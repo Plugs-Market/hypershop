@@ -7,6 +7,11 @@ export type SubscriptionPlan = {
   duration_days: number;
   max_devices: number;
   reseller_credits: number;
+  description?: string | null;
+  features?: string[];
+  cover_url?: string | null;
+  // Prix public si le panel HyperTV le fournit (pas encore renvoyé par l'API).
+  price_eur?: number | null;
 };
 export type Customer = {
   mac: string;
