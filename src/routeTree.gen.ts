@@ -10,33 +10,108 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedTestApiRouteImport } from './routes/_authenticated/test-api'
+import { Route as CommandeIdRouteImport } from './routes/commande.$id'
+import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
+import { Route as AuthenticatedAdminPrixRouteImport } from './routes/_authenticated/admin.prix'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTestApiRoute = AuthenticatedTestApiRouteImport.update({
+  id: '/test-api',
+  path: '/test-api',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const CommandeIdRoute = CommandeIdRouteImport.update({
+  id: '/commande/$id',
+  path: '/commande/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommanderPlanIdRoute = CommanderPlanIdRouteImport.update({
+  id: '/commander/$planId',
+  path: '/commander/$planId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminPrixRoute = AuthenticatedAdminPrixRouteImport.update({
+  id: '/admin/prix',
+  path: '/admin/prix',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/test-api': typeof AuthenticatedTestApiRoute
+  '/commande/$id': typeof CommandeIdRoute
+  '/commander/$planId': typeof CommanderPlanIdRoute
+  '/admin/prix': typeof AuthenticatedAdminPrixRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/test-api': typeof AuthenticatedTestApiRoute
+  '/commande/$id': typeof CommandeIdRoute
+  '/commander/$planId': typeof CommanderPlanIdRoute
+  '/admin/prix': typeof AuthenticatedAdminPrixRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/test-api': typeof AuthenticatedTestApiRoute
+  '/commande/$id': typeof CommandeIdRoute
+  '/commander/$planId': typeof CommanderPlanIdRoute
+  '/_authenticated/admin/prix': typeof AuthenticatedAdminPrixRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/test-api'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/admin/prix'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/test-api'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/admin/prix'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/test-api'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/_authenticated/admin/prix'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  CommandeIdRoute: typeof CommandeIdRoute
+  CommanderPlanIdRoute: typeof CommanderPlanIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +123,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/test-api': {
+      id: '/_authenticated/test-api'
+      path: '/test-api'
+      fullPath: '/test-api'
+      preLoaderRoute: typeof AuthenticatedTestApiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/commande/$id': {
+      id: '/commande/$id'
+      path: '/commande/$id'
+      fullPath: '/commande/$id'
+      preLoaderRoute: typeof CommandeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/commander/$planId': {
+      id: '/commander/$planId'
+      path: '/commander/$planId'
+      fullPath: '/commander/$planId'
+      preLoaderRoute: typeof CommanderPlanIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/prix': {
+      id: '/_authenticated/admin/prix'
+      path: '/admin/prix'
+      fullPath: '/admin/prix'
+      preLoaderRoute: typeof AuthenticatedAdminPrixRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedTestApiRoute: typeof AuthenticatedTestApiRoute
+  AuthenticatedAdminPrixRoute: typeof AuthenticatedAdminPrixRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedTestApiRoute: AuthenticatedTestApiRoute,
+  AuthenticatedAdminPrixRoute: AuthenticatedAdminPrixRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  CommandeIdRoute: CommandeIdRoute,
+  CommanderPlanIdRoute: CommanderPlanIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
