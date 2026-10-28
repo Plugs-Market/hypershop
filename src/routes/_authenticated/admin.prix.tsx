@@ -25,14 +25,14 @@ export const Route = createFileRoute("/_authenticated/admin/prix")({
   component: Prices,
 });
 
-function Row({ plan, product, onSaved }: { plan: { id: string; name: string; duration_days: number; reseller_credits: number }; product?: { price_cents: number; active: boolean }; onSaved: () => void }) {
+function Row({ plan, product, onSaved }: { plan: { id: string; name: string; duration_days: number; reseller_credits: number }; product: { price_cents: number; active: boolean } | undefined; onSaved: () => void }) {
   const save = useServerFn(savePrice);
   const [price, setPrice] = useState(product ? (product.price_cents / 100).toFixed(2) : "");
   const [active, setActive] = useState(product?.active ?? true);
   const [busy, setBusy] = useState(false);
   async function submit() {
     const cents = Math.round(parseFloat(price.replace(",", ".")) * 100);
-    if (!Number.isFinite(cents) || cents < 0) return toast.error("Prix invalide");
+    if (!Number.isFinite(cents) || cents < 0) { toast.error("Prix invalide"); return; }
     setBusy(true);
     try { await save({ data: { planId: plan.id, priceCents: cents, active } }); toast.success("Prix enregistré"); onSaved(); }
     catch (e) { toast.error((e as Error).message); }
