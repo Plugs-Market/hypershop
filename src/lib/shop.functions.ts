@@ -73,7 +73,7 @@ function publicOrder(o: any) {
 
 // Appelée après confirmation serveur du paiement (futur webhook Stripe).
 // Active une commande payée. Idempotent : même clé = jamais deux débits.
-export async function runActivation(id: string) {
+async function runActivation(id: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const o = await loadOrder(id);
   if (!o || o.payment_status !== "paid" || o.activation_status === "activated") return;

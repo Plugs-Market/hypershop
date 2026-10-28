@@ -47,16 +47,23 @@ function Home() {
         )}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.plans.map((p) => (
-            <article key={p.id} className="flex flex-col rounded-2xl border border-border bg-card p-6 transition hover:border-primary/60 hover:shadow-glow">
+            <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
+              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" className="aspect-video w-full object-cover" />}
+              <div className="flex flex-1 flex-col p-6">
               <h2 className="text-xl font-bold">{p.name}</h2>
-              <p className="mt-4 text-4xl font-extrabold">{formatPrice(p.price_cents)}</p>
+              {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
+              <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
               <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
                 <li className="flex items-center gap-2"><MonitorSmartphone className="h-4 w-4 text-primary" /> {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</li>
+                {p.features.map((f) => <li key={f} className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> {f}</li>)}
               </ul>
-              <Button asChild variant="hero" className="mt-6 w-full">
-                <Link to="/commander/$planId" params={{ planId: p.id }}>Choisir</Link>
-              </Button>
+              <div className="mt-auto pt-6">
+              {p.price_cents !== null ? (
+                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Choisir</Link></Button>
+              ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
+              </div>
+              </div>
             </article>
           ))}
         </div>

@@ -36,7 +36,8 @@ function Checkout() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const plan = data.plans.find((p) => p.id === selected);
+  const buyable = data.plans.filter((p) => p.price_cents !== null) as ((typeof data.plans)[number] & { price_cents: number })[];
+  const plan = buyable.find((p) => p.id === selected);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +64,7 @@ function Checkout() {
           <div className="space-y-2">
             <Label>Formule</Label>
             <div className="grid gap-2">
-              {data.plans.map((p) => (
+              {buyable.map((p) => (
                 <button type="button" key={p.id} onClick={() => setSelected(p.id)}
                   className={`flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
                   <span><span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</span></span>
