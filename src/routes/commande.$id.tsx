@@ -3,9 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock, Loader2, XCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { getOrder, retryActivation, simulatePayment, isAdmin } from "@/lib/shop.functions";
+import { getOrder, retryActivation } from "@/lib/shop.functions";
 import { formatPrice } from "@/lib/hypertv-shared";
-import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
@@ -31,17 +30,8 @@ function OrderPage() {
   const initial = Route.useLoaderData();
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
-  const [admin, setAdmin] = useState(false);
   const retry = useServerFn(retryActivation);
-  const pay = useServerFn(simulatePayment);
-  const checkAdmin = useServerFn(isAdmin);
   const tried = useRef(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) checkAdmin().then(setAdmin).catch(() => setAdmin(false));
-    });
-  }, [checkAdmin]);
 
   async function doRetry() {
     if (!order) return;
@@ -62,13 +52,6 @@ function OrderPage() {
 
   if (!order) {
     return (<div className="min-h-screen"><SiteHeader /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
-  }
-
-  async function doPay() {
-    setBusy(true);
-    try { setOrder(await pay({ data: { id: order!.id } })); }
-    catch (e) { toast.error((e as Error).message); }
-    finally { setBusy(false); }
   }
 
   const activated = order.activation_status === "activated";
@@ -105,7 +88,6 @@ function OrderPage() {
             <div className="space-y-2 border-t border-border pt-5">
               {/* Emplacement du paiement Stripe (à brancher plus tard). */}
               <Button className="w-full" variant="hero" disabled>Payer (bientôt disponible)</Button>
-              {admin && <Button className="w-full" variant="outline" onClick={doPay} disabled={busy}>Simuler le paiement (admin)</Button>}
             </div>
           )}
           {waiting && <Button className="w-full" variant="outline" onClick={doRetry} disabled={busy}>Réessayer l'activation</Button>}
