@@ -162,7 +162,7 @@ export const adminDashboard = createServerFn({ method: "GET" })
       catch (e) { return { ok: false as const, error: errInfo(e) }; }
     };
     const [offers, balance, customers] = await Promise.all([
-      wrap(hypertv.getOffers), wrap(hypertv.getBalance), wrap(hypertv.getCustomers),
+      wrap(async () => ({ subscriptionPlans: (await hypertv.getOffers()).subscriptionPlans })), wrap(hypertv.getBalance), wrap(hypertv.getCustomers),
     ]);
     return { offers, balance, customers };
   });
@@ -179,10 +179,10 @@ export const adminTestActivate = createServerFn({ method: "POST" })
     await assertAdmin(context as Ctx);
     try {
       const r = await hypertv.activate({ mac: data.mac, planId: data.planId, idempotencyKey: `test-${crypto.randomUUID()}` });
-      return { ok: true, response: r as unknown as Record<string, unknown> };
+      return { ok: true, response: JSON.stringify(r, null, 2) };
     } catch (e) {
       const i = errInfo(e);
-      return { ok: false, response: { status: i.status, error: i.code, message: i.message } as Record<string, unknown> };
+      return { ok: false, response: JSON.stringify({ status: i.status, error: i.code, message: i.message }, null, 2) };
     }
   });
 

@@ -40,7 +40,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
     res = await fetch(BASE_URL + path, {
       method: init?.method ?? "GET",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: init?.body ? JSON.stringify(init.body) : undefined,
+      ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
       signal: AbortSignal.timeout(15000),
     });
   } catch (e) {

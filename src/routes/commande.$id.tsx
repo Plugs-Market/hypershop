@@ -57,6 +57,7 @@ function OrderPage() {
       const t = setTimeout(doRetry, 3000);
       return () => clearTimeout(t);
     }
+    return undefined;
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {

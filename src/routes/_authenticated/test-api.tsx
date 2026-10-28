@@ -48,7 +48,7 @@ function TestApi() {
     e.preventDefault();
     if (!isValidMac(mac)) return setRaw("Adresse MAC invalide (XX:XX:XX:XX:XX:XX).");
     setBusy(true);
-    try { setRaw(JSON.stringify(await act({ data: { mac: normalizeMac(mac), planId } }), null, 2)); }
+    try { setRaw((await act({ data: { mac: normalizeMac(mac), planId } })).response); }
     catch (err) { setRaw((err as Error).message); }
     finally { setBusy(false); q.refetch(); }
   }
