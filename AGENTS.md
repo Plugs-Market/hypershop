@@ -12,4 +12,4 @@
 ## Architecture
 - All HyperTV API calls go through `src/lib/hypertvClient.server.ts` and are only invoked from server functions in `src/lib/shop.functions.ts` — the shop key must never reach the browser.
 - Orders have no client RLS policies; they are read/written only server-side, and activation always reuses the order id as idempotency key so a retry never charges twice.
-- The first account that signs up becomes shop admin (DB trigger); admin pages live under `src/routes/_authenticated/`.
+- No accounts, login or admin pages in the shop: catalog, prices and customers are managed in the HyperTV reseller panel and read only through its API.
