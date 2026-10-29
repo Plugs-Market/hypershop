@@ -139,5 +139,5 @@ body { padding-bottom: var(--safe-bottom); }
    pour que le bas de page (et la zone de réponse du support) touche l'écran. */
 @media (display-mode: standalone) {
   html { min-height: calc(100% + env(safe-area-inset-top)); }
-  .conversation-shell { bottom: auto; height: calc(100vh + var(--safe-top)); }
+  .conversation-shell { bottom: auto; height: 100vh; }
 }
