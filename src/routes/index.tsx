@@ -57,9 +57,10 @@ function Home() {
         </section>
 
         {data.error && <p className="text-center text-destructive">{data.error}</p>}
-        {!data.error && data.plans.length === 0 && (
+        {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && (
           <p className="text-center text-muted-foreground">Aucune formule disponible pour le moment.</p>
         )}
+        {data.plans.length > 0 && <h2 className="mb-5 text-2xl font-bold">Abonnements HyperTV</h2>}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.plans.map((p) => (
             <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
@@ -82,6 +83,30 @@ function Home() {
             </article>
           ))}
         </div>
+        {data.trexPlans.length > 0 && (
+          <section className="mt-12" aria-labelledby="trex-title">
+            <h2 id="trex-title" className="mb-5 text-2xl font-bold">Abonnements TREX</h2>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.trexPlans.map((p) => (
+                <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
+                  {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="text-xl font-bold">{p.name}</h3>
+                    {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
+                    <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
+                    <div className="mt-5 flex flex-wrap gap-2 text-xs">
+                      <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
+                      {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
+                    </div>
+                    <div className="mt-auto pt-6">
+                      {p.price_cents !== null ? <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }} search={{ type: "trex" }}>Acheter</Link></Button> : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
