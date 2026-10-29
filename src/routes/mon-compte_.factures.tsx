@@ -10,6 +10,7 @@ import { GuidesShell } from "@/components/GuidesShell";
 import { InvoiceStatus, InvoiceError, InvoiceNotFound } from "@/components/InvoiceShared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const invoicesQuery = (search: InvoiceSearch) => queryOptions({ queryKey: ["customer-invoices", search], queryFn: () => listCustomerInvoices({ data: search }), staleTime: 0, gcTime: 0, retry: false });
 export const Route = createFileRoute("/mon-compte_/factures")({
@@ -38,8 +39,24 @@ function InvoicesPage() {
     <Button variant="ghost" size="sm" asChild><Link to="/mon-compte"><ArrowLeft />Mon compte</Link></Button>
     <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="flex items-center gap-3 text-2xl font-bold"><Receipt className="text-primary" />Mes factures</h1><span className="text-sm text-muted-foreground">{data.total} facture{data.total !== 1 ? "s" : ""}</span></div>
     <form className="flex gap-2" onSubmit={e => { e.preventDefault(); void change({ q: draft }); }}><Input aria-label="Rechercher une facture" placeholder="Rechercher une facture…" value={draft} maxLength={200} onChange={e => setDraft(e.target.value)} /><Button type="submit" size="icon" aria-label="Rechercher" title="Rechercher"><Search /></Button></form>
-    <div className="space-y-3"><div className="flex flex-wrap gap-2" aria-label="Filtrer par statut"><Button size="sm" variant={search.status === "" ? "default" : "outline"} onClick={() => change({ status: "" })}>Tous les états</Button>{INVOICE_STATES.filter(s => s !== "activated").map(s => <Button key={s} size="sm" variant={search.status === s ? "default" : "outline"} onClick={() => change({ status: s })}>{invoiceStatusLabels[s]}</Button>)}</div>
-      <div className="flex flex-wrap gap-2" aria-label="Filtrer par mode"><Button size="sm" variant={search.method === "" ? "default" : "outline"} onClick={() => change({ method: "" })}>Tous les modes</Button>{data.methods.map(m => <Button key={m.code} size="sm" variant={search.method === m.code ? "default" : "outline"} onClick={() => change({ method: m.code })}>{m.label}</Button>)}</div></div>
+    <div className="flex flex-wrap items-center gap-2" aria-label="Filtres de factures">
+      <label className="sr-only" htmlFor="filter-status">Filtrer par état</label>
+      <Select value={search.status || "all"} onValueChange={(v) => change({ status: v === "all" ? "" : v })}>
+        <SelectTrigger id="filter-status" className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tous les états</SelectItem>
+          {INVOICE_STATES.filter(s => s !== "activated").map(s => <SelectItem key={s} value={s}>{invoiceStatusLabels[s]}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <label className="sr-only" htmlFor="filter-method">Filtrer par mode de paiement</label>
+      <Select value={search.method || "all"} onValueChange={(v) => change({ method: v === "all" ? "" : v })}>
+        <SelectTrigger id="filter-method" className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tous les modes</SelectItem>
+          {data.methods.map(m => <SelectItem key={m.code} value={m.code}>{m.label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
     <p className="flex items-center gap-2 text-sm text-muted-foreground"><ArrowDownWideNarrow className="h-4 w-4" />Plus récentes</p>
     {count === 0 ? <p className="border-y border-border py-12 text-center text-muted-foreground">Aucune facture trouvée.</p> : <div className="grid gap-4 sm:grid-cols-2">{newestInvoices(data.invoices).map(i => <article key={i.id} className="min-w-0 space-y-4 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs text-muted-foreground">N° {i.number}</span><InvoiceStatus state={i.state} /></div><h2 className="break-words text-lg font-semibold">{i.plan}</h2><p className="text-sm text-muted-foreground">{formatFrDate(i.createdAt)} · {i.payment.label}</p><div className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl">{invoiceCurrency(i.priceEur)}</strong>{i.source === "hypertv" && <span className="rounded-md bg-muted px-2 py-1 text-xs">HyperTV · Lecture seule</span>}</div><Button variant="outline" asChild className="w-full"><Link to="/mon-compte/factures/$id" params={{ id: i.id }}>Voir la facture<ChevronRight /></Link></Button>
