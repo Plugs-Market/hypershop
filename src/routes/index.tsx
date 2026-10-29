@@ -82,7 +82,7 @@ function Home() {
     {
       id: "hypertv",
       label: "Applications HYPERTV",
-      description: "Formules HyperTV activées automatiquement sur votre appareil après paiement.",
+      description: "Abonnements pour utiliser votre application HYPERTV activées automatiquement sur votre appareil après paiement.",
       icon: Tv,
       count: data.plans.length,
     },
