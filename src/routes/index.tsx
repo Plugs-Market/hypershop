@@ -94,9 +94,6 @@ function Home() {
       <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
         <section className={category === null ? "py-16 text-center md:py-24" : "pt-10 pb-10 text-center md:pt-14 md:pb-12"}>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
-            <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
-          </p>
           <h1 className={`mx-auto max-w-3xl font-extrabold ${category === null ? "text-4xl md:text-6xl" : "text-3xl md:text-4xl"}`}>
             {shop.description ?? <>Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes</>}
           </h1>
@@ -105,6 +102,9 @@ function Home() {
               {shop.slogan ?? "Choisissez une catégorie, saisissez l'adresse MAC de votre appareil, c'est tout."}
             </p>
           )}
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
+            <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
+          </p>
         </section>
 
         {data.error && <p className="text-center text-destructive">{data.error}</p>}
