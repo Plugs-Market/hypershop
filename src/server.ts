@@ -49,6 +49,10 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+      if (new URL(request.url).pathname.startsWith("/commande/")) {
+        response.headers.set("Cache-Control", "no-store");
+        response.headers.set("Referrer-Policy", "no-referrer");
+      }
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);

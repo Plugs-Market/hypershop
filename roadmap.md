@@ -1,6 +1,9 @@
 # Intégration TREX
-- [ ] Accès M3U et Xtream après activation — bloqué : le détail de commande de l’API ne fournit ni URL M3U, ni identifiants Xtream, ni serveur ; attendre le contrat de réponse ou l’endpoint sécurisé correspondant.
-- [ ] Catalogue et badges TREX depuis l’API revendeur.
-- [ ] Achat exclusif planId ou trexPlanId et clé conservée lors des réessais réseau.
-- [ ] Suivi TREX, timeline et erreurs traduites avec interrogation continue.
-- [ ] Tests ciblés et vérification du catalogue/parcours sans paiement réel.
+- [x] Accès M3U/Xtream privés et dates TREX depuis delivery.
+- [x] Preuve propriétaire serveur et téléchargement fournisseur protégé ; anciennes commandes sans preuve exclues.
+- [x] Tests autorisation, états et contenu M3U ; copie et affichage mobile vérifiés sur une commande gratuite activée avec preuve de test retirée ensuite.
+- [x] Catalogue et badges TREX depuis l’API revendeur.
+- [x] Achat exclusif planId ou trexPlanId et clé conservée lors des réessais réseau.
+- [x] Suivi TREX, timeline et erreurs traduites avec interrogation continue.
+- [x] Tests ciblés et vérification du catalogue/parcours sans paiement réel.
+- [ ] Vérification réelle d’une commande en attente et d’un nouvel achat activé — aucune commande en attente disponible, essai gratuit déjà utilisé ; tests automatisés couvrent ces états et aucun paiement réel n’a été effectué.

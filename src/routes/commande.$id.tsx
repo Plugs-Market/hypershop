@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { activationNotice, shouldPollOrder, trexTimeline } from "@/lib/shop-order";
 import { queryOptions } from "@tanstack/react-query";
 import { getCatalog } from "@/lib/shop.functions";
+import { OrderDelivery } from "@/components/OrderDelivery";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -120,6 +121,7 @@ function OrderPage() {
               </p>}
             </div>
           )}
+          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} authorized={order.deliveryAuthorized === true} />}
           {order.state === "expired" && (order.trexPlanId || order.planId) && (
             <Button asChild variant="hero" className="w-full">
               <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? "" }} search={order.type === "trex" ? { type: "trex" } : {}}>
@@ -185,7 +187,7 @@ function StateBadge({ order }: { order: Order }) {
             <p className="font-semibold">{order.type === "trex" ? "Playlist activée" : "Abonnement activé ✅"}</p>
             {order.subscriptionExpiresAt && (
               <p className="text-sm text-muted-foreground">
-                Valable jusqu'au <strong className="text-foreground">{new Date(order.subscriptionExpiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong>
+                {order.type === "trex" ? "Application HyperTV valable jusqu'au " : "Valable jusqu'au "}<strong className="text-foreground">{new Date(order.subscriptionExpiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong>
               </p>
             )}
           </div>

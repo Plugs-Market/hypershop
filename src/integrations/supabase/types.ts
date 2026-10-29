@@ -86,6 +86,30 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_order_access: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          order_id: string | null
+          owner_hash: string
+          request_hash: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          order_id?: string | null
+          owner_hash: string
+          request_hash: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          order_id?: string | null
+          owner_hash?: string
+          request_hash?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
