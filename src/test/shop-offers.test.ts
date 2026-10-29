@@ -26,7 +26,9 @@ describe("nouveau schéma des offres HyperTV", () => {
     expect(planPriceCents({ ...vip, currency: "USD" })).toBeNull();
   });
   it("refuse les prix manquants, négatifs ou non finis", () => {
-    for (const price_eur of [null, undefined, -1, Infinity, NaN]) {
+    const { price_eur: omittedPrice, ...withoutPrice } = vip;
+    expect(planPriceCents(withoutPrice)).toBeNull();
+    for (const price_eur of [null, -1, Infinity, NaN]) {
       expect(planPriceCents({ ...vip, price_eur })).toBeNull();
     }
   });
