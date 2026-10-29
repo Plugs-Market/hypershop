@@ -42,3 +42,11 @@ describe("suivi TREX", () => {
     expect(trexTimeline({ ...order, state: "activated" }).map((step) => step.done)).toEqual([true, true, true, true]);
   });
 });
+describe("commande sans email ni paiement", () => {
+  it("accepte une formule gratuite sans mode de paiement ni email", () => {
+    expect(orderInputSchema.safeParse({ mac: "00:1A:79:AB:CD:EF", planId: "p", idempotencyKey: "12345678-1234-4123-8123-123456789abc" }).success).toBe(true);
+  });
+  it("refuse un champ email", () => {
+    expect(orderInputSchema.safeParse({ mac: "00:1A:79:AB:CD:EF", planId: "p", email: "a@b.fr", idempotencyKey: "12345678-1234-4123-8123-123456789abc" }).success).toBe(false);
+  });
+});
