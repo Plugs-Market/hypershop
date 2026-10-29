@@ -5,7 +5,7 @@ import { getDelivery } from "@/lib/shop.functions";
 import type { Delivery } from "@/lib/playlist-security";
 import { Button } from "@/components/ui/button";
 
-function PrivateField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
+export function PrivateField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
