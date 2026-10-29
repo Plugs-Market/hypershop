@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Download, ShoppingBag, Tv, UserRound } from "lucide-react";
 import { accountStatusQuery } from "@/lib/account.functions";
@@ -13,6 +13,17 @@ const navLinkActiveClass = "border-primary/70 bg-primary/15 text-primary shadow-
 export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | null; logoUrl?: string | null; guidesEnabled?: boolean }) {
   const { data: apps } = useQuery(appsQuery);
   const { data: status } = useQuery(accountStatusQuery);
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Le bloc de téléchargement vit sur l'accueil : on y revient puis on défile jusqu'à lui.
+  const goDownload = () => {
+    if (pathname !== "/") {
+      void navigate({ to: "/" });
+      setTimeout(() => window.dispatchEvent(new Event("shop:download")), 350);
+    } else {
+      window.dispatchEvent(new Event("shop:download"));
+    }
+  };
   const brand = (name ?? "").trim() || "Boutique";
   const parts = brand.split(/\s+/);
   const last = parts.length > 1 ? parts.pop() : null;
@@ -67,13 +78,12 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
             <ShoppingBag className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Boutique</span>
           </Link>
           {apps && (
-            <Link aria-label="Télécharger"
-              to="/telecharger"
+            <button type="button" aria-label="Télécharger"
+              onClick={goDownload}
               className={navLinkClass}
-              activeProps={{ className: navLinkActiveClass }}
             >
               <Download className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Télécharger</span>
-            </Link>
+            </button>
           )}
           {guidesEnabled && (
             <Link aria-label="Guides"
