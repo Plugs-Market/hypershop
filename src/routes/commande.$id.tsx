@@ -11,6 +11,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { activationNotice, shouldPollOrder, trexTimeline } from "@/lib/shop-order";
+import { queryOptions } from "@tanstack/react-query";
+import { getCatalog } from "@/lib/shop.functions";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -28,17 +31,23 @@ export const Route = createFileRoute("/commande/$id")({
       ],
     };
   },
-  loader: async ({ params }): Promise<{
+  loader: async ({ params, context }): Promise<{
     order: Awaited<ReturnType<typeof getOrder>>;
     shop: Awaited<ReturnType<typeof getShopInfo>>;
     methods: Awaited<ReturnType<typeof getPaymentMethods>>;
+    includedSubscription: ShopOrder["includesHypertvSubscription"];
   }> => {
     const [order, shop, methods] = await Promise.all([
       getOrder({ data: { id: params.id } }),
       getShopInfo(),
       getPaymentMethods(),
     ]);
-    return { order, shop, methods };
+    let includedSubscription = order?.includesHypertvSubscription;
+    if (order?.type === "trex" && includedSubscription === undefined) {
+      const catalog = await context.queryClient.ensureQueryData(queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog(), staleTime: 0 }));
+      includedSubscription = catalog.trexPlans.find((plan) => plan.id === order.trexPlanId)?.includesHypertvSubscription;
+    }
+    return { order, shop, methods, includedSubscription };
   },
   component: OrderPage,
 });
@@ -46,14 +55,14 @@ export const Route = createFileRoute("/commande/$id")({
 type Order = ShopOrder;
 
 // États qui évoluent encore : on relance le suivi toutes les 20 s.
-const POLLING_STATES = new Set(["pending", "detected", "review", "paid"]);
 const CRYPTO_METHODS = new Set(["btc", "eth", "ltc", "ton"]);
 
 function OrderPage() {
-  const { order: initial, shop, methods } = Route.useLoaderData() as {
+  const { order: initial, shop, methods, includedSubscription } = Route.useLoaderData() as {
     order: Order | null;
     shop: { name: string | null; logoUrl: string | null };
     methods: { methods: PaymentMethod[]; error: string | null };
+    includedSubscription: Order["includesHypertvSubscription"];
   };
   const [order, setOrder] = useState<Order | null>(initial);
   const fetchOrder = useServerFn(getOrder);
@@ -70,7 +79,7 @@ function OrderPage() {
 
   // Polling toutes les 20 s tant que la commande évolue encore.
   useEffect(() => {
-    if (!order || !POLLING_STATES.has(order.state)) return;
+    if (!order || !shouldPollOrder(order)) return;
     const t = setInterval(refresh, 20000);
     return () => clearInterval(t);
   }); // eslint-disable-line react-hooks/exhaustive-deps
@@ -86,6 +95,7 @@ function OrderPage() {
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
           <StateBadge order={order} />
+          {order.type === "trex" && <TrexTimeline order={{ ...order, includesHypertvSubscription: order.includesHypertvSubscription ?? includedSubscription ?? null }} />}
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
@@ -103,16 +113,16 @@ function OrderPage() {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <p className="flex items-center justify-center gap-2 text-center font-semibold">
                 <Rocket className="h-5 w-5 shrink-0 text-primary" />
-                Lancez votre application pour profiter de votre abonnement
+                {order.type === "trex" ? "Votre playlist a été ajoutée automatiquement à votre application HyperTV. Ouvrez l'app pour en profiter." : "Lancez votre application pour profiter de votre abonnement"}
               </p>
-              <p className="mt-2 text-center text-sm text-muted-foreground">
+              {order.type !== "trex" && <p className="mt-2 text-center text-sm text-muted-foreground">
                 Redémarrez l'application HyperTV sur votre appareil : votre formule est déjà active.
-              </p>
+              </p>}
             </div>
           )}
-          {order.state === "expired" && (
+          {order.state === "expired" && (order.trexPlanId || order.planId) && (
             <Button asChild variant="hero" className="w-full">
-              <Link to="/commander/$planId" params={{ planId: order.planId }}>
+              <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? "" }} search={order.type === "trex" ? { type: "trex" } : {}}>
                 <RotateCcw className="h-4 w-4" /> Recommencer
               </Link>
             </Button>
@@ -133,6 +143,8 @@ function OrderPage() {
 
 function StateBadge({ order }: { order: Order }) {
   const base = "flex items-center gap-3";
+  const notice = activationNotice(order);
+  if (notice) return <div className={base}><Clock className="h-8 w-8 shrink-0 text-warning" /><p className="font-semibold">{notice}</p></div>;
   switch (order.state) {
     case "pending":
       return (
@@ -170,20 +182,13 @@ function StateBadge({ order }: { order: Order }) {
         <div className={base}>
           <CheckCircle2 className="h-8 w-8 shrink-0 text-success" />
           <div>
-            <p className="font-semibold">Abonnement activé ✅</p>
+            <p className="font-semibold">{order.type === "trex" ? "Playlist activée" : "Abonnement activé ✅"}</p>
             {order.subscriptionExpiresAt && (
               <p className="text-sm text-muted-foreground">
                 Valable jusqu'au <strong className="text-foreground">{new Date(order.subscriptionExpiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong>
               </p>
             )}
           </div>
-        </div>
-      );
-    case "paid_activation_failed":
-      return (
-        <div className={base}>
-          <Clock className="h-8 w-8 shrink-0 text-warning" />
-          <p className="font-semibold">Paiement reçu, activation en cours de traitement. Contactez le support si cela dure.</p>
         </div>
       );
     case "expired":
@@ -204,10 +209,21 @@ function StateBadge({ order }: { order: Order }) {
       return (
         <div className={base}>
           <Clock className="h-8 w-8 shrink-0 text-muted-foreground" />
-          <p className="font-semibold">{order.state}</p>
+          <p className="font-semibold">Traitement de votre commande en cours</p>
         </div>
       );
   }
+}
+
+function TrexTimeline({ order }: { order: Order }) {
+  const steps = trexTimeline(order);
+  const current = steps.findIndex((step) => !step.done);
+  return <ol aria-label="Progression de l'activation TREX" className="space-y-4 border-t border-border pt-5">
+    {steps.map((step, index) => <li key={step.label} className="flex items-center gap-3 text-sm" aria-current={index === current ? "step" : undefined}>
+      {step.done ? <CheckCircle2 aria-label="Terminé" className="h-5 w-5 shrink-0 text-success" /> : <Clock aria-label={index === current ? "En cours" : "En attente"} className={`h-5 w-5 shrink-0 ${index === current ? "text-primary" : "text-muted-foreground"}`} />}
+      <span className={step.done || index === current ? "text-foreground" : "text-muted-foreground"}>{step.label}</span>
+    </li>)}
+  </ol>;
 }
 
 function Countdown({ expiresAt }: { expiresAt: string }) {

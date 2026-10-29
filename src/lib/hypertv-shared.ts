@@ -16,11 +16,17 @@ export function translateHypertvError(status: number, code?: string, message?: s
     case "invalid_request":
       return "Vérifiez la MAC et l'email.";
     case "customer_not_found":
-      return "Aucun compte HyperTV avec cette MAC. Installez l'app et créez votre compte, puis réessayez.";
+      return "Aucun compte HyperTV avec cette adresse MAC";
     case "customer_locked_to_other_reseller":
-      return "Cet appareil est géré par un autre revendeur.";
+      return "Ce compte est géré par un autre revendeur";
     case "plan_not_for_sale":
-      return "Formule indisponible.";
+      return "Cette formule n'est plus disponible";
+    case "trex_unavailable":
+      return "Formule temporairement indisponible";
+    case "trex_line_state_unknown_contact_support":
+      return "Paiement reçu, notre équipe finalise votre activation";
+    case "paid_activation_failed":
+      return "Paiement reçu, activation en cours de traitement : nous vous contactons rapidement";
     case "payment_method_unavailable":
       return "Mode de paiement indisponible.";
     case "order_not_payable":
@@ -37,6 +43,9 @@ export function translateHypertvError(status: number, code?: string, message?: s
       return "Le service ne répond pas. Nouvel essai dans quelques instants.";
     case "timeout":
       return "Le service a mis trop de temps à répondre. Nouvel essai dans quelques instants.";
+  }
+  if (message === "Crédits HyperTV insuffisants." || message?.startsWith("trex_")) {
+    return "Paiement reçu, activation en cours de traitement : nous vous contactons rapidement";
   }
   if (status === 422) return message || "Demande refusée.";
   return "Une erreur inattendue est survenue. Réessayez plus tard.";

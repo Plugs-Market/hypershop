@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { resolveOrderAttempt, type OrderAttempt } from "@/lib/shop-order";
 
 const catalogQuery = queryOptions({
   queryKey: ["catalog"],
@@ -24,6 +25,7 @@ const methodsQuery = queryOptions({
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
+  validateSearch: (search: Record<string, unknown>): { type?: "trex" } => (search["type"] === "trex" ? { type: "trex" } : {}),
   head: ({ loaderData }) => {
     const data = loaderData as Catalog | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
@@ -50,6 +52,8 @@ export const Route = createFileRoute("/commander/$planId")({
 
 function Checkout() {
   const { planId } = Route.useParams();
+  const { type } = Route.useSearch();
+  const isTrex = type === "trex";
   const { data } = useSuspenseQuery(catalogQuery);
   const { data: methodsData } = useSuspenseQuery(methodsQuery);
   const navigate = useNavigate();
@@ -60,27 +64,36 @@ function Checkout() {
   const [method, setMethod] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // Générée une seule fois par tentative : un double clic ne crée pas deux commandes.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
-  const buyable = data.plans.filter((p) => p.price_cents !== null) as ((typeof data.plans)[number] & { price_cents: number })[];
+  // Conservée après un échec réseau ; renouvelée seulement si le contenu de la tentative change.
+  const attempt = useRef<OrderAttempt | null>(null);
+  const submitting = useRef(false);
+  const available = isTrex ? data.trexPlans : data.plans;
+  const buyable = available.filter((p): p is typeof p & { price_cents: number } => p.price_cents !== null);
   const plan = buyable.find((p) => p.id === selected);
   const methods = methodsData.methods;
   const selectedMethod = methods.find((m) => m.code === method);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;
     setError(null);
     if (!isValidMac(mac)) return setError("Format attendu : XX:XX:XX:XX:XX:XX (chiffres 0-9 et lettres A-F).");
     if (!/^\S+@\S+\.\S+$/.test(email)) return setError("Adresse email invalide.");
     if (!plan) return setError("Choisissez une formule.");
     if (!method) return setError("Choisissez un mode de paiement.");
+    submitting.current = true;
     setLoading(true);
+    const details = { email: email.trim(), mac: normalizeMac(mac), method };
+    const product = isTrex ? { trexPlanId: plan.id } : { planId: plan.id };
+    attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
-      const r = await create({ data: { planId: plan.id, email, mac: normalizeMac(mac), method, idempotencyKey } });
-      navigate({ to: "/commande/$id", params: { id: r.id } });
+      const r = await create({ data: { ...product, ...details, idempotencyKey: attempt.current.key } });
+      await navigate({ to: "/commande/$id", params: { id: r.id } });
     } catch (err) {
       setError((err as Error).message || "Erreur lors de la commande.");
       setLoading(false);
+    } finally {
+      submitting.current = false;
     }
   }
 
@@ -91,14 +104,16 @@ function Checkout() {
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="space-y-2">
-            <Label>Formule</Label>
+            <Label>{isTrex ? "Abonnement TREX" : "Formule"}</Label>
+            {data.error && <p className="text-sm text-destructive">{data.error}</p>}
+            {!data.error && !plan && <p className="text-sm text-destructive">Cette formule n'est plus disponible</p>}
             <div className="grid gap-2">
               {buyable.map((p) => (
-                <button type="button" key={p.id} onClick={() => setSelected(p.id)}
-                  className={`flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span><span className="font-semibold">{p.name}</span> <span className="text-muted-foreground">· {p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</span></span>
-                  <span className="font-bold">{formatPrice(p.price_cents)}</span>
-                </button>
+                <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
+                  className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? <>Ligne M3U {p.line.months} mois{p.includesHypertvSubscription && <span className="mt-1 block">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}</> : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
+                  <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
+                </Button>
               ))}
             </div>
           </div>
@@ -116,15 +131,15 @@ function Checkout() {
             {methodsData.error && <p className="text-sm text-destructive">{methodsData.error}</p>}
             <div className="grid gap-2" role="radiogroup" aria-label="Mode de paiement">
               {methods.map((m) => (
-                <button type="button" key={m.code} role="radio" aria-checked={method === m.code} onClick={() => setMethod(m.code)}
-                  className={`rounded-lg border px-4 py-3 text-left text-sm transition ${method === m.code ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
+                <Button variant="outline" type="button" key={m.code} disabled={loading} role="radio" aria-checked={method === m.code} onClick={() => setMethod(m.code)}
+                  className={`h-auto flex-col items-start rounded-lg px-4 py-3 text-left text-sm ${method === m.code ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
                   <span className="font-semibold">{m.label}</span>
                   {m.code === "paypal_ff" && (m.minEur !== null || m.maxEur !== null) && (
                     <span className="block text-xs text-muted-foreground">
                       De {m.minEur ?? 0} € à {m.maxEur ?? "∞"} €
                     </span>
                   )}
-                </button>
+                </Button>
               ))}
             </div>
             {selectedMethod?.code === "paypal_ff" && selectedMethod.instructions && (
@@ -132,7 +147,7 @@ function Checkout() {
             )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading}>
+          <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading || !plan}>
             {loading ? "Création…" : plan ? `Commander — ${formatPrice(plan.price_cents)}` : "Commander"}
           </Button>
           <p className="text-center text-xs text-muted-foreground"><Link to="/" className="underline">Retour aux formules</Link></p>

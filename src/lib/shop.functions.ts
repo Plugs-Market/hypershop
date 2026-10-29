@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
-import { normalizeMac, MAC_REGEX, translateHypertvError } from "./hypertv-shared";
-import { catalogPlans } from "./shop-offers";
+import { translateHypertvError } from "./hypertv-shared";
+import { catalogPlans, catalogTrexPlans } from "./shop-offers";
+import { orderInputSchema } from "./shop-order";
 
 function errMessage(e: unknown): string {
   if (e instanceof HypertvError) return translateHypertvError(e.status, e.code, e.message);
@@ -18,10 +19,10 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
       hypertv.getShop().catch(() => null),
     ]);
     const plans = catalogPlans(offers);
-    return { plans, shop: shopInfo(shop), error: null as string | null };
+    return { plans, trexPlans: catalogTrexPlans(offers), shop: shopInfo(shop), error: null as string | null };
   } catch (e) {
     console.error("getCatalog failed", e instanceof HypertvError ? e.code : e);
-    return { plans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
+    return { plans: [], trexPlans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
   }
 });
 
@@ -60,25 +61,10 @@ export const getPaymentMethods = createServerFn({ method: "GET" }).handler(async
   }
 });
 
-const macField = z
-  .string()
-  .transform(normalizeMac)
-  .refine((m) => MAC_REGEX.test(m), "Adresse MAC invalide");
-
 // Crée la commande côté HyperTV : le prix facturé est toujours celui de l'API.
 // L'idempotencyKey (générée une fois par tentative côté navigateur) évite les doublons.
 export const createOrder = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
-    z
-      .object({
-        planId: z.string().min(1).max(100),
-        email: z.string().trim().email().max(255),
-        mac: macField,
-        method: z.string().min(1).max(50),
-        idempotencyKey: z.string().uuid(),
-      })
-      .parse(d),
-  )
+  .inputValidator((d) => orderInputSchema.parse(d))
   .handler(async ({ data }) => {
     try {
       const order = await hypertv.createOrder(data);
