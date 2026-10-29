@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
-import { Route as TelechargerRouteImport } from './routes/telecharger'
 import { Route as ApiSupportStreamRouteImport } from './routes/api/support-stream'
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
@@ -44,11 +43,6 @@ const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
 const MonCompteRoute = MonCompteRouteImport.update({
   id: '/mon-compte',
   path: '/mon-compte',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TelechargerRoute = TelechargerRouteImport.update({
-  id: '/telecharger',
-  path: '/telecharger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSupportStreamRoute = ApiSupportStreamRouteImport.update({
@@ -113,7 +107,6 @@ export interface FileRoutesByFullPath {
   '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
-  '/telecharger': typeof TelechargerRoute
   '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -131,7 +124,6 @@ export interface FileRoutesByTo {
   '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
-  '/telecharger': typeof TelechargerRoute
   '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -150,7 +142,6 @@ export interface FileRoutesById {
   '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
-  '/telecharger': typeof TelechargerRoute
   '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -170,7 +161,6 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/manifest.webmanifest'
     | '/mon-compte'
-    | '/telecharger'
     | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -188,7 +178,6 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/manifest.webmanifest'
     | '/mon-compte'
-    | '/telecharger'
     | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -206,7 +195,6 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/manifest.webmanifest'
     | '/mon-compte'
-    | '/telecharger'
     | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -225,7 +213,6 @@ export interface RootRouteChildren {
   ConnexionRoute: typeof ConnexionRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   MonCompteRoute: typeof MonCompteRoute
-  TelechargerRoute: typeof TelechargerRoute
   ApiSupportStreamRoute: typeof ApiSupportStreamRoute
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
@@ -267,13 +254,6 @@ declare module '@tanstack/react-router' {
       path: '/mon-compte'
       fullPath: '/mon-compte'
       preLoaderRoute: typeof MonCompteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/telecharger': {
-      id: '/telecharger'
-      path: '/telecharger'
-      fullPath: '/telecharger'
-      preLoaderRoute: typeof TelechargerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/support-stream': {
@@ -361,7 +341,6 @@ const rootRouteChildren: RootRouteChildren = {
   ConnexionRoute: ConnexionRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   MonCompteRoute: MonCompteRoute,
-  TelechargerRoute: TelechargerRoute,
   ApiSupportStreamRoute: ApiSupportStreamRoute,
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
