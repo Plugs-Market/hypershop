@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as TelechargerRouteImport } from './routes/telecharger'
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
   id: '/manifest.webmanifest',
   path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TelechargerRoute = TelechargerRouteImport.update({
+  id: '/telecharger',
+  path: '/telecharger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIconSizeRoute = AppIconSizeRouteImport.update({
@@ -63,6 +69,7 @@ const ApiPublicOrdersIdPlaylistRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/manifest.webmanifest'
+    | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/manifest.webmanifest'
+    | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/manifest.webmanifest'
+    | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  TelechargerRoute: typeof TelechargerRoute
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
@@ -149,6 +162,13 @@ declare module '@tanstack/react-router' {
       path: '/manifest.webmanifest'
       fullPath: '/manifest.webmanifest'
       preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/telecharger': {
+      id: '/telecharger'
+      path: '/telecharger'
+      fullPath: '/telecharger'
+      preLoaderRoute: typeof TelechargerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app-icon/$size': {
@@ -199,6 +219,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  TelechargerRoute: TelechargerRoute,
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
