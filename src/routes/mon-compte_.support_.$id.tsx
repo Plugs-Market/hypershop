@@ -120,7 +120,8 @@ function Conversation() {
               : <ConfirmStatus label="Résolu" icon={<Check />} text="La demande sera marquée comme résolue." onConfirm={() => changeStatus("resolved")} />)}
           </div>}
         </div>
-        <div ref={messagesArea} role="region" aria-label="Messages de la discussion" tabIndex={0} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 py-5">
+        <div ref={messagesArea} role="region" aria-label="Messages de la discussion" tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pt-4 pb-2">
+          <div className="mt-auto flex shrink-0 flex-col gap-3">
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           {noKey && <p className="text-sm text-muted-foreground">Cette demande a été ouverte sur un autre appareil : son contenu n'est pas lisible ici.</p>}
           {!ticket && !error && <p className="text-sm text-muted-foreground">Déchiffrement…</p>}
@@ -141,6 +142,7 @@ function Conversation() {
               </span>
             </div>
           ))}
+          </div>
         </div>
 
         {key && ticket?.status !== "closed" && <Composer ticketId={id} ticketKey={key} name={ctx?.username ?? null} onSent={() => load()} onError={handle} />}
@@ -210,19 +212,19 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
   }
 
   return (
-    <div className="shrink-0 space-y-2 border-t border-border bg-background px-3 py-3 sm:px-4">
+    <div className="shrink-0 space-y-2 bg-background px-3 pt-2 pb-2 sm:px-4">
       {previews.length > 0 && <div className="flex flex-wrap gap-2">{previews.map((u, i) => (
         <div key={u} className="relative h-16 w-16 overflow-hidden rounded-lg border border-border">
           <img src={u} alt="" className="h-full w-full object-cover" />
           <Button type="button" size="icon" variant="ghost" aria-label="Retirer la photo" className="absolute right-0 top-0 h-6 w-6 rounded-bl bg-background/80" onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
         </div>))}</div>}
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-2 rounded-lg border border-input bg-card p-2 focus-within:border-ring">
         <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-        <Button type="button" variant="ghost" size="icon" aria-label="Ajouter des photos" disabled={busy || files.length >= 6} onClick={() => input.current?.click()}><ImagePlus /></Button>
-        <Textarea rows={1} value={text} maxLength={5000} aria-label="Votre message" placeholder="Votre message…" className="max-h-32 min-h-10 min-w-0 flex-1 resize-none text-base"
+        <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0" aria-label="Ajouter des photos" disabled={busy || files.length >= 6} onClick={() => input.current?.click()}><ImagePlus /></Button>
+        <Textarea rows={1} value={text} maxLength={5000} aria-label="Votre message" placeholder="Votre message…" className="max-h-32 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} />
-        <Button type="button" size="icon" aria-label="Envoyer" disabled={busy} onClick={() => void send()}><Send /></Button>
+        <Button type="button" size="icon" className="h-10 w-10 shrink-0" aria-label="Envoyer" disabled={busy} onClick={() => void send()}><Send /></Button>
       </div>
       {err && <p className="text-sm text-destructive">{err}</p>}
     </div>

@@ -9,7 +9,7 @@ type Shop = { name: string | null; logoUrl: string | null; slogan: string | null
 
 export function GuidesShell({ shop, children, conversation = false }: { shop: Shop; children: ReactNode; conversation?: boolean }) {
   return (
-    <div className={conversation ? "fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-[env(safe-area-inset-bottom)] flex min-h-0 flex-col overflow-hidden bg-background" : "flex min-h-screen flex-col"}>
+    <div className={conversation ? "fixed inset-x-0 top-[env(safe-area-inset-top)] flex h-[calc(100dvh-env(safe-area-inset-top))] min-h-0 flex-col overflow-hidden bg-background pb-[env(safe-area-inset-bottom)]" : "flex min-h-screen flex-col"}>
       <SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} guidesEnabled={shop?.guidesEnabled ?? false} />
       <main className={conversation ? "mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden" : "mx-auto w-full max-w-6xl flex-1 px-4 py-8"}>{children}</main>
       {!conversation && <SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} />}
