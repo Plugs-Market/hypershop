@@ -99,9 +99,9 @@ function Home() {
     },
   ];
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="flex min-h-screen flex-col bg-gradient-hero">
       <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
-      <main className="mx-auto max-w-6xl px-4 pb-20">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20">
         {category === null ? (
         <section className="py-10 text-center md:py-16">
           <h1 className={`mx-auto max-w-2xl font-bold leading-tight tracking-tight text-balance ${category === null ? "text-2xl sm:text-3xl md:text-4xl" : "text-xl md:text-2xl"}`}>
