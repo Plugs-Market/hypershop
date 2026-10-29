@@ -7,6 +7,8 @@ import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { DownloadApps } from "@/components/DownloadApps";
+import { appsQuery } from "@/lib/apps.functions";
 import { Button } from "@/components/ui/button";
 
 // Les URL d'images de l'API expirent après 24 h : on relit le catalogue à chaque visite.
@@ -35,7 +37,10 @@ export const Route = createFileRoute("/")({
       ],
     };
   },
-  loader: ({ context }): Promise<Catalog> => context.queryClient.ensureQueryData(catalogQuery),
+  loader: async ({ context }): Promise<Catalog> => {
+    const [catalog] = await Promise.all([context.queryClient.ensureQueryData(catalogQuery), context.queryClient.ensureQueryData(appsQuery)]);
+    return catalog;
+  },
   component: Home,
 });
 
@@ -72,6 +77,7 @@ function PlanCard({ plan, trex, details }: { plan: PlanCardData; trex: boolean; 
 
 function Home() {
   const { data } = useSuspenseQuery(catalogQuery);
+  const { data: apps } = useSuspenseQuery(appsQuery);
   const shop = data.shop;
   const shopName = shop.name ?? null;
   const [category, setCategory] = useState<Category | null>(null);
@@ -200,6 +206,11 @@ function Home() {
               </div>
             )}
           </section>
+        )}
+        {category === null && apps && (
+          <div className="mt-12">
+            <DownloadApps data={apps} />
+          </div>
         )}
       </main>
       <SiteFooter name={shopName} slogan={shop.slogan} />

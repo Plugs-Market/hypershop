@@ -104,6 +104,7 @@ export type ShopOrder = OrderProgress & {
 export const hypertv = {
   getShop: () => call<ShopInfo>("/shop"),
   getShopCached: () => cached<ShopInfo>("/shop"),
+  getApps: () => cached<unknown>("/apps"),
   getGuideCategories: () => cached<GuideCategoriesResponse>("/guides/categories"),
   listGuides: (category?: string) =>
     cached<GuidesListResponse>("/guides" + (category ? `?category=${encodeURIComponent(category)}` : "")),
