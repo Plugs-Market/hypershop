@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Tv } from "lucide-react";
+import { ShoppingBag, Tv } from "lucide-react";
 
 export function SiteHeader({ name, logoUrl }: { name?: string | null; logoUrl?: string | null }) {
   const brand = (name ?? "").trim() || "Boutique";
@@ -20,8 +20,15 @@ export function SiteHeader({ name, logoUrl }: { name?: string | null; logoUrl?: 
           {parts.join(" ")}
           {last && <> <span className="text-primary">{last}</span></>}
         </Link>
-        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">Formules</Link>
+        <nav className="flex items-center">
+          <Link
+            to="/"
+            // Ramène aussi au choix des catégories quand on est déjà sur l'accueil.
+            onClick={() => window.dispatchEvent(new Event("shop:home"))}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+          >
+            <ShoppingBag className="h-4 w-4 text-primary" /> Boutique
+          </Link>
         </nav>
       </div>
     </header>
