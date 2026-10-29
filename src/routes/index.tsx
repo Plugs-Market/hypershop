@@ -37,75 +37,119 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+type Category = "hypertv" | "trex";
+
 function Home() {
   const { data } = useSuspenseQuery(catalogQuery);
   const shop = data.shop;
   const shopName = shop.name ?? null;
+  const [category, setCategory] = useState<Category | null>(null);
+  const categories: { id: Category; label: string; description: string; icon: typeof Tv; count: number }[] = [
+    {
+      id: "hypertv",
+      label: "Abonnements HyperTV",
+      description: "Formules HyperTV activées automatiquement sur votre appareil après paiement.",
+      icon: Tv,
+      count: data.plans.length,
+    },
+    {
+      id: "trex",
+      label: "Abonnements TREX",
+      description: "Lignes M3U prêtes pour votre application, avec abonnement HyperTV inclus selon la formule.",
+      icon: ListMusic,
+      count: data.trexPlans.length,
+    },
+  ];
   return (
     <div className="min-h-screen bg-gradient-hero">
       <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
-        <section className="py-16 text-center md:py-24">
+        <section className={category === null ? "py-16 text-center md:py-24" : "pt-10 pb-10 text-center md:pt-14 md:pb-12"}>
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
           </p>
-          <h1 className="mx-auto max-w-3xl text-4xl font-extrabold md:text-6xl">
+          <h1 className={`mx-auto max-w-3xl font-extrabold ${category === null ? "text-4xl md:text-6xl" : "text-3xl md:text-4xl"}`}>
             {shop.description ?? <>Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes</>}
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
-            {shop.slogan ?? "Choisissez une formule, saisissez l'adresse MAC de votre appareil, c'est tout."}
-          </p>
+          {category === null && (
+            <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
+              {shop.slogan ?? "Choisissez une catégorie, saisissez l'adresse MAC de votre appareil, c'est tout."}
+            </p>
+          )}
         </section>
 
         {data.error && <p className="text-center text-destructive">{data.error}</p>}
         {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && (
           <p className="text-center text-muted-foreground">Aucune formule disponible pour le moment.</p>
         )}
-        {data.plans.length > 0 && <h2 className="mb-5 text-2xl font-bold">Abonnements HyperTV</h2>}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {data.plans.map((p) => (
-            <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
-              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
-              <div className="flex flex-1 flex-col p-6">
-              <h2 className="text-xl font-bold">{p.name}</h2>
-              {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
-              <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
-              <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
-                <li className="flex items-center gap-2"><MonitorSmartphone className="h-4 w-4 text-primary" /> {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</li>
-                {p.features.map((f) => <li key={f} className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> {f}</li>)}
-              </ul>
-              <div className="mt-auto pt-6">
-              {p.price_cents !== null ? (
-                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Acheter</Link></Button>
-              ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
-              </div>
-              </div>
-            </article>
-          ))}
-        </div>
-        {data.trexPlans.length > 0 && (
-          <section className="mt-12" aria-labelledby="trex-title">
-            <h2 id="trex-title" className="mb-5 text-2xl font-bold">Abonnements TREX</h2>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.trexPlans.map((p) => (
-                <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
-                  {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="text-xl font-bold">{p.name}</h3>
-                    {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
-                    <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
-                    <div className="mt-5 flex flex-wrap gap-2 text-xs">
-                      <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
-                      {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
-                    </div>
-                    <div className="mt-auto pt-6">
-                      {p.price_cents !== null ? <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }} search={{ type: "trex" }}>Acheter</Link></Button> : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
-                    </div>
-                  </div>
-                </article>
-              ))}
+
+        {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0) && category === null && (
+          <section aria-label="Choisissez une catégorie" className="grid gap-5 sm:grid-cols-2">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategory(c.id)}
+                className="group flex items-center gap-5 rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
+              >
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-primary shadow-glow">
+                  <c.icon className="h-7 w-7 text-primary-foreground" />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-xl font-bold">{c.label}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{c.description}</span>
+                  <span className="mt-2 block text-xs font-medium text-primary">
+                    {c.count > 0 ? `${c.count} formule${c.count > 1 ? "s" : ""} disponible${c.count > 1 ? "s" : ""}` : "Bientôt disponible"}
+                  </span>
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:text-primary" />
+              </button>
+            ))}
+          </section>
+        )}
+
+        {!data.error && category !== null && (
+          <section aria-label={category === "hypertv" ? "Abonnements HyperTV" : "Abonnements TREX"}>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
+                <ArrowLeft className="h-4 w-4" /> Toutes les catégories
+              </Button>
             </div>
+            {categories.find((c) => c.id === category)?.count === 0 ? (
+              <p className="text-center text-muted-foreground">Aucune formule disponible dans cette catégorie pour le moment.</p>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {(category === "hypertv" ? data.plans : data.trexPlans).map((p) => (
+                  <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
+                    {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
+                    <div className="flex flex-1 flex-col p-6">
+                      <h2 className="text-xl font-bold">{p.name}</h2>
+                      {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
+                      <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
+                      {category === "hypertv" ? (
+                        <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                          <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
+                          <li className="flex items-center gap-2"><MonitorSmartphone className="h-4 w-4 text-primary" /> {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</li>
+                          {p.features.map((f) => <li key={f} className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> {f}</li>)}
+                        </ul>
+                      ) : (
+                        <div className="mt-5 flex flex-wrap gap-2 text-xs">
+                          <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
+                          {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
+                        </div>
+                      )}
+                      <div className="mt-auto pt-6">
+                        {p.price_cents !== null ? (
+                          <Button asChild variant="hero" className="w-full">
+                            <Link to="/commander/$planId" params={{ planId: p.id }} {...(category === "trex" ? { search: { type: "trex" } } : {})}>Acheter</Link>
+                          </Button>
+                        ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </main>
