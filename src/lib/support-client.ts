@@ -40,14 +40,17 @@ export async function shareTicketKey(ticketId: string, key: CryptoKey, devices: 
 export function rememberTicketKey(id: string, key: CryptoKey) { keyCache.set(id, key); }
 
 // Lit un ticket et renvoie sa clé déchiffrée (null si cet appareil n'y a pas accès).
-export async function loadTicket(id: string, device: DeviceRecord, after?: string) {
-  const detail = await getSupportTicket({ data: { id, deviceId: device.deviceId, ...(after ? { after } : {}) } });
+export type TicketReadOptions = { after?: string | undefined; includeDevices?: boolean | undefined; etag?: string | null | undefined };
+export async function loadTicket(id: string, device: DeviceRecord, opts: TicketReadOptions = {}) {
+  const res = await getSupportTicket({ data: { id, deviceId: device.deviceId, ...(opts.after ? { after: opts.after } : {}), ...(opts.includeDevices ? { includeDevices: true } : {}), ...(opts.etag ? { etag: opts.etag } : {}) } });
+  if (res.notModified) return { notModified: true as const, detail: null, key: keyCache.get(id) ?? null };
+  const detail = res;
   let key = keyCache.get(id) ?? null;
   if (!key && detail.key) {
     try { key = await unwrapTicketKey(detail.key, device.privateKey); keyCache.set(id, key); } catch { key = null; }
   }
   if (key && detail.devices.length) await shareTicketKey(id, key, detail.devices, device).catch(() => null);
-  return { detail, key };
+  return { notModified: false as const, detail, key };
 }
 
 // SSE relayé par la boutique ; repli sur un sondage toutes les 3 s.

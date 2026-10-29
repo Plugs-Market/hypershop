@@ -5,7 +5,7 @@ import { ArrowLeft, Check, CheckCheck, ImagePlus, Lock, RotateCcw, Send, X } fro
 import { getAccountStatus } from "@/lib/account.functions";
 import { getSupportAttachment, markSupportRead, requestSupportUploads, sendSupportMessage, setSupportStatus } from "@/lib/support.functions";
 import { attachmentsError, categoryLabel, mergeById, readMessageId, SUPPORT_ERRORS, supportStatusLabel, type Attachment, type MessagePayload } from "@/lib/support";
-import { decryptBytes, decryptJson, encryptBytes, encryptJson } from "@/lib/support-crypto";
+import { decryptBytes, decryptJson, encryptBytes, encryptJson, readTicketCache, writeTicketCache, type TicketCache } from "@/lib/support-crypto";
 import { loadTicket, useSupportContext, useSupportLive } from "@/lib/support-client";
 import { shopQuery } from "./mon-compte";
 import { SupportStatusBadge } from "./mon-compte_.support";
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/mon-compte_/support_/$id")({
 });
 
 type Msg = { id: string; from: "customer" | "staff"; createdAt: string; statusChange: string | null; text: string; atts: Attachment[] };
+const isLocal = (m: Msg) => m.id.startsWith("local-");
 const time = (iso: string) => { const d = new Date(iso); return isNaN(d.getTime()) ? "" : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
 
 function Conversation() {
@@ -56,30 +57,89 @@ function Conversation() {
     setError(m);
   }, [navigate]);
 
-  const load = useCallback(async (full = false) => {
+  const etag = useRef<string | null>(null);
+  const loaded = useRef(false);
+  const running = useRef<Promise<void> | null>(null);
+  const again = useRef(false);
+  const msgsRef = useRef<Msg[]>([]);
+  msgsRef.current = msgs;
+  const persist = useCallback((patch: Partial<TicketCache<Msg>>) => {
+    if (!ctx) return;
+    const t = ticketRef.current;
+    if (!t) return;
+    void writeTicketCache<Msg>(ctx.customerId, id, { status: t.status, category: t.category, subject: t.subject, staffReadAt: staffReadRef.current, etag: etag.current, messages: msgsRef.current.filter((m) => !isLocal(m)), ...patch });
+  }, [ctx, id]);
+  const ticketRef = useRef(ticket);
+  ticketRef.current = ticket;
+  const staffReadRef = useRef(staffReadAt);
+  staffReadRef.current = staffReadAt;
+
+  const readOnce = useCallback(async (full: boolean) => {
     if (!ctx) return;
     try {
-      if (full) lastAt.current = undefined;
-      const { detail, key: k } = await loadTicket(id, ctx.device, lastAt.current);
+      if (full) { lastAt.current = undefined; etag.current = null; }
+      const first = !loaded.current || full;
+      const { notModified, detail, key: k } = await loadTicket(id, ctx.device, { after: lastAt.current, includeDevices: first, etag: etag.current });
+      loaded.current = true;
+      if (notModified || !detail) return;
+      etag.current = detail.etag ?? null;
       if (!k) { setNoKey(true); setTicket({ status: detail.ticket.status, category: detail.ticket.category, subject: null }); return; }
       setKey(k);
-      const subj = detail.ticket.subject ? await decryptJson<string | { t?: string }>(k, detail.ticket.subject).catch(() => null) : null;
-      setTicket((p) => ({ status: detail.ticket.status, category: detail.ticket.category, subject: (typeof subj === "string" ? subj : subj?.t) ?? p?.subject ?? null }));
-      setStaffReadAt(detail.staffReadAt);
-      const decoded = await Promise.all(detail.messages.map(async (m): Promise<Msg> => {
+      let subject = ticketRef.current?.subject ?? null;
+      if (!subject && detail.ticket.subject) {
+        const subj = await decryptJson<string | { t?: string }>(k, detail.ticket.subject).catch(() => null);
+        subject = (typeof subj === "string" ? subj : subj?.t) ?? null;
+      }
+      const nextTicket = { status: detail.ticket.status, category: detail.ticket.category, subject };
+      setTicket(nextTicket); ticketRef.current = nextTicket;
+      if (detail.staffReadAt) { setStaffReadAt(detail.staffReadAt); staffReadRef.current = detail.staffReadAt; }
+      const known = new Set(msgsRef.current.map((m) => m.id));
+      const fresh = detail.messages.filter((m) => full || !known.has(m.id));
+      const decoded = await Promise.all(fresh.map(async (m): Promise<Msg> => {
         const p = await decryptJson<MessagePayload>(k, m).catch(() => ({ t: "Message illisible sur cet appareil" } as MessagePayload));
         return { id: m.id, from: m.from, createdAt: m.createdAt, statusChange: m.statusChange, text: p.t ?? "", atts: Array.isArray(p.atts) ? p.atts : [] };
       }));
-      if (decoded.length) {
-        lastAt.current = decoded[decoded.length - 1]?.createdAt || lastAt.current;
-        if (decoded.some((m) => m.from === "staff")) void markSupportRead({ data: { id } }).catch(() => null);
-      }
-      setMsgs((old) => (full ? decoded : mergeById(old, decoded)));
+      const lastServer = detail.messages[detail.messages.length - 1]?.createdAt;
+      if (lastServer && (!lastAt.current || lastServer > lastAt.current)) lastAt.current = lastServer;
+      if (decoded.some((m) => m.from === "staff")) void markSupportRead({ data: { id } }).catch(() => null);
+      const base = full ? msgsRef.current.filter(isLocal) : msgsRef.current;
+      const withoutTemps = decoded.some((m) => m.from === "customer") ? base.filter((m) => !isLocal(m)) : base;
+      const next = mergeById(withoutTemps, decoded);
+      msgsRef.current = next;
+      setMsgs(next);
+      persist({ messages: next.filter((m) => !isLocal(m)) });
       setError(null);
     } catch (e) { handle(e); }
-  }, [ctx, id, handle]);
+  }, [ctx, id, handle, persist]);
 
-  useEffect(() => { if (ctx) { void load(true); void markSupportRead({ data: { id } }).catch(() => null); } }, [ctx, id, load]);
+  // Lectures sérialisées : un événement pendant une lecture en relance une seule après.
+  const load = useCallback(async (full = false) => {
+    if (running.current) { again.current = true; return running.current; }
+    const run = (async () => {
+      await readOnce(full);
+      while (again.current) { again.current = false; await readOnce(false); }
+    })().finally(() => { running.current = null; });
+    running.current = run;
+    return run;
+  }, [readOnce]);
+
+  useEffect(() => {
+    if (!ctx) return;
+    let alive = true;
+    (async () => {
+      const cached = await readTicketCache<Msg>(ctx.customerId, id);
+      if (alive && cached && cached.messages.length) {
+        msgsRef.current = cached.messages;
+        setMsgs(cached.messages);
+        setTicket({ status: cached.status, category: cached.category, subject: cached.subject });
+        setStaffReadAt(cached.staffReadAt);
+        lastAt.current = cached.messages[cached.messages.length - 1]?.createdAt || undefined;
+      }
+      if (alive) await load();
+    })();
+    void markSupportRead({ data: { id } }).catch(() => null);
+    return () => { alive = false; };
+  }, [ctx, id, load]);
   useEffect(() => { if (ctxError) handle(ctxError); }, [ctxError, handle]);
   useEffect(() => {
     const area = messagesArea.current;
@@ -145,7 +205,10 @@ function Conversation() {
           </div>
         </div>
 
-        {key && ticket?.status !== "closed" && <Composer ticketId={id} ticketKey={key} name={ctx?.username ?? null} onSent={() => load()} onError={handle} />}
+        {key && ticket?.status !== "closed" && <Composer ticketId={id} ticketKey={key} name={ctx?.username ?? null} onSent={() => load()} onError={handle}
+          onOptimistic={(m) => setMsgs((old) => { const next = mergeById(old, [m]); msgsRef.current = next; return next; })}
+          onConfirmed={(tempId, real) => setMsgs((old) => { const next = real ? old.map((m) => (m.id === tempId ? { ...m, ...real } : m)) : old; msgsRef.current = next; return next; })}
+          onFailed={(tempId) => setMsgs((old) => { const next = old.filter((m) => m.id !== tempId); msgsRef.current = next; return next; })} />}
       </div>
     </GuidesShell>
   );
@@ -163,7 +226,10 @@ function ConfirmStatus({ label, icon, text, onConfirm }: { label: string; icon: 
   );
 }
 
-function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: string; ticketKey: CryptoKey; name: string | null; onSent: () => Promise<void>; onError: (e: unknown) => void }) {
+function Composer({ ticketId, ticketKey, name, onSent, onError, onOptimistic, onConfirmed, onFailed }: {
+  ticketId: string; ticketKey: CryptoKey; name: string | null; onSent: () => Promise<void>; onError: (e: unknown) => void;
+  onOptimistic: (m: Msg) => void; onConfirmed: (tempId: string, real: { id: string; createdAt: string } | null) => void; onFailed: (tempId: string) => void;
+}) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -187,6 +253,8 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
   async function send() {
     if (busy || (!text.trim() && !files.length)) return;
     setBusy(true); setErr(null);
+    let tempId: string | null = null;
+    const draft = text, draftFiles = files;
     try {
       const atts: Attachment[] = [];
       if (files.length) {
@@ -202,10 +270,16 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
         }));
       }
       const payload: MessagePayload = { t: text.trim(), ...(name ? { n: name } : {}), ...(atts.length ? { atts } : {}) };
-      await sendSupportMessage({ data: { id: ticketId, ...(await encryptJson(ticketKey, payload)) } });
+      const cipher = await encryptJson(ticketKey, payload);
+      tempId = `local-${crypto.randomUUID()}`;
+      onOptimistic({ id: tempId, from: "customer", createdAt: new Date().toISOString(), statusChange: null, text: payload.t ?? "", atts });
       setText(""); setFiles([]);
+      const sent = await sendSupportMessage({ data: { id: ticketId, ...cipher } });
+      onConfirmed(tempId, sent.id && sent.createdAt ? { id: sent.id, createdAt: sent.createdAt } : null);
+      tempId = null;
       await onSent();
     } catch (e) {
+      if (tempId) { onFailed(tempId); setText(draft); setFiles(draftFiles); }
       const m = e instanceof Error ? e.message : "Envoi impossible.";
       if (m === SUPPORT_ERRORS.session || m === SUPPORT_ERRORS.notFound) onError(e); else setErr(m);
     } finally { setBusy(false); }

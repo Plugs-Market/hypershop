@@ -81,16 +81,19 @@ export type DeviceRecord = { deviceId: string; privateKey: CryptoKey; publicJwk:
 const DB = "hypertv-support";
 function db(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("devices");
+    const r = indexedDB.open(DB, 2);
+    r.onupgradeneeded = () => {
+      if (!r.result.objectStoreNames.contains("devices")) r.result.createObjectStore("devices");
+      if (!r.result.objectStoreNames.contains("tickets")) r.result.createObjectStore("tickets");
+    };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
   });
 }
-async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>, store = "devices"): Promise<T> {
   const d = await db();
   return new Promise<T>((resolve, reject) => {
-    const req = fn(d.transaction("devices", mode).objectStore("devices"));
+    const req = fn(d.transaction(store, mode).objectStore(store));
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   }).finally(() => d.close());
@@ -111,4 +114,15 @@ export async function clearSupportDevices(): Promise<void> {
     const r = indexedDB.deleteDatabase(DB);
     r.onsuccess = r.onerror = r.onblocked = () => resolve();
   });
+}
+
+// Cache local des messages déjà déchiffrés (par client + ticket), jamais envoyé au serveur.
+export type TicketCache<M = unknown> = { status: string; category: string; subject: string | null; staffReadAt: string | null; etag: string | null; messages: M[] };
+export async function readTicketCache<M>(customerId: string, ticketId: string): Promise<TicketCache<M> | null> {
+  if (typeof indexedDB === "undefined") return null;
+  try { return (await tx<TicketCache<M> | undefined>("readonly", (s) => s.get(`${customerId}:${ticketId}`), "tickets")) ?? null; } catch { return null; }
+}
+export async function writeTicketCache<M>(customerId: string, ticketId: string, value: TicketCache<M>): Promise<void> {
+  if (typeof indexedDB === "undefined") return;
+  try { await tx("readwrite", (s) => s.put(value, `${customerId}:${ticketId}`), "tickets"); } catch { /* cache facultatif */ }
 }
