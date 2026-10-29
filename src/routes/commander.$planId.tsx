@@ -110,7 +110,7 @@ function Checkout() {
               {buyable.map((p) => (
                 <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
                   className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? <>{trexLineLabels(p.line).map((lbl, i) => <span key={i} className="block break-words">{lbl}</span>)}</> : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? null : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
                   <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
                 </Button>
               ))}
