@@ -24,18 +24,18 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
           {guidesEnabled && (
             <Link
               to="/guides"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-2 sm:px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
             >
-              <BookOpen className="h-4 w-4 text-primary" /> Guides
+              <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Guides</span>
             </Link>
           )}
           <Link
             to="/"
             // Ramène aussi au choix des catégories quand on est déjà sur l'accueil.
             onClick={() => window.dispatchEvent(new Event("shop:home"))}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-2 sm:px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
           >
-            <ShoppingBag className="h-4 w-4 text-primary" /> Boutique
+            <ShoppingBag className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Boutique</span>
           </Link>
         </nav>
       </div>
