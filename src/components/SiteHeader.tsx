@@ -6,7 +6,7 @@ export function SiteHeader({ name, logoUrl }: { name?: string | null; logoUrl?: 
   const parts = brand.split(/\s+/);
   const last = parts.length > 1 ? parts.pop() : null;
   return (
-    <header className="border-b border-border/60 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
           {logoUrl ? (
