@@ -11,14 +11,16 @@ type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
-    const data = loaderData as { shopName?: string | null } | undefined;
-    const shopName = data?.shopName ?? "Boutique";
+    const data = loaderData as Catalog | undefined;
+    const shop = data?.shop;
+    const shopName = shop?.name ?? "Boutique";
+    const desc = shop?.description ?? shop?.slogan ?? "Choisissez votre formule et activez votre appareil automatiquement après paiement.";
     return {
       meta: [
         { title: `${shopName} — Abonnements activés instantanément` },
-        { name: "description", content: "Choisissez votre formule et activez votre appareil automatiquement après paiement." },
+        { name: "description", content: desc },
         { property: "og:title", content: `${shopName} — Abonnements activés instantanément` },
-        { property: "og:description", content: "Formules, activation automatique sur votre appareil." },
+        { property: "og:description", content: desc },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },
       ],
@@ -30,20 +32,21 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data } = useSuspenseQuery(catalogQuery);
-  const shopName = data.shopName ?? null;
+  const shop = data.shop;
+  const shopName = shop.name ?? null;
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader name={shopName} />
+      <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
         <section className="py-16 text-center md:py-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
           </p>
           <h1 className="mx-auto max-w-3xl text-4xl font-extrabold md:text-6xl">
-            Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes
+            {shop.description ?? <>Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes</>}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
-            Choisissez une formule, saisissez l'adresse MAC de votre appareil, c'est tout.
+            {shop.slogan ?? "Choisissez une formule, saisissez l'adresse MAC de votre appareil, c'est tout."}
           </p>
         </section>
 
