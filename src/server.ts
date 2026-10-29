@@ -49,7 +49,8 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      if (new URL(request.url).pathname.startsWith("/commande/") || new URL(request.url).pathname === "/mon-compte") {
+      const path = new URL(request.url).pathname;
+      if (path.startsWith("/commande/") || path === "/mon-compte" || path.startsWith("/mon-compte/") || path === "/api/support-stream") {
         response.headers.set("Cache-Control", "no-store");
         response.headers.set("Referrer-Policy", "no-referrer");
       }
