@@ -89,7 +89,7 @@ function Home() {
     {
       id: "trex",
       label: "TREX",
-      description: "Lignes M3U prêtes automatiquement sur votre application, avec abonnement HYPERTV inclus selon la formule.",
+      description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       icon: ListMusic,
       count: data.trexPlans.length,
     },
