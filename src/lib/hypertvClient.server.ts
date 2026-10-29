@@ -1,5 +1,6 @@
 // Seul module qui parle à l'API HyperTV. Serveur uniquement.
 import type { OffersResponse } from "./shop-offers";
+import type { OrderInput, OrderProgress } from "./shop-order";
 
 const BASE_URL = "https://hypertv.win/api/public/shop/v1";
 
@@ -69,11 +70,12 @@ export type OrderPayment = {
   memo?: string | null;
 };
 
-export type ShopOrder = {
+export type ShopOrder = OrderProgress & {
   id: string;
   state: string;
   plan: string;
-  planId: string;
+  planId?: string;
+  trexPlanId?: string;
   priceEur: number;
   mac: string;
   email: string;
@@ -87,7 +89,7 @@ export const hypertv = {
   getOffers: () => call<OffersResponse>("/offers"),
   getPaymentMethods: () => call<{ methods: PaymentMethod[] }>("/payment-methods"),
   // L'API enveloppe la commande dans { order: … } ; on accepte aussi la réponse directe.
-  createOrder: async (body: { mac: string; planId: string; email: string; method: string; idempotencyKey: string }) => {
+  createOrder: async (body: OrderInput) => {
     const json = await call<ShopOrder | { order: ShopOrder }>("/orders", { method: "POST", body });
     return "order" in json ? json.order : json;
   },

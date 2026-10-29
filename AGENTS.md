@@ -14,4 +14,5 @@
 - Orders are created and tracked through the HyperTV API (POST /orders, GET /orders/{id}); the local orders table is legacy and unused. Never call POST /activate for customer orders — HyperTV credits the reseller wallet and activates the subscription automatically once payment is confirmed.
 - Displayed and charged prices always come from the HyperTV API (price_eur); never compute or send prices from the browser. The checkout idempotency key is generated once per attempt in the form state so a double click cannot create two orders.
 - No accounts, login or admin pages in the shop: catalog, prices and customers are managed in the HyperTV reseller panel and read only through its API.
-- Normalize subscription offers in src/lib/shop-offers.ts for both catalog and checkout so visibility and purchasability cannot diverge; reseller credit packs are never subscription products.
+- Normalize HyperTV and TREX offers in src/lib/shop-offers.ts for both catalog and checkout so visibility and purchasability cannot diverge; reseller credit packs are never subscription products.
+- TREX reuses the existing checkout route with a product-type search parameter; src/lib/shop-order.ts validates exactly one product identifier, preserves retry keys for unchanged attempts, and centralizes activation progress and polling rules to prevent divergent checkout/tracking behavior.
