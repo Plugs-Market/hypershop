@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
+import { ArrowLeft, ChevronRight, CircleCheck, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
 import { getCatalog } from "@/lib/shop.functions";
+import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,21 @@ function Home() {
                       />
                     ))
                   : data.trexPlans.map((p) => (
-                      <PlanCard key={p.id} plan={p} trex details={null} />
+                      <PlanCard
+                        key={p.id}
+                        plan={p}
+                        trex
+                        details={
+                          <ul className="mt-5 space-y-2 text-xs">
+                            {trexLineLabels(p.line).map((lbl, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                <span className="min-w-0 break-words">{lbl}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        }
+                      />
                     ))}
               </div>
             )}
