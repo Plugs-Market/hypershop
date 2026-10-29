@@ -10,6 +10,7 @@ import { cipherSchema, normalizeDevices, normalizeTicketDetail, normalizeTicketS
 const rec = (v: unknown): any => (v && typeof v === "object" ? v : {});
 const id = z.string().min(1).max(150);
 const b64 = z.string().min(1).max(20_000);
+export const supportTicketInput = z.object({ id, deviceId: id, after: z.string().max(60).optional(), includeDevices: z.boolean().optional(), etag: z.string().max(200).optional() });
 
 async function supportCall<T>(run: (session: string) => Promise<T>): Promise<T> {
   setResponseHeader("Cache-Control", "no-store");
@@ -65,12 +66,20 @@ export const addSupportKeys = createServerFn({ method: "POST" })
   .handler(({ data }) => supportCall(async (session) => { await hypertv.supportKeys(session, data.id, data.keys); return { ok: true }; }));
 
 export const getSupportTicket = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ id, deviceId: id, after: z.string().max(60).optional() }).parse(d))
-  .handler(({ data }) => supportCall(async (session) => normalizeTicketDetail(await hypertv.supportTicket(session, data.id, data.deviceId, data.after))));
+  .inputValidator((d: unknown) => supportTicketInput.parse(d))
+  .handler(({ data }) => supportCall(async (session) => {
+    const r = await hypertv.supportTicket(session, data.id, data.deviceId, { after: data.after, includeDevices: data.includeDevices, etag: data.etag });
+    if (r.status === 304) return { notModified: true as const };
+    return { notModified: false as const, etag: r.etag, ...normalizeTicketDetail(r.data) };
+  }));
 
 export const sendSupportMessage = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => cipherSchema.extend({ id }).parse(d))
-  .handler(({ data }) => supportCall(async (session) => { await hypertv.supportMessage(session, data.id, { ct: data.ct, iv: data.iv }); return { ok: true }; }));
+  .handler(({ data }) => supportCall(async (session) => {
+    const r = rec(await hypertv.supportMessage(session, data.id, { ct: data.ct, iv: data.iv }));
+    const m = rec(r.message ?? r);
+    return { ok: true, id: typeof m.id === "string" ? m.id : null, createdAt: typeof m.createdAt === "string" ? m.createdAt : null };
+  }));
 
 export const requestSupportUploads = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id, files: z.array(z.object({ mime: z.string().regex(/^image\/[\w.+-]+$/), size: z.number().int().positive().max(10 * 1024 * 1024 + 64) })).min(1).max(6) }).parse(d))

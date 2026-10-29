@@ -15,6 +15,10 @@ export class HypertvError extends Error {
 }
 
 async function call<T>(path: string, init?: { method?: string; body?: unknown; session?: string }): Promise<T> {
+  return (await request<T>(path, init)).data as T;
+}
+
+async function request<T>(path: string, init?: { method?: string; body?: unknown; session?: string; headers?: Record<string, string> }): Promise<{ data: T | null; status: number; etag: string | null }> {
   const key = process.env["HYPERTV_SHOP_KEY"];
   if (!key) throw new HypertvError(500, "unauthorized", "Clé boutique absente");
   let res: Response;
@@ -22,7 +26,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown; s
     res = await fetch(BASE_URL + path, {
       method: init?.method ?? "GET",
       ...(init?.session ? { cache: "no-store" as const } : {}),
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init?.session ? { "X-Customer-Session": init.session } : {}) },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init?.session ? { "X-Customer-Session": init.session } : {}), ...(init?.headers ?? {}) },
       ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
       signal: AbortSignal.timeout(15000),
     });
@@ -32,6 +36,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown; s
       throw new HypertvError(0, "timeout", "Délai dépassé");
     throw new HypertvError(0, "network_error", "Erreur réseau");
   }
+  if (res.status === 304) return { data: null, status: 304, etag: res.headers.get("ETag") };
   let json: any = null;
   try {
     json = await res.json();
@@ -43,7 +48,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown; s
     const message = typeof json?.message === "string" ? json.message : err;
     throw new HypertvError(res.status, err, message);
   }
-  return json as T;
+  return { data: json as T, status: res.status, etag: res.headers.get("ETag") };
 }
 
 export type ShopInfo = {
@@ -154,10 +159,10 @@ export const hypertv = {
   supportCreate: (session: string, body: unknown) => call<unknown>("/account/support/tickets", { method: "POST", body, session }),
   supportKeys: (session: string, id: string, keys: unknown[]) =>
     call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/keys`, { method: "POST", body: { keys }, session }),
-  supportTicket: (session: string, id: string, deviceId: string, after?: string) =>
-    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}?${new URLSearchParams({ deviceId, ...(after ? { after } : {}) })}`, { session }),
+  supportTicket: (session: string, id: string, deviceId: string, opts: { after?: string; includeDevices?: boolean; etag?: string } = {}) =>
+    request<unknown>(`/account/support/tickets/${encodeURIComponent(id)}?${new URLSearchParams({ deviceId, ...(opts.after ? { after: opts.after } : {}), ...(opts.includeDevices ? { include: "devices" } : {}) })}`, { session, ...(opts.etag ? { headers: { "If-None-Match": opts.etag } } : {}) }),
   supportMessage: (session: string, id: string, body: { ct: string; iv: string }) =>
-    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/messages`, { method: "POST", body, session }),
+    call<any>(`/account/support/tickets/${encodeURIComponent(id)}/messages`, { method: "POST", body, session }),
   supportUploads: (session: string, id: string, files: { mime: string; size: number }[]) =>
     call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/attachments`, { method: "POST", body: { files }, session }),
   supportAttachment: (session: string, id: string, path: string) =>
