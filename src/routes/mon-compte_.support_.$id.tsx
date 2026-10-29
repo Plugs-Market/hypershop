@@ -254,6 +254,7 @@ function Composer({ ticketId, ticketKey, name, onSent, onError, onOptimistic, on
     if (busy || (!text.trim() && !files.length)) return;
     setBusy(true); setErr(null);
     let tempId: string | null = null;
+    const draft = text, draftFiles = files;
     try {
       const atts: Attachment[] = [];
       if (files.length) {
@@ -278,7 +279,7 @@ function Composer({ ticketId, ticketKey, name, onSent, onError, onOptimistic, on
       tempId = null;
       await onSent();
     } catch (e) {
-      if (tempId) onFailed(tempId);
+      if (tempId) { onFailed(tempId); setText(draft); setFiles(draftFiles); }
       const m = e instanceof Error ? e.message : "Envoi impossible.";
       if (m === SUPPORT_ERRORS.session || m === SUPPORT_ERRORS.notFound) onError(e); else setErr(m);
     } finally { setBusy(false); }
