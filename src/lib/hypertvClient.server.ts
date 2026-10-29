@@ -1,18 +1,9 @@
 // Seul module qui parle à l'API HyperTV. Serveur uniquement.
+import type { OffersResponse } from "./shop-offers";
+
 const BASE_URL = "https://hypertv.win/api/public/shop/v1";
 
-export type SubscriptionPlan = {
-  id: string;
-  name: string;
-  duration_days: number;
-  max_devices: number;
-  reseller_credits: number;
-  description?: string | null;
-  features?: string[];
-  cover_url?: string | null;
-  // Prix public si le panel HyperTV le fournit (pas encore renvoyé par l'API).
-  price_eur?: number | null;
-};
+export type { SubscriptionPlan } from "./shop-offers";
 export type Customer = {
   mac: string;
   username: string;
@@ -78,8 +69,7 @@ export type ShopInfo = {
 
 export const hypertv = {
   getShop: () => call<ShopInfo>("/shop"),
-  getOffers: () =>
-    call<{ resellerOffers: unknown[]; subscriptionPlans: SubscriptionPlan[] }>("/offers"),
+  getOffers: () => call<OffersResponse>("/offers"),
   getBalance: () => call<{ credits: number }>("/balance"),
   getCustomers: () => call<{ customers: Customer[] }>("/customers"),
   activate: (body: { mac: string; planId: string; idempotencyKey: string }) =>
