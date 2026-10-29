@@ -14,14 +14,14 @@ export class HypertvError extends Error {
   }
 }
 
-async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+async function call<T>(path: string, init?: { method?: string; body?: unknown; session?: string }): Promise<T> {
   const key = process.env["HYPERTV_SHOP_KEY"];
   if (!key) throw new HypertvError(500, "unauthorized", "Clé boutique absente");
   let res: Response;
   try {
     res = await fetch(BASE_URL + path, {
       method: init?.method ?? "GET",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init?.session ? { "X-Customer-Session": init.session } : {}) },
       ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
       signal: AbortSignal.timeout(15000),
     });
@@ -133,4 +133,12 @@ export const hypertv = {
     call<{ url: string }>(`/orders/${encodeURIComponent(id)}/stripe-checkout`, { method: "POST", body: { returnUrl } }),
   paypalTxid: (id: string, body: { txid: string; paypalEmail: string; name: string }) =>
     call<{ ok: boolean }>(`/orders/${encodeURIComponent(id)}/paypal-txid`, { method: "POST", body }),
+  login: (accessKey: string) =>
+    call<{ mfaRequired?: boolean; session?: string; mfaToken?: string }>("/account/login", { method: "POST", body: { accessKey } }),
+  loginMfa: (mfaToken: string, code: string) =>
+    call<{ session?: string }>("/account/login/mfa", { method: "POST", body: { mfaToken, code } }),
+  getAccount: (session: string) => call<unknown>("/account", { session }),
+  updateAccount: (session: string, username: string) =>
+    call<unknown>("/account", { method: "PATCH", body: { username }, session }),
+  logout: (session: string) => call<unknown>("/account/logout", { method: "POST", session }),
 };
