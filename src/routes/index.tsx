@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
@@ -73,6 +73,11 @@ function Home() {
   const shop = data.shop;
   const shopName = shop.name ?? null;
   const [category, setCategory] = useState<Category | null>(null);
+  useEffect(() => {
+    const reset = () => { setCategory(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    window.addEventListener("shop:home", reset);
+    return () => window.removeEventListener("shop:home", reset);
+  }, []);
   const categories: { id: Category; label: string; description: string; icon: typeof Tv; count: number }[] = [
     {
       id: "hypertv",
