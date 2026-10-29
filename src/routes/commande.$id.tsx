@@ -102,7 +102,7 @@ function OrderPage() {
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
             <dt className="text-muted-foreground">Prix</dt><dd className="text-right">{formatEur(order.priceEur)}</dd>
             <dt className="text-muted-foreground">Appareil (MAC)</dt><dd className="text-right font-mono">{order.mac}</dd>
-            <dt className="text-muted-foreground">Email</dt><dd className="truncate text-right">{order.email}</dd>
+            {order.email && <><dt className="text-muted-foreground">Email</dt><dd className="truncate text-right">{order.email}</dd></>}
             {order.payment?.label && (
               <>
                 <dt className="text-muted-foreground">Paiement</dt><dd className="text-right">{order.payment.label}</dd>

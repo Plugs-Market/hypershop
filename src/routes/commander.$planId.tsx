@@ -60,7 +60,6 @@ function Checkout() {
   const create = useServerFn(createOrder);
   const [selected, setSelected] = useState(planId);
   const [mac, setMac] = useState("");
-  const [email, setEmail] = useState("");
   const [method, setMethod] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,6 +69,7 @@ function Checkout() {
   const available = isTrex ? data.trexPlans : data.plans;
   const buyable = available.filter((p): p is typeof p & { price_cents: number } => p.price_cents !== null);
   const plan = buyable.find((p) => p.id === selected);
+  const isFree = plan?.price_cents === 0;
   const methods = methodsData.methods;
   const selectedMethod = methods.find((m) => m.code === method);
 
@@ -78,12 +78,11 @@ function Checkout() {
     if (submitting.current) return;
     setError(null);
     if (!isValidMac(mac)) return setError("Format attendu : XX:XX:XX:XX:XX:XX (chiffres 0-9 et lettres A-F).");
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setError("Adresse email invalide.");
     if (!plan) return setError("Choisissez une formule.");
-    if (!method) return setError("Choisissez un mode de paiement.");
+    if (!isFree && !method) return setError("Choisissez un mode de paiement.");
     submitting.current = true;
     setLoading(true);
-    const details = { email: email.trim(), mac: normalizeMac(mac), method };
+    const details = isFree ? { mac: normalizeMac(mac) } : { mac: normalizeMac(mac), method: method! };
     const product = isTrex ? { trexPlanId: plan.id } : { planId: plan.id };
     attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
@@ -122,10 +121,7 @@ function Checkout() {
             <Input id="mac" value={mac} onChange={(e) => setMac(e.target.value.toUpperCase())} placeholder="00:1A:79:AB:CD:EF" maxLength={17} className="font-mono" />
             <p className="text-xs text-muted-foreground">Visible dans HyperTV › Profil › Appareils MAG.</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" />
-          </div>
+          {!isFree && (
           <div className="space-y-2">
             <Label>Mode de paiement</Label>
             {methodsData.error && <p className="text-sm text-destructive">{methodsData.error}</p>}
@@ -146,6 +142,7 @@ function Checkout() {
               <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">{selectedMethod.instructions}</p>
             )}
           </div>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading || !plan}>
             {loading ? "Création…" : plan ? `Commander — ${formatPrice(plan.price_cents)}` : "Commander"}

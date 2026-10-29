@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { activationNotice, orderInputSchema, resolveOrderAttempt, shouldPollOrder, trexTimeline } from "@/lib/shop-order";
 
-const common = { mac: "00:1A:79:AB:CD:EF", email: "test@example.com", method: "btc", idempotencyKey: "12345678-1234-4123-8123-123456789abc" };
+const common = { mac: "00:1A:79:AB:CD:EF", method: "btc", idempotencyKey: "12345678-1234-4123-8123-123456789abc" };
 describe("commande TREX", () => {
   it("envoie trexPlanId à la place de planId", () => {
     const data = orderInputSchema.parse({ ...common, trexPlanId: "trex-12" });
