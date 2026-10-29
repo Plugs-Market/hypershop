@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Download, ShoppingBag, Tv, UserRound } from "lucide-react";
@@ -10,9 +11,33 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
   const brand = (name ?? "").trim() || "Boutique";
   const parts = brand.split(/\s+/);
   const last = parts.length > 1 ? parts.pop() : null;
+  const headerRef = useRef<HTMLElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
+  // Le contenu commence exactement sous la barre flottante, quel que soit le
+  // décalage appliqué par l'appareil (app iOS installée, navigateur…).
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    const spacer = spacerRef.current;
+    if (!header || !spacer) return;
+    const fit = () => {
+      const top = spacer.getBoundingClientRect().top + window.scrollY;
+      const bottom = header.getBoundingClientRect().bottom;
+      spacer.style.height = `${Math.max(0, Math.round(bottom - top))}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(header);
+    window.addEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("orientationchange", fit);
+    };
+  }, []);
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-50 px-2 pt-[calc(var(--safe-top)+0.5rem)] sm:px-4">
+    <header ref={headerRef} className="fixed inset-x-0 top-0 z-50 px-2 pt-[calc(var(--safe-top)+0.5rem)] sm:px-4">
       <div className="mx-auto grid h-14 max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/60 bg-background/75 px-3 shadow-lg backdrop-blur-md sm:flex sm:justify-between sm:px-4">
         <Link to="/" className="flex min-w-0 items-center gap-2 font-display text-base font-bold sm:text-lg">
           {logoUrl ? (
@@ -59,7 +84,7 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
         </nav>
       </div>
     </header>
-    <div aria-hidden className="h-[calc(var(--safe-top)+4.5rem)] shrink-0" />
+    <div ref={spacerRef} aria-hidden className="h-[calc(var(--safe-top)+4rem)] shrink-0" />
     </>
   );
 }
