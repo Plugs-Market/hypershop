@@ -9,25 +9,34 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/commande/$id")({
-  head: () => ({
-    meta: [
-      { title: "Suivi de commande — HyperTV" },
-      { name: "description", content: "Suivez le paiement et l'activation de votre abonnement HyperTV." },
-      { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Suivi de commande — HyperTV" },
-      { property: "og:description", content: "Suivi de votre commande HyperTV." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  loader: ({ params }) => getOrder({ data: { id: params.id } }),
+  head: ({ loaderData }) => {
+    const shopName = loaderData?.shop?.name ?? "Boutique";
+    return {
+      meta: [
+        { title: `Suivi de commande — ${shopName}` },
+        { name: "description", content: "Suivez le paiement et l'activation de votre abonnement." },
+        { name: "robots", content: "noindex" },
+        { property: "og:title", content: `Suivi de commande — ${shopName}` },
+        { property: "og:description", content: "Suivi de votre commande." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
+  loader: async ({ params }) => {
+    const [order, shop] = await Promise.all([
+      getOrder({ data: { id: params.id } }),
+      getShopInfo(),
+    ]);
+    return { order, shop };
+  },
   component: OrderPage,
 });
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 function OrderPage() {
-  const initial = Route.useLoaderData();
+  const { order: initial, shop } = Route.useLoaderData();
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
   const retry = useServerFn(retryActivation);

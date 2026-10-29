@@ -60,7 +60,7 @@ function Checkout() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader />
+      <SiteHeader name={data.shopName} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
