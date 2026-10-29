@@ -57,7 +57,7 @@ function SupportList() {
       setCanCreate(r.canCreate);
       const out = await Promise.all(r.tickets.map(async (t): Promise<Row> => {
         try {
-          const { key } = await loadTicket(t.id, ctx.device, t.lastMessageAt ?? undefined);
+          const { key } = await loadTicket(t.id, ctx.device, { after: t.lastMessageAt ?? undefined, includeDevices: true });
           const subjectText = key && t.subject ? await decryptJson<string | { t?: string }>(key, t.subject) : null;
           return { ...t, subjectText: typeof subjectText === "string" ? subjectText : subjectText?.t ?? null };
         } catch { return { ...t, subjectText: null }; }
