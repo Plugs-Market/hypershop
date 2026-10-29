@@ -184,9 +184,16 @@ function Home() {
                         plan={p}
                         trex
                         details={
-                          <div className="mt-5 flex flex-wrap gap-2 text-xs">
-                            <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
-                            {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
+                          <div className="mt-5 space-y-2">
+                            <ul className="space-y-2 text-xs">
+                              {trexLineLabels(p.line).map((lbl, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                  <span className="min-w-0 break-words">{lbl}</span>
+                                </li>
+                              ))}
+                            </ul>
+                            {p.includesHypertvSubscription && <span className="inline-block rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
                           </div>
                         }
                       />
