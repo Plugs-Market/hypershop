@@ -14,6 +14,7 @@ import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as TelechargerRouteImport } from './routes/telecharger'
+import { Route as ApiSupportStreamRouteImport } from './routes/api/support-stream'
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
@@ -46,6 +47,11 @@ const MonCompteRoute = MonCompteRouteImport.update({
 const TelechargerRoute = TelechargerRouteImport.update({
   id: '/telecharger',
   path: '/telecharger',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSupportStreamRoute = ApiSupportStreamRouteImport.update({
+  id: '/api/support-stream',
+  path: '/api/support-stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIconSizeRoute = AppIconSizeRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   MonCompteRoute: typeof MonCompteRoute
   TelechargerRoute: typeof TelechargerRoute
+  ApiSupportStreamRoute: typeof ApiSupportStreamRoute
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/telecharger'
       fullPath: '/telecharger'
       preLoaderRoute: typeof TelechargerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/support-stream': {
+      id: '/api/support-stream'
+      path: '/api/support-stream'
+      fullPath: '/api/support-stream'
+      preLoaderRoute: typeof ApiSupportStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app-icon/$size': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   MonCompteRoute: MonCompteRoute,
   TelechargerRoute: TelechargerRoute,
+  ApiSupportStreamRoute: ApiSupportStreamRoute,
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
