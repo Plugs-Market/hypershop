@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
+import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,58 @@ const CommanderPlanIdRoute = CommanderPlanIdRouteImport.update({
   path: '/commander/$planId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOrdersIdPlaylistRoute =
+  ApiPublicOrdersIdPlaylistRouteImport.update({
+    id: '/api/public/orders/$id/playlist',
+    path: '/api/public/orders/$id/playlist',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/commande/$id' | '/commander/$planId'
+  fullPaths:
+    | '/'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/commande/$id' | '/commander/$planId'
-  id: '__root__' | '/' | '/commande/$id' | '/commander/$planId'
+  to:
+    | '/'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/api/public/orders/$id/playlist'
+  id:
+    | '__root__'
+    | '/'
+    | '/commande/$id'
+    | '/commander/$planId'
+    | '/api/public/orders/$id/playlist'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
+  ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommanderPlanIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/orders/$id/playlist': {
+      id: '/api/public/orders/$id/playlist'
+      path: '/api/public/orders/$id/playlist'
+      fullPath: '/api/public/orders/$id/playlist'
+      preLoaderRoute: typeof ApiPublicOrdersIdPlaylistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +120,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
+  ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
