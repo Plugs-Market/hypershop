@@ -180,7 +180,21 @@ function Home() {
                       />
                     ))
                   : data.trexPlans.map((p) => (
-                      <PlanCard key={p.id} plan={p} trex details={null} />
+                      <PlanCard
+                        key={p.id}
+                        plan={p}
+                        trex
+                        details={
+                          <ul className="mt-5 space-y-2 text-xs">
+                            {trexLineLabels(p.line).map((lbl, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                <span className="min-w-0 break-words">{lbl}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        }
+                      />
                     ))}
               </div>
             )}
