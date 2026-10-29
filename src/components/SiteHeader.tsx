@@ -5,6 +5,11 @@ import { BookOpen, Download, ShoppingBag, Tv, UserRound } from "lucide-react";
 import { accountStatusQuery } from "@/lib/account.functions";
 import { appsQuery } from "@/lib/apps.functions";
 
+const navLinkClass =
+  "inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent sm:h-auto sm:w-auto sm:px-4 sm:py-2";
+// Style du bouton de la section en cours de visite.
+const navLinkActiveClass = "border-primary/70 bg-primary/15 text-primary shadow-glow";
+
 export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | null; logoUrl?: string | null; guidesEnabled?: boolean }) {
   const { data: apps } = useQuery(appsQuery);
   const { data: status } = useQuery(accountStatusQuery);
