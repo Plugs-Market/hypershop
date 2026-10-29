@@ -123,3 +123,8 @@
 @utility bg-gradient-hero { background-image: var(--gradient-hero); }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 @layer base { h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; } }
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
