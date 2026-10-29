@@ -77,12 +77,13 @@ export const createOrder = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { error: reserveError } = await supabaseAdmin.from("shop_order_access").upsert({ attempt_id: data.idempotencyKey, owner_hash: hash, request_hash: requestHash }, { onConflict: "attempt_id", ignoreDuplicates: true });
       const { data: proof, error: proofError } = await supabaseAdmin.from("shop_order_access").select("owner_hash,request_hash").eq("attempt_id", data.idempotencyKey).maybeSingle();
-      if (reserveError || proofError || proof?.owner_hash !== hash || proof.request_hash !== requestHash) throw new Error("Tentative non autorisée.");
+      if (reserveError || proofError || proof?.owner_hash !== hash || proof.request_hash !== requestHash) { console.error("checkout ownership failure", reserveError?.code ?? proofError?.code ?? "proof_mismatch"); throw new Error("Tentative non autorisée."); }
       const order = await hypertv.createOrder(data);
       const { error } = await supabaseAdmin.from("shop_order_access").update({ order_id: order.id }).eq("attempt_id", data.idempotencyKey).eq("owner_hash", hash);
       if (error) throw new Error("Suivi sécurisé indisponible. Réessayez cette même commande.");
       return { id: order.id };
     } catch (e) {
+      console.error("checkout failed", e instanceof HypertvError ? e.code : "ownership_failure");
       throw new Error(errMessage(e));
     }
   });
