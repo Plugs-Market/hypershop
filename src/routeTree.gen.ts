@@ -14,6 +14,8 @@ import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +43,16 @@ const CommanderPlanIdRoute = CommanderPlanIdRouteImport.update({
   path: '/commander/$planId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrdersIdPlaylistRoute =
   ApiPublicOrdersIdPlaylistRouteImport.update({
     id: '/api/public/orders/$id/playlist',
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
+  '/guides/': typeof GuidesIndexRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
+  '/guides': typeof GuidesIndexRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesById {
@@ -71,6 +87,8 @@ export interface FileRoutesById {
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
+  '/guides/': typeof GuidesIndexRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRouteTypes {
@@ -81,6 +99,8 @@ export interface FileRouteTypes {
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
+    | '/guides/$slug'
+    | '/guides/'
     | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -89,6 +109,8 @@ export interface FileRouteTypes {
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
+    | '/guides/$slug'
+    | '/guides'
     | '/api/public/orders/$id/playlist'
   id:
     | '__root__'
@@ -97,6 +119,8 @@ export interface FileRouteTypes {
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
+    | '/guides/$slug'
+    | '/guides/'
     | '/api/public/orders/$id/playlist'
   fileRoutesById: FileRoutesById
 }
@@ -106,6 +130,8 @@ export interface RootRouteChildren {
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
 }
 
@@ -146,6 +172,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommanderPlanIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/orders/$id/playlist': {
       id: '/api/public/orders/$id/playlist'
       path: '/api/public/orders/$id/playlist'
@@ -162,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
 }
 export const routeTree = rootRouteImport

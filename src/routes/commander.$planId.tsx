@@ -99,7 +99,7 @@ function Checkout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-hero">
-      <SiteHeader name={data.shop.name} logoUrl={data.shop.logoUrl} />
+      <SiteHeader name={data.shop.name} logoUrl={data.shop.logoUrl} guidesEnabled={data.shop.guidesEnabled} />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-12">
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
