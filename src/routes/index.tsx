@@ -81,7 +81,7 @@ function Home() {
   const categories: { id: Category; label: string; description: string; icon: typeof Tv; count: number }[] = [
     {
       id: "hypertv",
-      label: "Applications HYPERTV",
+      label: "HYPER TV",
       description: "Abonnements pour activer votre application HYPERTV.",
       icon: Tv,
       count: data.plans.length,
@@ -147,7 +147,7 @@ function Home() {
         )}
 
         {!data.error && category !== null && (
-          <section aria-label={category === "hypertv" ? "Applications HYPERTV" : "TREX Abonnements"}>
+          <section aria-label={category === "hypertv" ? "HYPER TV" : "TREX Abonnements"}>
             <div className="mb-5 flex items-center justify-between gap-4">
               <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
                 <ArrowLeft className="h-4 w-4" /> Toutes les catégories
