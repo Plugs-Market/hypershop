@@ -40,7 +40,7 @@ export const Route = createFileRoute("/commande/$id")({
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 function OrderPage() {
-  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null; logoUrl?: string | null } };
+  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null; logoUrl: string | null } };
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
   const retry = useServerFn(retryActivation);
