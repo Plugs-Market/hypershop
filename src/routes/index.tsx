@@ -83,8 +83,17 @@ function Home() {
   const [category, setCategory] = useState<Category | null>(null);
   useEffect(() => {
     const reset = () => { setCategory(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    const goDownload = () => {
+      setCategory(null);
+      // Laisse le temps au bloc de se réafficher si une catégorie était ouverte.
+      setTimeout(() => document.getElementById("telechargements")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    };
     window.addEventListener("shop:home", reset);
-    return () => window.removeEventListener("shop:home", reset);
+    window.addEventListener("shop:download", goDownload);
+    return () => {
+      window.removeEventListener("shop:home", reset);
+      window.removeEventListener("shop:download", goDownload);
+    };
   }, []);
   const categories: { id: Category; label: string; description: string; image: string | null; icon: typeof Tv; count: number }[] = [
     {
@@ -208,7 +217,7 @@ function Home() {
           </section>
         )}
         {category === null && apps && (
-          <div className="mt-12">
+          <div id="telechargements" className="mt-12 scroll-mt-24">
             <DownloadApps data={apps} />
           </div>
         )}
