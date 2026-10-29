@@ -6,7 +6,13 @@ import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
-const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
+// Les URL d'images de l'API expirent après 24 h : on relit le catalogue à chaque visite.
+const catalogQuery = queryOptions({
+  queryKey: ["catalog"],
+  queryFn: () => getCatalog(),
+  staleTime: 0,
+  refetchOnMount: "always",
+});
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/")({
@@ -57,7 +63,7 @@ function Home() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.plans.map((p) => (
             <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
-              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" className="aspect-video w-full object-cover" />}
+              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
               <div className="flex flex-1 flex-col p-6">
               <h2 className="text-xl font-bold">{p.name}</h2>
               {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
@@ -69,7 +75,7 @@ function Home() {
               </ul>
               <div className="mt-auto pt-6">
               {p.price_cents !== null ? (
-                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Choisir</Link></Button>
+                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Acheter</Link></Button>
               ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
               </div>
               </div>

@@ -1,14 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
-import { isRetryableCode, normalizeMac, MAC_REGEX, translateHypertvError } from "./hypertv-shared";
-import { catalogPlans, enabledSubscriptionPlans, planPriceCents } from "./shop-offers";
+import { normalizeMac, MAC_REGEX, translateHypertvError } from "./hypertv-shared";
+import { catalogPlans } from "./shop-offers";
 
-function errInfo(e: unknown) {
-  if (e instanceof HypertvError)
-    return { status: e.status, code: e.code, message: translateHypertvError(e.status, e.code, e.message) };
-  return { status: 500, code: "unknown", message: "Erreur inattendue." };
+function errMessage(e: unknown): string {
+  if (e instanceof HypertvError) return translateHypertvError(e.status, e.code, e.message);
+  return "Erreur inattendue.";
 }
+
 // ---------- Public ----------
 // Tout le catalogue vient de l'API HyperTV (géré depuis le panel revendeur).
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
@@ -20,7 +20,7 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
     const plans = catalogPlans(offers);
     return { plans, shop: shopInfo(shop), error: null as string | null };
   } catch (e) {
-    console.error("getCatalog failed", errInfo(e).code);
+    console.error("getCatalog failed", e instanceof HypertvError ? e.code : e);
     return { plans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
   }
 });
@@ -49,84 +49,97 @@ export const getShopInfo = createServerFn({ method: "GET" }).handler(async () =>
   }
 });
 
+// Modes de paiement activés dans le panel revendeur (crypto, Stripe, PayPal…).
+export const getPaymentMethods = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const { methods } = await hypertv.getPaymentMethods();
+    return { methods, error: null as string | null };
+  } catch (e) {
+    console.error("getPaymentMethods failed", e instanceof HypertvError ? e.code : e);
+    return { methods: [], error: "Modes de paiement momentanément indisponibles." };
+  }
+});
+
+const macField = z
+  .string()
+  .transform(normalizeMac)
+  .refine((m) => MAC_REGEX.test(m), "Adresse MAC invalide");
+
+// Crée la commande côté HyperTV : le prix facturé est toujours celui de l'API.
+// L'idempotencyKey (générée une fois par tentative côté navigateur) évite les doublons.
 export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
         planId: z.string().min(1).max(100),
         email: z.string().trim().email().max(255),
-        mac: z.string().transform(normalizeMac).refine((m) => MAC_REGEX.test(m), "Adresse MAC invalide"),
+        mac: macField,
+        method: z.string().min(1).max(50),
+        idempotencyKey: z.string().uuid(),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const offers = await hypertv.getOffers();
-    const plan = enabledSubscriptionPlans(offers).find((p) => p.id === data.planId);
-    if (!plan) throw new Error("Cette formule n'est plus disponible.");
-    const price = planPriceCents(plan);
-    if (price === null) throw new Error("Le prix de cette formule n'est pas encore disponible.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const id = crypto.randomUUID();
-    const { error } = await supabaseAdmin.from("orders").insert({
-      id, email: data.email, mac: data.mac, plan_id: plan.id, plan_name: plan.name,
-      price_cents: price, idempotency_key: id,
-    });
-    if (error) throw new Error("Impossible de créer la commande.");
-    return { id };
+    try {
+      const order = await hypertv.createOrder(data);
+      return { id: order.id };
+    } catch (e) {
+      throw new Error(errMessage(e));
+    }
   });
 
 const idSchema = z.object({ id: z.string().uuid() });
 
-async function loadOrder(id: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("orders").select("*").eq("id", id).maybeSingle();
-  return data;
-}
-function publicOrder(o: any) {
-  return {
-    id: o.id, email: o.email, mac: o.mac, plan_name: o.plan_name, price_cents: o.price_cents,
-    payment_status: o.payment_status as string, activation_status: o.activation_status as string,
-    activation_error: o.activation_error as string | null, expires_at: o.expires_at as string | null,
-    created_at: o.created_at as string,
-  };
-}
-
-// Appelée après confirmation serveur du paiement (futur webhook Stripe).
-// Active une commande payée. Idempotent : même clé = jamais deux débits.
-async function runActivation(id: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const o = await loadOrder(id);
-  if (!o || o.payment_status !== "paid" || o.activation_status === "activated") return;
-  try {
-    const r = await hypertv.activate({ mac: o.mac, planId: o.plan_id, idempotencyKey: o.idempotency_key });
-    await supabaseAdmin.from("orders").update({
-      activation_status: "activated", activation_error: null, api_response: r as any,
-      expires_at: r.expiresAt, updated_at: new Date().toISOString(),
-    }).eq("id", id);
-  } catch (e) {
-    const info = errInfo(e);
-    await supabaseAdmin.from("orders").update({
-      activation_status: isRetryableCode(info.code) ? "pending_retry" : "failed",
-      activation_error: info.message, api_response: { error: info.code, status: info.status },
-      updated_at: new Date().toISOString(),
-    }).eq("id", id);
-  }
-}
-
 export const getOrder = createServerFn({ method: "GET" })
   .inputValidator((d) => idSchema.parse(d))
   .handler(async ({ data }) => {
-    const o = await loadOrder(data.id);
-    return o ? publicOrder(o) : null;
+    try {
+      return await hypertv.getOrder(data.id);
+    } catch (e) {
+      if (e instanceof HypertvError && e.status === 404) return null;
+      throw new Error(errMessage(e));
+    }
   });
 
-export const retryActivation = createServerFn({ method: "POST" })
-  .inputValidator((d) => idSchema.parse(d))
+// Stripe : renvoie l'URL de paiement hébergée. order_not_payable → le client recharge la commande.
+export const stripeCheckout = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({ id: z.string().uuid(), returnUrl: z.string().url().max(500) }).parse(d),
+  )
   .handler(async ({ data }) => {
-    const o = await loadOrder(data.id);
-    if (o && o.payment_status === "paid" && o.activation_status !== "activated" && o.activation_status !== "failed")
-      await runActivation(data.id);
-    const n = await loadOrder(data.id);
-    return n ? publicOrder(n) : null;
+    try {
+      const r = await hypertv.stripeCheckout(data.id, data.returnUrl);
+      return { ok: true as const, url: r.url };
+    } catch (e) {
+      return {
+        ok: false as const,
+        code: e instanceof HypertvError ? e.code : "unknown",
+        message: errMessage(e),
+      };
+    }
   });
 
+// PayPal « Entre proches » : déclaration de la transaction par le client.
+export const paypalTxid = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        txid: z.string().trim().min(4).max(100),
+        paypalEmail: z.string().trim().email().max(255),
+        name: z.string().trim().min(1).max(100),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      await hypertv.paypalTxid(data.id, { txid: data.txid, paypalEmail: data.paypalEmail, name: data.name });
+      return { ok: true as const };
+    } catch (e) {
+      return {
+        ok: false as const,
+        code: e instanceof HypertvError ? e.code : "unknown",
+        message: errMessage(e),
+      };
+    }
+  });
