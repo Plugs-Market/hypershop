@@ -12,16 +12,19 @@ import { Label } from "@/components/ui/label";
 const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
 
 export const Route = createFileRoute("/commander/$planId")({
-  head: () => ({
-    meta: [
-      { title: "Commander — HyperTV" },
-      { name: "description", content: "Finalisez votre commande d'abonnement HyperTV." },
-      { property: "og:title", content: "Commander — HyperTV" },
-      { property: "og:description", content: "Finalisez votre commande d'abonnement HyperTV." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const shopName = loaderData?.shopName ?? "Boutique";
+    return {
+      meta: [
+        { title: `Commander — ${shopName}` },
+        { name: "description", content: "Finalisez votre commande d'abonnement." },
+        { property: "og:title", content: `Commander — ${shopName}` },
+        { property: "og:description", content: "Finalisez votre commande d'abonnement." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Checkout,
 });

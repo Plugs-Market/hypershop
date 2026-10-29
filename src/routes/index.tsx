@@ -9,16 +9,19 @@ import { Button } from "@/components/ui/button";
 const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "HyperTV — Abonnements activés instantanément" },
-      { name: "description", content: "Choisissez votre formule HyperTV et activez votre appareil automatiquement après paiement." },
-      { property: "og:title", content: "HyperTV — Abonnements activés instantanément" },
-      { property: "og:description", content: "Formules HyperTV, activation automatique sur votre appareil." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const shopName = loaderData?.shopName ?? "Boutique";
+    return {
+      meta: [
+        { title: `${shopName} — Abonnements activés instantanément` },
+        { name: "description", content: "Choisissez votre formule et activez votre appareil automatiquement après paiement." },
+        { property: "og:title", content: `${shopName} — Abonnements activés instantanément` },
+        { property: "og:description", content: "Formules, activation automatique sur votre appareil." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Home,
 });
