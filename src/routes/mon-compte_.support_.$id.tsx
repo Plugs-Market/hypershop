@@ -286,7 +286,7 @@ function Composer({ ticketId, ticketKey, name, onSent, onError, onOptimistic, on
   }
 
   return (
-    <div className="shrink-0 space-y-2 bg-background px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] group-data-[keyboard=true]:pb-2 sm:px-4">
+    <div className="shrink-0 space-y-2 bg-background px-3 pt-2 pb-[max(0.375rem,calc(env(safe-area-inset-bottom)-0.875rem))] group-data-[keyboard=true]:pb-2 sm:px-4">
       {previews.length > 0 && <div className="flex flex-wrap gap-2">{previews.map((u, i) => (
         <div key={u} className="relative h-16 w-16 overflow-hidden rounded-lg border border-border">
           <img src={u} alt="" className="h-full w-full object-cover" />
