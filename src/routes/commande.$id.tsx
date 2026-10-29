@@ -23,7 +23,10 @@ export const Route = createFileRoute("/commande/$id")({
       ],
     };
   },
-  loader: async ({ params }) => {
+  loader: async ({ params }): Promise<{
+    order: Awaited<ReturnType<typeof getOrder>>;
+    shop: Awaited<ReturnType<typeof getShopInfo>>;
+  }> => {
     const [order, shop] = await Promise.all([
       getOrder({ data: { id: params.id } }),
       getShopInfo(),

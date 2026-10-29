@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
 const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
+type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/")({
       ],
     };
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
+  loader: ({ context }): Promise<Catalog> => context.queryClient.ensureQueryData(catalogQuery),
   component: Home,
 });
 

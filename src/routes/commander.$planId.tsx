@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
+type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
   head: ({ loaderData }) => {
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/commander/$planId")({
       ],
     };
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
+  loader: ({ context }): Promise<Catalog> => context.queryClient.ensureQueryData(catalogQuery),
   component: Checkout,
 });
 
