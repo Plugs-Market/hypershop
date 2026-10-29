@@ -14,8 +14,8 @@ type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
   head: ({ loaderData }) => {
-    const data = loaderData as { shopName?: string | null } | undefined;
-    const shopName = data?.shopName ?? "Boutique";
+    const data = loaderData as Catalog | undefined;
+    const shopName = data?.shop?.name ?? "Boutique";
     return {
       meta: [
         { title: `Commander — ${shopName}` },
@@ -62,7 +62,7 @@ function Checkout() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader name={data.shopName} />
+      <SiteHeader name={data.shop.name} logoUrl={data.shop.logoUrl} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
