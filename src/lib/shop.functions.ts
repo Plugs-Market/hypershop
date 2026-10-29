@@ -55,6 +55,19 @@ export const getShopInfo = createServerFn({ method: "GET" }).handler(async () =>
   }
 });
 
+// Palette revendeur (cache 5 min). Invalide ou erreur → null : styles.css sert de repli.
+export const getShopTheme = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const { buildThemeCss } = await import("./shop-theme");
+    const shop = await hypertv.getShopCached();
+    const css = buildThemeCss(shop.theme);
+    if (!css) return null;
+    return { css, background: (shop.theme as { background: string }).background };
+  } catch {
+    return null;
+  }
+});
+
 // Modes de paiement activés dans le panel revendeur (crypto, Stripe, PayPal…).
 export const getPaymentMethods = createServerFn({ method: "GET" }).handler(async () => {
   try {

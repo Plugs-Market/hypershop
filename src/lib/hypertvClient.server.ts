@@ -52,6 +52,8 @@ export type ShopInfo = {
   description?: string | null;
   logoUrl?: string | null;
   guides?: { enabled?: boolean; categoryIds?: string[] } | null;
+  theme?: Record<string, unknown> | null;
+  cssVariables?: string | null;
 };
 
 // Cache mémoire court (5 min) pour les guides.

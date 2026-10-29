@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { getShopTheme } from "../lib/shop.functions";
 
 function NotFoundComponent() {
   return (
@@ -75,13 +76,15 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: () => getShopTheme(),
+  staleTime: 300_000,
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Boutique — Abonnements" },
       { name: "description", content: "Abonnements IPTV activés automatiquement après paiement." },
-      { name: "theme-color", content: "#1a1214" },
+      { name: "theme-color", content: loaderData?.background ?? "#1a1214" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -97,6 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/app-icon/192" },
       { rel: "apple-touch-icon", href: "/app-icon/180" },
     ],
+    styles: loaderData?.css ? [{ id: "shop-theme", children: loaderData.css }] : [],
   }),
   shellComponent: RootShell,
   component: RootComponent,
