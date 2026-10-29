@@ -18,7 +18,8 @@ export function invoicePolls(state: string) { return state === "pending" || stat
 export function invoiceCanPay(i: Pick<Invoice, "priceEur" | "payable" | "source">) { return i.payable && i.priceEur > 0 && i.source !== "hypertv"; }
 export function invoiceCanCancel(i: Pick<Invoice, "state" | "source" | "cancellable">) { return i.source !== "hypertv" && i.cancellable && invoicePolls(i.state); }
 export function invoiceCurrency(value: number) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(value); }
-export function record(value: unknown): Record<string, unknown> { return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
+type ApiRecord = Partial<Record<"invoice" | "payment" | "order" | "priceEur" | "id" | "number" | "plan" | "name" | "createdAt" | "date" | "state" | "status" | "source" | "payable" | "cancellable" | "cancelable" | "expiresAt" | "orderId" | "delivery" | "method" | "label" | "amount" | "symbol" | "address" | "memo" | "xtream" | "m3uUrl" | "serverUrl" | "username" | "password" | "replacedId" | "total" | "page" | "pageSize" | "limit" | "invoices", unknown>>;
+export function record(value: unknown): ApiRecord { return value && typeof value === "object" && !Array.isArray(value) ? value as ApiRecord : {}; }
 const text = (v: unknown): string | null => typeof v === "string" ? v : null;
 export function normalizeInvoice(raw: unknown): Invoice {
   const outer = record(raw), i = record(outer.invoice ?? raw), p = record(i.payment), o = record(i.order);
