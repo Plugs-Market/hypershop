@@ -87,7 +87,7 @@ function OrderPage() {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
-    return (<div className="flex min-h-screen flex-col"><SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p><SiteFooter name={shop?.name} slogan={shop?.slogan} /></div>);
+    return (<div className="flex min-h-screen flex-col"><SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p><SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} /></div>);
   }
 
   return (
@@ -140,7 +140,7 @@ function OrderPage() {
           </Button>
         </div>
       </main>
-      <SiteFooter name={shop?.name} slogan={shop?.slogan} />
+      <SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} />
     </div>
   );
 }
