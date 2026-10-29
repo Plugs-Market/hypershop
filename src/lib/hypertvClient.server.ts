@@ -21,6 +21,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown; s
   try {
     res = await fetch(BASE_URL + path, {
       method: init?.method ?? "GET",
+      ...(init?.session ? { cache: "no-store" as const } : {}),
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init?.session ? { "X-Customer-Session": init.session } : {}) },
       ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
       signal: AbortSignal.timeout(15000),
@@ -119,7 +120,7 @@ export const hypertv = {
     }
   },
   getOffers: () => call<OffersResponse>("/offers"),
-  getPaymentMethods: () => call<{ methods: PaymentMethod[] }>("/payment-methods"),
+   getPaymentMethods: (session?: string) => call<{ methods: PaymentMethod[] }>("/payment-methods", session ? { session } : undefined),
   // L'API enveloppe la commande dans { order: … } ; on accepte aussi la réponse directe.
   createOrder: async (body: OrderInput) => {
     const json = await call<ShopOrder | { order: ShopOrder }>("/orders", { method: "POST", body });
@@ -129,10 +130,15 @@ export const hypertv = {
     const json = await call<ShopOrder | { order: ShopOrder }>(`/orders/${encodeURIComponent(id)}`);
     return "order" in json ? json.order : json;
   },
-  stripeCheckout: (id: string, returnUrl: string) =>
-    call<{ url: string }>(`/orders/${encodeURIComponent(id)}/stripe-checkout`, { method: "POST", body: { returnUrl } }),
-  paypalTxid: (id: string, body: { txid: string; paypalEmail: string; name: string }) =>
-    call<{ ok: boolean }>(`/orders/${encodeURIComponent(id)}/paypal-txid`, { method: "POST", body }),
+   stripeCheckout: (id: string, returnUrl: string, session?: string) =>
+     call<{ url: string }>(`/orders/${encodeURIComponent(id)}/stripe-checkout`, { method: "POST", body: { returnUrl }, ...(session ? { session } : {}) }),
+   paypalTxid: (id: string, body: { txid: string; paypalEmail: string; name?: string }, session?: string) =>
+     call<{ ok: boolean }>(`/orders/${encodeURIComponent(id)}/paypal-txid`, { method: "POST", body, ...(session ? { session } : {}) }),
+   getInvoices: (session: string, search: { status: string; method: string; q: string; page: number }) =>
+     call<unknown>(`/account/invoices?${new URLSearchParams({ ...search, page: String(search.page) })}`, { session }),
+   getInvoice: (session: string, id: string) => call<unknown>(`/account/invoices/${encodeURIComponent(id)}`, { session }),
+   payInvoice: (session: string, id: string, method: string) => call<unknown>(`/account/invoices/${encodeURIComponent(id)}/pay`, { method: "POST", session, body: { method } }),
+   cancelInvoice: (session: string, id: string) => call<unknown>(`/account/invoices/${encodeURIComponent(id)}/cancel`, { method: "POST", session }),
   login: (accessKey: string) =>
     call<{ mfaRequired?: boolean; session?: string; mfaToken?: string }>("/account/login", { method: "POST", body: { accessKey } }),
   loginMfa: (mfaToken: string, code: string) =>

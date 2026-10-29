@@ -54,6 +54,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-primary-glow: var(--primary-glow);
+  --color-qr-surface: var(--qr-surface);
   --font-display: "Sora", sans-serif;
   --font-sans: "Manrope", sans-serif;
   --color-sidebar: var(--sidebar);
@@ -67,6 +68,7 @@
 }
 
 :root {
+  --qr-surface: oklch(1 0 0);
   --radius: 0.75rem;
   --background: oklch(0.14 0.01 20);
   --foreground: oklch(0.97 0.005 20);

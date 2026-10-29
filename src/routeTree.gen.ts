@@ -19,6 +19,8 @@ import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
+import { Route as MonCompteFacturesRouteImport } from './routes/mon-compte_.factures'
+import { Route as MonCompteFacturesIdRouteImport } from './routes/mon-compte_.factures_.$id'
 import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +73,16 @@ const GuidesSlugRoute = GuidesSlugRouteImport.update({
   path: '/guides/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonCompteFacturesRoute = MonCompteFacturesRouteImport.update({
+  id: '/mon-compte_/factures',
+  path: '/mon-compte/factures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteFacturesIdRoute = MonCompteFacturesIdRouteImport.update({
+  id: '/mon-compte_/factures_/$id',
+  path: '/mon-compte/factures/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrdersIdPlaylistRoute =
   ApiPublicOrdersIdPlaylistRouteImport.update({
     id: '/api/public/orders/$id/playlist',
@@ -88,7 +100,9 @@ export interface FileRoutesByFullPath {
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/mon-compte/factures': typeof MonCompteFacturesRoute
   '/guides/': typeof GuidesIndexRoute
+  '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
@@ -101,7 +115,9 @@ export interface FileRoutesByTo {
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/mon-compte/factures': typeof MonCompteFacturesRoute
   '/guides': typeof GuidesIndexRoute
+  '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesById {
@@ -115,7 +131,9 @@ export interface FileRoutesById {
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/mon-compte_/factures': typeof MonCompteFacturesRoute
   '/guides/': typeof GuidesIndexRoute
+  '/mon-compte_/factures_/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRouteTypes {
@@ -130,7 +148,9 @@ export interface FileRouteTypes {
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
+    | '/mon-compte/factures'
     | '/guides/'
+    | '/mon-compte/factures/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,7 +163,9 @@ export interface FileRouteTypes {
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
+    | '/mon-compte/factures'
     | '/guides'
+    | '/mon-compte/factures/$id'
     | '/api/public/orders/$id/playlist'
   id:
     | '__root__'
@@ -156,7 +178,9 @@ export interface FileRouteTypes {
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
+    | '/mon-compte_/factures'
     | '/guides/'
+    | '/mon-compte_/factures_/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesById: FileRoutesById
 }
@@ -170,7 +194,9 @@ export interface RootRouteChildren {
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
+  MonCompteFacturesRoute: typeof MonCompteFacturesRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
+  MonCompteFacturesIdRoute: typeof MonCompteFacturesIdRoute
   ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
 }
 
@@ -246,6 +272,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuidesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mon-compte_/factures': {
+      id: '/mon-compte_/factures'
+      path: '/mon-compte/factures'
+      fullPath: '/mon-compte/factures'
+      preLoaderRoute: typeof MonCompteFacturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte_/factures_/$id': {
+      id: '/mon-compte_/factures_/$id'
+      path: '/mon-compte/factures/$id'
+      fullPath: '/mon-compte/factures/$id'
+      preLoaderRoute: typeof MonCompteFacturesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/orders/$id/playlist': {
       id: '/api/public/orders/$id/playlist'
       path: '/api/public/orders/$id/playlist'
@@ -266,7 +306,9 @@ const rootRouteChildren: RootRouteChildren = {
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
   GuidesSlugRoute: GuidesSlugRoute,
+  MonCompteFacturesRoute: MonCompteFacturesRoute,
   GuidesIndexRoute: GuidesIndexRoute,
+  MonCompteFacturesIdRoute: MonCompteFacturesIdRoute,
   ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
 }
 export const routeTree = rootRouteImport
