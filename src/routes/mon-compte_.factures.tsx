@@ -41,18 +41,18 @@ function InvoicesPage() {
     <form className="flex gap-2" onSubmit={e => { e.preventDefault(); void change({ q: draft }); }}><Input aria-label="Rechercher une facture" placeholder="Rechercher une facture…" value={draft} maxLength={200} onChange={e => setDraft(e.target.value)} /><Button type="submit" size="icon" aria-label="Rechercher" title="Rechercher"><Search /></Button></form>
     <div className="flex flex-wrap items-center gap-2" aria-label="Filtres de factures">
       <label className="sr-only" htmlFor="filter-status">Filtrer par état</label>
-      <Select value={search.status} onValueChange={(v) => change({ status: v })}>
-        <SelectTrigger id="filter-status" size="sm" className="w-44"><SelectValue /></SelectTrigger>
+      <Select value={search.status || "all"} onValueChange={(v) => change({ status: v === "all" ? "" : v })}>
+        <SelectTrigger id="filter-status" className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les états</SelectItem>
+          <SelectItem value="all">Tous les états</SelectItem>
           {INVOICE_STATES.filter(s => s !== "activated").map(s => <SelectItem key={s} value={s}>{invoiceStatusLabels[s]}</SelectItem>)}
         </SelectContent>
       </Select>
       <label className="sr-only" htmlFor="filter-method">Filtrer par mode de paiement</label>
-      <Select value={search.method} onValueChange={(v) => change({ method: v })}>
-        <SelectTrigger id="filter-method" size="sm" className="w-48"><SelectValue /></SelectTrigger>
+      <Select value={search.method || "all"} onValueChange={(v) => change({ method: v === "all" ? "" : v })}>
+        <SelectTrigger id="filter-method" className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les modes</SelectItem>
+          <SelectItem value="all">Tous les modes</SelectItem>
           {data.methods.map(m => <SelectItem key={m.code} value={m.code}>{m.label}</SelectItem>)}
         </SelectContent>
       </Select>
