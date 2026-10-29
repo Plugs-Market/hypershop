@@ -9,16 +9,16 @@ describe("MAC", () => {
 });
 
 describe("erreurs HyperTV", () => {
-  it("customer_not_found explique comment créer son compte", () =>
+  it("customer_not_found", () =>
     expect(translateHypertvError(404, "customer_not_found")).toBe(
-      "Aucun compte HyperTV avec cette MAC. Installez l'app et créez votre compte, puis réessayez.",
+      "Aucun compte HyperTV avec cette adresse MAC",
     ));
   it("customer_locked_to_other_reseller", () =>
     expect(translateHypertvError(409, "customer_locked_to_other_reseller")).toBe(
-      "Cet appareil est géré par un autre revendeur.",
+      "Ce compte est géré par un autre revendeur",
     ));
   it("plan_not_for_sale", () =>
-    expect(translateHypertvError(422, "plan_not_for_sale")).toBe("Formule indisponible."));
+    expect(translateHypertvError(422, "plan_not_for_sale")).toBe("Cette formule n'est plus disponible"));
   it("payment_method_unavailable", () =>
     expect(translateHypertvError(422, "payment_method_unavailable")).toBe("Mode de paiement indisponible."));
   it("invalid_request demande de vérifier MAC et email", () =>
