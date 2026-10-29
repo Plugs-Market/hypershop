@@ -126,15 +126,18 @@
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 @layer base { h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; } }
 
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+/* Les marges de zone sûre ne servent que dans l'app installée (écran d'accueil) :
+   dans un navigateur, la page démarre déjà sous la barre d'état. */
+:root { --safe-top: 0px; --safe-bottom: 0px; }
+@media (display-mode: standalone) {
+  :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
 }
+body { padding-bottom: var(--safe-bottom); }
 
 /* iOS écran d'accueil (barre d'état translucide) : la zone affichable annoncée
    est plus courte que l'écran de la hauteur de la barre d'état. On l'étend
    pour que le bas de page (et la zone de réponse du support) touche l'écran. */
 @media (display-mode: standalone) {
   html { min-height: calc(100% + env(safe-area-inset-top)); }
-  .conversation-shell { bottom: auto; height: calc(100vh + env(safe-area-inset-top)); }
+  .conversation-shell { bottom: auto; height: calc(100vh + var(--safe-top)); }
 }

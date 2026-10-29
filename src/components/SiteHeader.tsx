@@ -12,7 +12,7 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
   const last = parts.length > 1 ? parts.pop() : null;
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-50 px-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:px-4">
+    <header className="fixed inset-x-0 top-0 z-50 px-2 pt-[calc(var(--safe-top)+0.5rem)] sm:px-4">
       <div className="mx-auto grid h-14 max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/60 bg-background/75 px-3 shadow-lg backdrop-blur-md sm:flex sm:justify-between sm:px-4">
         <Link to="/" className="flex min-w-0 items-center gap-2 font-display text-base font-bold sm:text-lg">
           {logoUrl ? (
@@ -59,7 +59,7 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
         </nav>
       </div>
     </header>
-    <div aria-hidden className="h-[calc(env(safe-area-inset-top)+4.5rem)] shrink-0" />
+    <div aria-hidden className="h-[calc(var(--safe-top)+4.5rem)] shrink-0" />
     </>
   );
 }
