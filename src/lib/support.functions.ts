@@ -48,7 +48,7 @@ export const registerSupportDevice = createServerFn({ method: "POST" })
 export const listSupportTickets = createServerFn({ method: "GET" }).handler(() =>
   supportCall(async (session) => {
     const r = rec(await hypertv.supportTickets(session));
-    return { canCreate: r.canCreate !== false, tickets: (Array.isArray(r.tickets) ? r.tickets : []).map(normalizeTicketSummary) };
+    return { canCreate: r.canCreate !== false, tickets: (Array.isArray(r.tickets) ? (r.tickets as unknown[]) : []).map(normalizeTicketSummary) };
   }),
 );
 
@@ -76,7 +76,7 @@ export const requestSupportUploads = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id, files: z.array(z.object({ mime: z.string().regex(/^image\/[\w.+-]+$/), size: z.number().int().positive().max(10 * 1024 * 1024 + 64) })).min(1).max(6) }).parse(d))
   .handler(({ data }) => supportCall(async (session) => {
     const r = rec(await hypertv.supportUploads(session, data.id, data.files));
-    return (Array.isArray(r.uploads) ? r.uploads : []).map(rec).map((u) => ({ path: String(u.path), uploadUrl: String(u.uploadUrl) }));
+    return (Array.isArray(r.uploads) ? (r.uploads as unknown[]) : []).map(rec).map((u: any): { path: string; uploadUrl: string } => ({ path: String(u.path), uploadUrl: String(u.uploadUrl) }));
   }));
 
 export const getSupportAttachment = createServerFn({ method: "POST" })

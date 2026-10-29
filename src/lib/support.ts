@@ -56,7 +56,7 @@ export function normalizeTicketSummary(v: unknown): SupportTicketSummary {
   return { id: String(r.id ?? ""), category: s(r.category) ?? "other", status: s(r.status) ?? "open", subject: cipher(r.subject), lastSender: s(r.lastSender), lastMessageAt: s(r.lastMessageAt) };
 }
 export function normalizeDevices(v: unknown): SupportDevice[] {
-  return (Array.isArray(v) ? v : []).map(rec).filter((d) => d.id && typeof d.publicKey === "string").map((d) => ({
+  return (Array.isArray(v) ? (v as unknown[]) : []).map(rec).filter((d: any) => d.id && typeof d.publicKey === "string").map((d: any): SupportDevice => ({
     id: String(d.id), publicKey: d.publicKey, owner: s(d.owner), hasKey: typeof d.hasKey === "boolean" ? d.hasKey : null,
   }));
 }
@@ -64,11 +64,11 @@ export function normalizeTicketDetail(v: unknown) {
   const root = rec(v);
   const t = rec(root.ticket ?? root);
   const k = rec(root.key);
-  const statusChange = (m: Record<string, any>) => (typeof m.statusChange === "string" ? m.statusChange : m.statusChange ? s(rec(m.statusChange).status ?? rec(m.statusChange).to) ?? "changed" : null);
+  const statusChange = (m: any): string | null => (typeof m.statusChange === "string" ? m.statusChange : m.statusChange ? s(rec(m.statusChange).status ?? rec(m.statusChange).to) ?? "changed" : null);
   return {
     ticket: { ...normalizeTicketSummary(t), id: String(t.id ?? root.id ?? "") },
     key: typeof k.wrappedKey === "string" && typeof k.iv === "string" && typeof k.wrapperPub === "string" ? ({ wrappedKey: k.wrappedKey, iv: k.iv, wrapperPub: k.wrapperPub } as WrappedKey) : null,
-    messages: (Array.isArray(root.messages) ? root.messages : []).map(rec).filter((m) => m.id && typeof m.ct === "string").map((m): SupportMessage => ({
+    messages: (Array.isArray(root.messages) ? (root.messages as unknown[]) : []).map(rec).filter((m: any) => m.id && typeof m.ct === "string").map((m: any): SupportMessage => ({
       id: String(m.id), from: m.from === "staff" ? "staff" : "customer", ct: m.ct, iv: String(m.iv ?? ""), statusChange: statusChange(m), createdAt: s(m.createdAt) ?? "",
     })),
     staffReadAt: s(root.staffReadAt),
