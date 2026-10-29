@@ -86,9 +86,15 @@ export const hypertv = {
   getShop: () => call<ShopInfo>("/shop"),
   getOffers: () => call<OffersResponse>("/offers"),
   getPaymentMethods: () => call<{ methods: PaymentMethod[] }>("/payment-methods"),
-  createOrder: (body: { mac: string; planId: string; email: string; method: string; idempotencyKey: string }) =>
-    call<ShopOrder>("/orders", { method: "POST", body }),
-  getOrder: (id: string) => call<ShopOrder>(`/orders/${encodeURIComponent(id)}`),
+  // L'API enveloppe la commande dans { order: … } ; on accepte aussi la réponse directe.
+  createOrder: async (body: { mac: string; planId: string; email: string; method: string; idempotencyKey: string }) => {
+    const json = await call<ShopOrder | { order: ShopOrder }>("/orders", { method: "POST", body });
+    return "order" in json ? json.order : json;
+  },
+  getOrder: async (id: string) => {
+    const json = await call<ShopOrder | { order: ShopOrder }>(`/orders/${encodeURIComponent(id)}`);
+    return "order" in json ? json.order : json;
+  },
   stripeCheckout: (id: string, returnUrl: string) =>
     call<{ url: string }>(`/orders/${encodeURIComponent(id)}/stripe-checkout`, { method: "POST", body: { returnUrl } }),
   paypalTxid: (id: string, body: { txid: string; paypalEmail: string; name: string }) =>
