@@ -3,31 +3,44 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock, Loader2, XCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { getOrder, retryActivation } from "@/lib/shop.functions";
+import { getShopInfo, getOrder, retryActivation } from "@/lib/shop.functions";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/commande/$id")({
-  head: () => ({
-    meta: [
-      { title: "Suivi de commande — HyperTV" },
-      { name: "description", content: "Suivez le paiement et l'activation de votre abonnement HyperTV." },
-      { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Suivi de commande — HyperTV" },
-      { property: "og:description", content: "Suivi de votre commande HyperTV." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  loader: ({ params }) => getOrder({ data: { id: params.id } }),
+  head: ({ loaderData }) => {
+    const data = loaderData as { shop?: { name?: string | null } } | undefined;
+    const shopName = data?.shop?.name ?? "Boutique";
+    return {
+      meta: [
+        { title: `Suivi de commande — ${shopName}` },
+        { name: "description", content: "Suivez le paiement et l'activation de votre abonnement." },
+        { name: "robots", content: "noindex" },
+        { property: "og:title", content: `Suivi de commande — ${shopName}` },
+        { property: "og:description", content: "Suivi de votre commande." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
+  loader: async ({ params }): Promise<{
+    order: Awaited<ReturnType<typeof getOrder>>;
+    shop: Awaited<ReturnType<typeof getShopInfo>>;
+  }> => {
+    const [order, shop] = await Promise.all([
+      getOrder({ data: { id: params.id } }),
+      getShopInfo(),
+    ]);
+    return { order, shop };
+  },
   component: OrderPage,
 });
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 function OrderPage() {
-  const initial = Route.useLoaderData();
+  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null } };
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
   const retry = useServerFn(retryActivation);
@@ -51,7 +64,7 @@ function OrderPage() {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
-    return (<div className="min-h-screen"><SiteHeader /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
+    return (<div className="min-h-screen"><SiteHeader name={shop?.name} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
   }
 
   const activated = order.activation_status === "activated";
@@ -60,7 +73,7 @@ function OrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader />
+      <SiteHeader name={shop?.name} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">

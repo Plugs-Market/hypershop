@@ -79,8 +79,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "HyperTV — Abonnements" },
-      { name: "description", content: "Abonnements HyperTV activés automatiquement." },
+      { title: "Boutique — Abonnements" },
+      { name: "description", content: "Abonnements IPTV activés automatiquement après paiement." },
     ],
     links: [
       {

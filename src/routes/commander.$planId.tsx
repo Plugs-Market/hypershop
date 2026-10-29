@@ -10,19 +10,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
+type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
-  head: () => ({
-    meta: [
-      { title: "Commander — HyperTV" },
-      { name: "description", content: "Finalisez votre commande d'abonnement HyperTV." },
-      { property: "og:title", content: "Commander — HyperTV" },
-      { property: "og:description", content: "Finalisez votre commande d'abonnement HyperTV." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
+  head: ({ loaderData }) => {
+    const data = loaderData as { shopName?: string | null } | undefined;
+    const shopName = data?.shopName ?? "Boutique";
+    return {
+      meta: [
+        { title: `Commander — ${shopName}` },
+        { name: "description", content: "Finalisez votre commande d'abonnement." },
+        { property: "og:title", content: `Commander — ${shopName}` },
+        { property: "og:description", content: "Finalisez votre commande d'abonnement." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
+  loader: ({ context }): Promise<Catalog> => context.queryClient.ensureQueryData(catalogQuery),
   component: Checkout,
 });
 
@@ -57,7 +62,7 @@ function Checkout() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader />
+      <SiteHeader name={data.shopName} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">

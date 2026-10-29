@@ -16,16 +16,29 @@ function planPriceCents(p: { price_eur?: number | null }) {
 // Tout le catalogue vient de l'API HyperTV (géré depuis le panel revendeur).
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
   try {
-    const offers = await hypertv.getOffers();
+    const [offers, shop] = await Promise.all([
+      hypertv.getOffers(),
+      hypertv.getShop().catch(() => null),
+    ]);
     const plans = offers.subscriptionPlans.map((p) => ({
       id: p.id, name: p.name, description: p.description ?? null, features: p.features ?? [],
       cover_url: p.cover_url ?? null, duration_days: p.duration_days, max_devices: p.max_devices,
       price_cents: planPriceCents(p),
     }));
-    return { plans, error: null as string | null };
+    return { plans, shopName: shop?.name ?? null, error: null as string | null };
   } catch (e) {
     console.error("getCatalog failed", errInfo(e).code);
-    return { plans: [], error: "Catalogue momentanément indisponible." };
+    return { plans: [], shopName: null, error: "Catalogue momentanément indisponible." };
+  }
+});
+
+// Titre de la boutique, défini dans le panel revendeur.
+export const getShopInfo = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const s = await hypertv.getShop();
+    return { name: s.name as string | null };
+  } catch {
+    return { name: null as string | null };
   }
 });
 
