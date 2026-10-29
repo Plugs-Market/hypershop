@@ -5,6 +5,11 @@ import { BookOpen, Download, ShoppingBag, Tv, UserRound } from "lucide-react";
 import { accountStatusQuery } from "@/lib/account.functions";
 import { appsQuery } from "@/lib/apps.functions";
 
+const navLinkClass =
+  "inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent sm:h-auto sm:w-auto sm:px-4 sm:py-2";
+// Style du bouton de la section en cours de visite.
+const navLinkActiveClass = "border-primary/70 bg-primary/15 text-primary shadow-glow";
+
 export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | null; logoUrl?: string | null; guidesEnabled?: boolean }) {
   const { data: apps } = useQuery(appsQuery);
   const { data: status } = useQuery(accountStatusQuery);
@@ -53,16 +58,19 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
         <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Link aria-label="Boutique"
             to="/"
+            activeOptions={{ exact: true }}
             // Ramène aussi au choix des catégories quand on est déjà sur l'accueil.
             onClick={() => window.dispatchEvent(new Event("shop:home"))}
-            className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+            className={navLinkClass}
+            activeProps={{ className: navLinkActiveClass }}
           >
             <ShoppingBag className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Boutique</span>
           </Link>
           {apps && (
             <Link aria-label="Télécharger"
               to="/telecharger"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass }}
             >
               <Download className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Télécharger</span>
             </Link>
@@ -70,14 +78,16 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
           {guidesEnabled && (
             <Link aria-label="Guides"
               to="/guides"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass }}
             >
               <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Guides</span>
             </Link>
           )}
           <Link aria-label={status?.loggedIn ? "Mon compte" : "Connexion"}
             to={status?.loggedIn ? "/mon-compte" : "/connexion"}
-            className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+            className={navLinkClass}
+            activeProps={{ className: navLinkActiveClass }}
           >
             <UserRound className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">{status?.loggedIn ? "Mon compte" : "Connexion"}</span>
           </Link>
