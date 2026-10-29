@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 
 type Shop = { name: string | null; logoUrl: string | null; slogan: string | null; guidesEnabled: boolean } | null | undefined;
 
-export function GuidesShell({ shop, children }: { shop: Shop; children: ReactNode }) {
+export function GuidesShell({ shop, children, conversation = false }: { shop: Shop; children: ReactNode; conversation?: boolean }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={conversation ? "fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-[env(safe-area-inset-bottom)] flex min-h-0 flex-col overflow-hidden bg-background" : "flex min-h-screen flex-col"}>
       <SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} guidesEnabled={shop?.guidesEnabled ?? false} />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-      <SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} />
+      <main className={conversation ? "mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden" : "mx-auto w-full max-w-6xl flex-1 px-4 py-8"}>{children}</main>
+      {!conversation && <SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} />}
     </div>
   );
 }

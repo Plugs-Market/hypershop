@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture
+- Support conversations opt into the viewport-bound GuidesShell layout; only the message region scrolls, keeping ticket controls and the composer visible without affecting other pages.
 - All HyperTV API calls go through `src/lib/hypertvClient.server.ts` and are invoked only by feature server functions — the shop key must never reach the browser.
 - Orders are created and tracked through the HyperTV API (POST /orders, GET /orders/{id}); the local orders table is legacy and unused. Never call POST /activate for customer orders — HyperTV credits the reseller wallet and activates the subscription automatically once payment is confirmed.
 - Displayed and charged prices always come from the HyperTV API (price_eur); never compute or send prices from the browser. The checkout idempotency key is generated once per attempt in the form state so a double click cannot create two orders.
