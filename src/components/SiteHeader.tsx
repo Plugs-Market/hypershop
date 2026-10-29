@@ -10,7 +10,8 @@ export function SiteHeader({ name, logoUrl }: { name?: string | null; logoUrl?: 
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
           {logoUrl ? (
-            <img src={logoUrl} alt={brand} className="h-8 w-8 rounded-lg object-cover shadow-glow" />
+            // Les URL signées de l'API tournent entre le rendu serveur et le client.
+            <img src={logoUrl} alt={brand} suppressHydrationWarning className="h-8 w-8 rounded-lg object-cover shadow-glow" />
           ) : (
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary shadow-glow">
               <Tv className="h-4 w-4 text-primary-foreground" />

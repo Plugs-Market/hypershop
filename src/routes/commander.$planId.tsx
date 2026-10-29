@@ -38,9 +38,12 @@ export const Route = createFileRoute("/commander/$planId")({
       ],
     };
   },
-  loader: ({ context }): Promise<Catalog> => {
-    void context.queryClient.ensureQueryData(methodsQuery);
-    return context.queryClient.ensureQueryData(catalogQuery);
+  loader: async ({ context }): Promise<Catalog> => {
+    const [catalog] = await Promise.all([
+      context.queryClient.ensureQueryData(catalogQuery),
+      context.queryClient.ensureQueryData(methodsQuery),
+    ]);
+    return catalog;
   },
   component: Checkout,
 });

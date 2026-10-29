@@ -63,7 +63,7 @@ function Home() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.plans.map((p) => (
             <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
-              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" className="aspect-video w-full object-cover" />}
+              {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
               <div className="flex flex-1 flex-col p-6">
               <h2 className="text-xl font-bold">{p.name}</h2>
               {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
