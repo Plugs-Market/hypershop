@@ -20,6 +20,7 @@ import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as MonCompteFacturesRouteImport } from './routes/mon-compte_.factures'
+import { Route as MonCompteFacturesIdRouteImport } from './routes/mon-compte_.factures_.$id'
 import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +78,11 @@ const MonCompteFacturesRoute = MonCompteFacturesRouteImport.update({
   path: '/mon-compte/factures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonCompteFacturesIdRoute = MonCompteFacturesIdRouteImport.update({
+  id: '/mon-compte_/factures_/$id',
+  path: '/mon-compte/factures/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrdersIdPlaylistRoute =
   ApiPublicOrdersIdPlaylistRouteImport.update({
     id: '/api/public/orders/$id/playlist',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte/factures': typeof MonCompteFacturesRoute
   '/guides/': typeof GuidesIndexRoute
+  '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte/factures': typeof MonCompteFacturesRoute
   '/guides': typeof GuidesIndexRoute
+  '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesById {
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte_/factures': typeof MonCompteFacturesRoute
   '/guides/': typeof GuidesIndexRoute
+  '/mon-compte_/factures_/$id': typeof MonCompteFacturesIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRouteTypes {
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/mon-compte/factures'
     | '/guides/'
+    | '/mon-compte/factures/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/mon-compte/factures'
     | '/guides'
+    | '/mon-compte/factures/$id'
     | '/api/public/orders/$id/playlist'
   id:
     | '__root__'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/mon-compte_/factures'
     | '/guides/'
+    | '/mon-compte_/factures_/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesById: FileRoutesById
 }
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   GuidesSlugRoute: typeof GuidesSlugRoute
   MonCompteFacturesRoute: typeof MonCompteFacturesRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
+  MonCompteFacturesIdRoute: typeof MonCompteFacturesIdRoute
   ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
 }
 
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonCompteFacturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mon-compte_/factures_/$id': {
+      id: '/mon-compte_/factures_/$id'
+      path: '/mon-compte/factures/$id'
+      fullPath: '/mon-compte/factures/$id'
+      preLoaderRoute: typeof MonCompteFacturesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/orders/$id/playlist': {
       id: '/api/public/orders/$id/playlist'
       path: '/api/public/orders/$id/playlist'
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesSlugRoute: GuidesSlugRoute,
   MonCompteFacturesRoute: MonCompteFacturesRoute,
   GuidesIndexRoute: GuidesIndexRoute,
+  MonCompteFacturesIdRoute: MonCompteFacturesIdRoute,
   ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
 }
 export const routeTree = rootRouteImport
