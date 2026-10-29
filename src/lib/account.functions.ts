@@ -47,8 +47,7 @@ export const loginWithMfa = createServerFn({ method: "POST" })
   });
 
 // null = non connecté (ou session expirée : cookie supprimé).
-export const getMyAccount = createServerFn({ method: "GET" }).handler(async () => {
-  setResponseHeader("Cache-Control", "no-store");
+async function loadAccount() {
   const session = readSession();
   if (!session) return null;
   try {
@@ -60,6 +59,11 @@ export const getMyAccount = createServerFn({ method: "GET" }).handler(async () =
     }
     throw new Error(translateAccountError(e instanceof HypertvError ? e.code : undefined));
   }
+}
+
+export const getMyAccount = createServerFn({ method: "GET" }).handler(async () => {
+  setResponseHeader("Cache-Control", "no-store");
+  return loadAccount();
 });
 
 // État léger pour l'en-tête et le checkout : jamais d'erreur.
@@ -67,7 +71,7 @@ export const getAccountStatus = createServerFn({ method: "GET" }).handler(async 
   setResponseHeader("Cache-Control", "no-store");
   if (!readSession()) return { loggedIn: false, mac: null as string | null };
   try {
-    const a = await getMyAccount();
+    const a = await loadAccount();
     return { loggedIn: !!a, mac: a?.mac ?? null };
   } catch {
     return { loggedIn: true, mac: null as string | null };
