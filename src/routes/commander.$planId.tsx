@@ -3,7 +3,6 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
-import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
