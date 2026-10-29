@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button";
 type Shop = { name: string | null; logoUrl: string | null; slogan: string | null; guidesEnabled: boolean } | null | undefined;
 
 /**
- * Pins the conversation layout to the real visible screen.
- * iOS home-screen apps (black-translucent status bar) report a viewport shorter
- * than the screen, which left an empty band under the composer. In standalone
- * mode we size the shell from the physical screen height; when the keyboard is
- * open we follow the visual viewport so the composer stays above it.
+ * Pins the conversation layout to the visible screen.
+ * The shell is `position: fixed; inset: 0`, so it always matches the real
+ * screen (including iOS home-screen apps). Only while the on-screen keyboard is
+ * open do we follow the visual viewport, so the composer stays just above it.
  */
 function useConversationViewport(enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null);
@@ -21,22 +20,21 @@ function useConversationViewport(enabled: boolean) {
     const el = ref.current;
     if (!el) return;
     const vv = window.visualViewport;
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    const html = document.documentElement;
+    const prevOverflow = html.style.overflow;
+    html.style.overflow = "hidden";
     const update = () => {
-      const portrait = window.innerHeight >= window.innerWidth;
-      const screenH = portrait
-        ? Math.max(window.screen.width, window.screen.height)
-        : Math.min(window.screen.width, window.screen.height);
       const vh = vv?.height ?? window.innerHeight;
       const keyboard = vh < window.innerHeight * 0.8;
-      let height: number;
-      if (keyboard) height = vh;
-      else if (standalone) height = Math.max(screenH, window.innerHeight);
-      else height = window.innerHeight;
-      el.style.height = `${Math.round(height)}px`;
-      el.style.transform = keyboard && vv ? `translateY(${Math.round(vv.offsetTop)}px)` : "";
+      if (keyboard && vv) {
+        el.style.bottom = "auto";
+        el.style.height = `${Math.round(vv.height)}px`;
+        el.style.transform = `translateY(${Math.round(vv.offsetTop)}px)`;
+      } else {
+        el.style.bottom = "";
+        el.style.height = "";
+        el.style.transform = "";
+      }
       el.dataset["keyboard"] = keyboard ? "true" : "false";
     };
     update();
@@ -45,6 +43,7 @@ function useConversationViewport(enabled: boolean) {
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     return () => {
+      html.style.overflow = prevOverflow;
       vv?.removeEventListener("resize", update);
       vv?.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
@@ -61,7 +60,7 @@ export function GuidesShell({ shop, children, conversation = false }: { shop: Sh
       ref={ref}
       className={
         conversation
-          ? "fixed inset-x-0 top-0 flex h-dvh min-h-0 flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)] pb-[max(0px,calc(env(safe-area-inset-bottom)-1.25rem))] data-[keyboard=true]:pb-0"
+          ? "group fixed inset-0 z-40 flex min-h-0 flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)]"
           : "flex min-h-screen flex-col"
       }
     >
