@@ -51,22 +51,6 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
           <span className="truncate">{parts.join(" ")}{last && <> <span className="text-primary">{last}</span></>}</span>
         </Link>
         <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {guidesEnabled && (
-            <Link aria-label="Guides"
-              to="/guides"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
-            >
-              <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Guides</span>
-            </Link>
-          )}
-          {apps && (
-            <Link aria-label="Télécharger"
-              to="/telecharger"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
-            >
-              <Download className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Télécharger</span>
-            </Link>
-          )}
           <Link aria-label="Boutique"
             to="/"
             // Ramène aussi au choix des catégories quand on est déjà sur l'accueil.
@@ -75,6 +59,22 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
           >
             <ShoppingBag className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Boutique</span>
           </Link>
+          {apps && (
+            <Link aria-label="Télécharger"
+              to="/telecharger"
+              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+            >
+              <Download className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Télécharger</span>
+            </Link>
+          )}
+          {guidesEnabled && (
+            <Link aria-label="Guides"
+              to="/guides"
+              className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+            >
+              <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Guides</span>
+            </Link>
+          )}
           <Link aria-label={status?.loggedIn ? "Mon compte" : "Connexion"}
             to={status?.loggedIn ? "/mon-compte" : "/connexion"}
             className="inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-border bg-card/60 sm:h-auto sm:w-auto sm:px-4 sm:py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
