@@ -27,7 +27,13 @@ export const listCustomerInvoices = createServerFn({ method: "GET" })
   .handler(({ data }) => privateCall(async session => {
     const [raw, methods] = await Promise.all([hypertv.getInvoices(session, data), hypertv.getPaymentMethods(session)]);
     const r = record(raw);
-    return { total: Number(r.total) || 0, page: Number(r.page) || data.page, pageSize: typeof r.pageSize === "number" ? r.pageSize : typeof r.limit === "number" ? r.limit : null, invoices: Array.isArray(r.invoices) ? r.invoices.map(normalizeInvoice) : [], methods: methods.methods };
+    let pageSize = typeof r.pageSize === "number" ? r.pageSize : typeof r.limit === "number" ? r.limit : null;
+    // The API contract has no page size. Read page one rather than guessing from a partial last page.
+    if (pageSize === null) {
+      const first = data.page === 1 ? r : record(await hypertv.getInvoices(session, { ...data, page: 1 }));
+      pageSize = Array.isArray(first.invoices) ? first.invoices.length : 0;
+    }
+    return { total: Number(r.total) || 0, page: Number(r.page) || data.page, pageSize, invoices: Array.isArray(r.invoices) ? r.invoices.map(normalizeInvoice) : [], methods: methods.methods };
   }));
 export const getCustomerInvoice = createServerFn({ method: "GET" }).inputValidator((d: unknown) => idSchema.parse(d))
   .handler(({ data }) => privateCall(async session => {

@@ -13,6 +13,7 @@ export type Invoice = {
   orderId: string | null; payment: InvoicePayment; hasDelivery: boolean;
 };
 export const INVOICE_STATES = ["pending", "detected", "review", "paid", "activated", "expired", "cancelled"] as const;
+export const INVOICE_POLL_INTERVAL = 20_000;
 export const invoiceStatusLabels: Record<string, string> = { pending: "En attente", detected: "Paiement détecté", review: "À vérifier", paid: "Payée", activated: "Payée", expired: "Expirée", cancelled: "Annulée" };
 export function invoicePolls(state: string) { return state === "pending" || state === "detected"; }
 export function invoiceCanPay(i: Pick<Invoice, "priceEur" | "payable" | "source">) { return i.payable && i.priceEur > 0 && i.source !== "hypertv"; }
@@ -29,7 +30,7 @@ export function normalizeInvoice(raw: unknown): Invoice {
     createdAt: text(i.createdAt) ?? text(i.date), priceEur: Number.isFinite(price) ? price : 0,
     state: text(i.state) ?? text(i.status) ?? "unknown", source: text(i.source) ?? "shop",
     payable: i.payable === true, cancellable: i.cancellable !== false && i.cancelable !== false,
-    expiresAt: text(i.expiresAt), orderId: text(o.id) ?? text(i.orderId), hasDelivery: !!i.delivery,
+    expiresAt: text(i.expiresAt), orderId: text(o.id) ?? text(i.orderId) ?? text(i.id), hasDelivery: !!i.delivery,
     payment: { method: text(p.method) ?? "", label: text(p.label) ?? "—", amount: typeof p.amount === "number" || typeof p.amount === "string" ? p.amount : null, symbol: text(p.symbol), address: text(p.address), memo: text(p.memo) },
   };
 }

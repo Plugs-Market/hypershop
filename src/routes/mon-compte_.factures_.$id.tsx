@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CreditCard, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getCustomerInvoice, payCustomerInvoice, cancelCustomerInvoice, invoiceStripeCheckout, invoicePaypalTxid } from "@/lib/invoices.functions";
-import { invoiceCanPay, invoiceCanCancel, invoiceCurrency, invoicePolls } from "@/lib/invoices";
+import { invoiceCanPay, invoiceCanCancel, invoiceCurrency, invoicePolls, INVOICE_POLL_INTERVAL } from "@/lib/invoices";
 import { formatFrDate } from "@/lib/account";
 import { shopQuery } from "./mon-compte";
 import { GuidesShell } from "@/components/GuidesShell";
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
-const detailQuery = (id: string) => queryOptions({ queryKey: ["customer-invoice", id], queryFn: () => getCustomerInvoice({ data: { id } }), staleTime: 0, gcTime: 0, retry: false, refetchInterval: query => invoicePolls(query.state.data?.invoice.state ?? "") ? 20_000 : false });
+const detailQuery = (id: string) => queryOptions({ queryKey: ["customer-invoice", id], queryFn: () => getCustomerInvoice({ data: { id } }), staleTime: 0, gcTime: 0, retry: false, refetchInterval: query => invoicePolls(query.state.data?.invoice.state ?? "") ? INVOICE_POLL_INTERVAL : false, throwOnError: e => e.message.startsWith("Session expirée") });
 export const Route = createFileRoute("/mon-compte_/factures_/$id")({
   loader: async ({ context, params }) => {
     try { const [, shop] = await Promise.all([context.queryClient.ensureQueryData(detailQuery(params.id)), context.queryClient.ensureQueryData(shopQuery)]); return { shopName: shop.name }; }
