@@ -2,6 +2,7 @@
 import type { OffersResponse } from "./shop-offers";
 import type { OrderInput, OrderProgress } from "./shop-order";
 import type { Delivery } from "./playlist-security";
+import type { GuideCategoriesResponse, GuidesListResponse, GuideDetail } from "./guides";
 
 const BASE_URL = "https://hypertv.win/api/public/shop/v1";
 
@@ -50,7 +51,19 @@ export type ShopInfo = {
   slogan?: string | null;
   description?: string | null;
   logoUrl?: string | null;
+  guides?: { enabled?: boolean; categoryIds?: string[] } | null;
 };
+
+// Cache mémoire court (5 min) pour les guides.
+const guideCache = new Map<string, { at: number; value: unknown }>();
+async function cached<T>(path: string): Promise<T> {
+  const hit = guideCache.get(path);
+  if (hit && Date.now() - hit.at < 300_000) return hit.value as T;
+  const value = await call<T>(path);
+  guideCache.set(path, { at: Date.now(), value });
+  return value;
+}
+
 
 export type PaymentMethod = {
   code: string;
@@ -90,6 +103,18 @@ export type ShopOrder = OrderProgress & {
 
 export const hypertv = {
   getShop: () => call<ShopInfo>("/shop"),
+  getShopCached: () => cached<ShopInfo>("/shop"),
+  getGuideCategories: () => cached<GuideCategoriesResponse>("/guides/categories"),
+  listGuides: (category?: string) =>
+    cached<GuidesListResponse>("/guides" + (category ? `?category=${encodeURIComponent(category)}` : "")),
+  getGuide: async (slug: string) => {
+    try {
+      return await cached<GuideDetail>(`/guides/${encodeURIComponent(slug)}`);
+    } catch (e) {
+      if (e instanceof HypertvError && e.status === 404) return null;
+      throw e;
+    }
+  },
   getOffers: () => call<OffersResponse>("/offers"),
   getPaymentMethods: () => call<{ methods: PaymentMethod[] }>("/payment-methods"),
   // L'API enveloppe la commande dans { order: … } ; on accepte aussi la réponse directe.

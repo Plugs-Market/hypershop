@@ -100,7 +100,7 @@ function Home() {
   ];
   return (
     <div className="flex min-h-screen flex-col bg-gradient-hero">
-      <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
+      <SiteHeader name={shopName} logoUrl={shop.logoUrl} guidesEnabled={shop.guidesEnabled} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20">
         {category === null ? (
         <section className="py-10 text-center md:py-16">

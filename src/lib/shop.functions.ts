@@ -35,13 +35,15 @@ export type ShopIdentity = {
   slogan: string | null;
   description: string | null;
   logoUrl: string | null;
+  guidesEnabled: boolean;
 };
-function shopInfo(s: { name?: string; slogan?: string | null; description?: string | null; logoUrl?: string | null } | null): ShopIdentity {
+export function shopInfo(s: { name?: string; slogan?: string | null; description?: string | null; logoUrl?: string | null; guides?: { enabled?: boolean } | null } | null): ShopIdentity {
   return {
     name: s?.name ?? null,
     slogan: s?.slogan ?? null,
     description: s?.description ?? null,
     logoUrl: s?.logoUrl ?? null,
+    guidesEnabled: s?.guides?.enabled === true,
   };
 }
 

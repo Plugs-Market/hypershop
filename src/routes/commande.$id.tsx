@@ -87,12 +87,12 @@ function OrderPage() {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
-    return (<div className="flex min-h-screen flex-col"><SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} /><p className="flex-1 p-12 text-center text-muted-foreground">Commande introuvable.</p><SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} /></div>);
+    return (<div className="flex min-h-screen flex-col"><SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} guidesEnabled={shop?.guidesEnabled} /><p className="flex-1 p-12 text-center text-muted-foreground">Commande introuvable.</p><SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} /></div>);
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-hero">
-      <SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} />
+      <SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} guidesEnabled={shop?.guidesEnabled} />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-12">
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
