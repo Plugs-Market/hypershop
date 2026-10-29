@@ -3,6 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
+import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ function Checkout() {
               {buyable.map((p) => (
                 <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
                   className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? <>Ligne M3U {p.line.months} mois{p.includesHypertvSubscription && <span className="mt-1 block">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}</> : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? <>{trexLineLabels(p.line).map((lbl, i) => <span key={i} className="block break-words">{lbl}</span>)}{p.includesHypertvSubscription && <span className="mt-1 block">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}</> : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
                   <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
                 </Button>
               ))}

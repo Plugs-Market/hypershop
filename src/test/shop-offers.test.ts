@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { catalogPlans, catalogTrexPlans, enabledSubscriptionPlans, planPriceCents, type SubscriptionPlan, type TrexPlan } from "@/lib/shop-offers";
+import { catalogPlans, catalogTrexPlans, enabledSubscriptionPlans, planPriceCents, trexLineLabels, type SubscriptionPlan, type TrexPlan } from "@/lib/shop-offers";
 
 const vip: SubscriptionPlan = {
   id: "vip", name: "VIP", description: "Texte personnalisé",
@@ -53,5 +53,20 @@ describe("offres TREX", () => {
     for (const plan of [{ ...trex, price_eur: null }, { ...trex, currency: "USD" }]) {
       expect(catalogTrexPlans({ resellerOffers: [], subscriptionPlans: [], trexPlans: [plan] })[0]?.price_cents).toBeNull();
     }
+  });
+});
+
+describe("libellés TREX écrits par le revendeur", () => {
+  it("affiche line.labels dans l'ordre reçu, texte brut", () => {
+    expect(trexLineLabels({ labels: ["Ligne 1 mois", "Ultra 4K"], label: "Ligne 1 mois" })).toEqual(["Ligne 1 mois", "Ultra 4K"]);
+  });
+  it("replie sur line.label quand labels est absent", () => {
+    expect(trexLineLabels({ label: "Ligne 1 mois" })).toEqual(["Ligne 1 mois"]);
+    expect(trexLineLabels({ labels: [], label: "Ligne 1 mois" })).toEqual(["Ligne 1 mois"]);
+  });
+  it("ignore les libellés vides et ne dérive aucune durée des libellés", () => {
+    expect(trexLineLabels({ labels: ["", "   ", "Valable 12 mois"], label: "" })).toEqual(["Valable 12 mois"]);
+    expect(trexLineLabels({})).toEqual([]);
+    expect(trexLineLabels({ labels: ["Un an"] })).toEqual(["Un an"]);
   });
 });

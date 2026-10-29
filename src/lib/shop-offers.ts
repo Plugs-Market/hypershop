@@ -27,9 +27,17 @@ export type TrexPlan = {
   cover_url?: string | null;
   price_eur?: number | null;
   currency: string;
-  line: { type: "m3u"; months: number; durationDays: number };
+  line: { type: "m3u"; months: number; durationDays: number; sub?: number | null; label?: string; labels?: string[] };
   includesHypertvSubscription: null | { name: string; durationDays: number; maxDevices: number };
 };
+
+// Les libellés sont affichés tels qu'écrits par le revendeur : ils ne servent
+// jamais à calculer une durée (months / durationDays restent les vraies valeurs).
+export function trexLineLabels(line: Pick<TrexPlan["line"], "labels" | "label">): string[] {
+  const labels = (line.labels ?? []).filter((l): l is string => typeof l === "string" && l.trim().length > 0);
+  if (labels.length > 0) return labels;
+  return typeof line.label === "string" && line.label.trim().length > 0 ? [line.label] : [];
+}
 
 export function planPriceCents(plan: Pick<SubscriptionPlan, "currency" | "price_eur">): number | null {
   if (plan.currency !== undefined && plan.currency !== "EUR") return null;
