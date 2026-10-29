@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,6 +151,7 @@ function Checkout() {
           <p className="text-center text-xs text-muted-foreground"><Link to="/" className="underline">Retour aux formules</Link></p>
         </form>
       </main>
+      <SiteFooter name={data.shop.name} slogan={data.shop.slogan} />
     </div>
   );
 }

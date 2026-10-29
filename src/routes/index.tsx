@@ -6,6 +6,7 @@ import { getCatalog } from "@/lib/shop.functions";
 import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 
 // Les URL d'images de l'API expirent après 24 h : on relit le catalogue à chaque visite.
@@ -201,6 +202,7 @@ function Home() {
           </section>
         )}
       </main>
+      <SiteFooter name={shopName} slogan={shop.slogan} />
     </div>
   );
 }
