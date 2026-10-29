@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Loader2, XCircle, Copy, ExternalLink, RotateCcw, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, XCircle, Copy, Rocket, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { getShopInfo, getOrder, getPaymentMethods, stripeCheckout, paypalTxid } from "@/lib/shop.functions";
@@ -100,11 +100,15 @@ function OrderPage() {
           </dl>
 
           {order.state === "activated" && (
-            <Button asChild variant="hero" className="w-full">
-              <a href="https://hypertv.win" target="_blank" rel="noreferrer">
-                <ExternalLink className="h-4 w-4" /> Ouvrir HyperTV
-              </a>
-            </Button>
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <p className="flex items-center justify-center gap-2 text-center font-semibold">
+                <Rocket className="h-5 w-5 shrink-0 text-primary" />
+                Lancez votre application pour profiter de votre abonnement
+              </p>
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                Redémarrez l'application HyperTV sur votre appareil : votre formule est déjà active.
+              </p>
+            </div>
           )}
           {order.state === "expired" && (
             <Button asChild variant="hero" className="w-full">
