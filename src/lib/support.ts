@@ -43,7 +43,8 @@ export type SupportDevice = { id: string; publicKey: string; owner: string | nul
 export type SupportMessage = { id: string; from: "customer" | "staff"; ct: string; iv: string; statusChange: string | null; createdAt: string };
 export type SupportTicketSummary = { id: string; category: string; status: string; subject: Cipher | null; lastSender: string | null; lastMessageAt: string | null };
 
-const rec = (v: unknown): Record<string, any> => (v && typeof v === "object" ? (v as Record<string, any>) : {});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rec = (v: unknown): any => (v && typeof v === "object" ? v : {});
 const s = (v: unknown) => (typeof v === "string" ? v : null);
 
 function cipher(v: unknown): Cipher | null {

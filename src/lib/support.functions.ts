@@ -6,7 +6,8 @@ import { clearSession, readSession } from "./account.server";
 import { SESSION_ERRORS } from "./account";
 import { cipherSchema, normalizeDevices, normalizeTicketDetail, normalizeTicketSummary, SUPPORT_CATEGORIES, SUPPORT_ERRORS, translateSupportError } from "./support";
 
-const rec = (v: unknown): Record<string, any> => (v && typeof v === "object" ? (v as Record<string, any>) : {});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rec = (v: unknown): any => (v && typeof v === "object" ? v : {});
 const id = z.string().min(1).max(150);
 const b64 = z.string().min(1).max(20_000);
 

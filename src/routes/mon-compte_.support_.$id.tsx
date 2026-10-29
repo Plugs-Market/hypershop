@@ -71,7 +71,7 @@ function Conversation() {
         return { id: m.id, from: m.from, createdAt: m.createdAt, statusChange: m.statusChange, text: p.t ?? "", atts: Array.isArray(p.atts) ? p.atts : [] };
       }));
       if (decoded.length) {
-        lastAt.current = decoded[decoded.length - 1].createdAt || lastAt.current;
+        lastAt.current = decoded[decoded.length - 1]?.createdAt || lastAt.current;
         if (decoded.some((m) => m.from === "staff")) void markSupportRead({ data: { id } }).catch(() => null);
       }
       setMsgs((old) => (full ? decoded : mergeById(old, decoded)));
@@ -191,9 +191,10 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
         const uploads = await requestSupportUploads({ data: { id: ticketId, files: encrypted.map((e) => ({ mime: e.f.type, size: e.data.byteLength })) } });
         if (uploads.length !== encrypted.length) throw new Error("Envoi des photos impossible.");
         await Promise.all(uploads.map(async (u, i) => {
-          const r = await fetch(u.uploadUrl, { method: "PUT", body: encrypted[i].data, headers: { "Content-Type": "application/octet-stream" } });
+          const enc = encrypted[i]!;
+          const r = await fetch(u.uploadUrl, { method: "PUT", body: enc.data, headers: { "Content-Type": "application/octet-stream" } });
           if (!r.ok) throw new Error("Envoi des photos impossible.");
-          atts.push({ p: u.path, m: encrypted[i].f.type, s: encrypted[i].f.size, iv: encrypted[i].iv });
+          atts.push({ p: u.path, m: enc.f.type, s: enc.f.size, iv: enc.iv });
         }));
       }
       const payload: MessagePayload = { t: text.trim(), ...(name ? { n: name } : {}), ...(atts.length ? { atts } : {}) };
