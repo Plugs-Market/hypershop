@@ -147,4 +147,34 @@ export const hypertv = {
   updateAccount: (session: string, username: string) =>
     call<unknown>("/account", { method: "PATCH", body: { username }, session }),
   logout: (session: string) => call<unknown>("/account/logout", { method: "POST", session }),
+  // Support chiffré : le serveur ne relaie que des données chiffrées.
+  supportRegisterDevice: (session: string, body: { publicKey: string; label: string }) =>
+    call<{ deviceId?: string; id?: string }>("/account/support/devices", { method: "POST", body, session }),
+  supportTickets: (session: string) => call<unknown>("/account/support/tickets", { session }),
+  supportCreate: (session: string, body: unknown) => call<unknown>("/account/support/tickets", { method: "POST", body, session }),
+  supportKeys: (session: string, id: string, keys: unknown[]) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/keys`, { method: "POST", body: { keys }, session }),
+  supportTicket: (session: string, id: string, deviceId: string, after?: string) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}?${new URLSearchParams({ deviceId, ...(after ? { after } : {}) })}`, { session }),
+  supportMessage: (session: string, id: string, body: { ct: string; iv: string }) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/messages`, { method: "POST", body, session }),
+  supportUploads: (session: string, id: string, files: { mime: string; size: number }[]) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/attachments`, { method: "POST", body: { files }, session }),
+  supportAttachment: (session: string, id: string, path: string) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/attachments?${new URLSearchParams({ path })}`, { session }),
+  supportStatus: (session: string, id: string, body: { expected: string; status: string; ct: string; iv: string }) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/status`, { method: "POST", body, session }),
+  supportRead: (session: string, id: string) =>
+    call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/read`, { method: "POST", body: {}, session }),
 };
+
+// Flux SSE brut (événements sans contenu), relayé tel quel au navigateur.
+export async function openSupportStream(session: string, signal: AbortSignal): Promise<Response> {
+  const key = process.env["HYPERTV_SHOP_KEY"];
+  if (!key) return new Response(null, { status: 500 });
+  return fetch(BASE_URL + "/account/support/stream", {
+    headers: { Authorization: `Bearer ${key}`, "X-Customer-Session": session, Accept: "text/event-stream" },
+    cache: "no-store",
+    signal,
+  });
+}

@@ -2,8 +2,9 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Check, Copy, LogOut, RefreshCw, Receipt } from "lucide-react";
+import { Check, Copy, LifeBuoy, LogOut, RefreshCw, Receipt } from "lucide-react";
 import { getMyAccount, logoutCustomer, updateUsername } from "@/lib/account.functions";
+import { clearSupportDevices } from "@/lib/support-crypto";
 import { formatFrDate, usernameSchema } from "@/lib/account";
 import { getShopInfo } from "@/lib/shop.functions";
 import { GuidesShell } from "@/components/GuidesShell";
@@ -83,6 +84,7 @@ function AccountPage() {
 
   async function onLogout() {
     await logout();
+    await clearSupportDevices().catch(() => null);
     qc.removeQueries({ queryKey: ["account-status"] });
     await navigate({ to: "/connexion", replace: true });
   }
@@ -151,6 +153,9 @@ function AccountPage() {
         </Button>
         <Button asChild variant="outline" className="w-full">
           <Link to="/mon-compte/factures" search={{ status: "", method: "", q: "", page: 1 }}><Receipt className="h-4 w-4" /> Mes factures</Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/mon-compte/support"><LifeBuoy className="h-4 w-4" /> Support</Link>
         </Button>
       </div>
     </GuidesShell>

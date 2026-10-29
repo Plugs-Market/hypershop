@@ -14,13 +14,16 @@ import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as TelechargerRouteImport } from './routes/telecharger'
+import { Route as ApiSupportStreamRouteImport } from './routes/api/support-stream'
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as MonCompteFacturesRouteImport } from './routes/mon-compte_.factures'
+import { Route as MonCompteSupportRouteImport } from './routes/mon-compte_.support'
 import { Route as MonCompteFacturesIdRouteImport } from './routes/mon-compte_.factures_.$id'
+import { Route as MonCompteSupportIdRouteImport } from './routes/mon-compte_.support_.$id'
 import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
 
 const IndexRoute = IndexRouteImport.update({
@@ -46,6 +49,11 @@ const MonCompteRoute = MonCompteRouteImport.update({
 const TelechargerRoute = TelechargerRouteImport.update({
   id: '/telecharger',
   path: '/telecharger',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSupportStreamRoute = ApiSupportStreamRouteImport.update({
+  id: '/api/support-stream',
+  path: '/api/support-stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIconSizeRoute = AppIconSizeRouteImport.update({
@@ -78,9 +86,19 @@ const MonCompteFacturesRoute = MonCompteFacturesRouteImport.update({
   path: '/mon-compte/factures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonCompteSupportRoute = MonCompteSupportRouteImport.update({
+  id: '/mon-compte_/support',
+  path: '/mon-compte/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MonCompteFacturesIdRoute = MonCompteFacturesIdRouteImport.update({
   id: '/mon-compte_/factures_/$id',
   path: '/mon-compte/factures/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteSupportIdRoute = MonCompteSupportIdRouteImport.update({
+  id: '/mon-compte_/support_/$id',
+  path: '/mon-compte/support/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicOrdersIdPlaylistRoute =
@@ -96,13 +114,16 @@ export interface FileRoutesByFullPath {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte/factures': typeof MonCompteFacturesRoute
+  '/mon-compte/support': typeof MonCompteSupportRoute
   '/guides/': typeof GuidesIndexRoute
   '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
+  '/mon-compte/support/$id': typeof MonCompteSupportIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
@@ -111,13 +132,16 @@ export interface FileRoutesByTo {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte/factures': typeof MonCompteFacturesRoute
+  '/mon-compte/support': typeof MonCompteSupportRoute
   '/guides': typeof GuidesIndexRoute
   '/mon-compte/factures/$id': typeof MonCompteFacturesIdRoute
+  '/mon-compte/support/$id': typeof MonCompteSupportIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesById {
@@ -127,13 +151,16 @@ export interface FileRoutesById {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
+  '/api/support-stream': typeof ApiSupportStreamRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/mon-compte_/factures': typeof MonCompteFacturesRoute
+  '/mon-compte_/support': typeof MonCompteSupportRoute
   '/guides/': typeof GuidesIndexRoute
   '/mon-compte_/factures_/$id': typeof MonCompteFacturesIdRoute
+  '/mon-compte_/support_/$id': typeof MonCompteSupportIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRouteTypes {
@@ -144,13 +171,16 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
     | '/mon-compte/factures'
+    | '/mon-compte/support'
     | '/guides/'
     | '/mon-compte/factures/$id'
+    | '/mon-compte/support/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -159,13 +189,16 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
     | '/mon-compte/factures'
+    | '/mon-compte/support'
     | '/guides'
     | '/mon-compte/factures/$id'
+    | '/mon-compte/support/$id'
     | '/api/public/orders/$id/playlist'
   id:
     | '__root__'
@@ -174,13 +207,16 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/mon-compte'
     | '/telecharger'
+    | '/api/support-stream'
     | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/guides/$slug'
     | '/mon-compte_/factures'
+    | '/mon-compte_/support'
     | '/guides/'
     | '/mon-compte_/factures_/$id'
+    | '/mon-compte_/support_/$id'
     | '/api/public/orders/$id/playlist'
   fileRoutesById: FileRoutesById
 }
@@ -190,13 +226,16 @@ export interface RootRouteChildren {
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   MonCompteRoute: typeof MonCompteRoute
   TelechargerRoute: typeof TelechargerRoute
+  ApiSupportStreamRoute: typeof ApiSupportStreamRoute
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
   MonCompteFacturesRoute: typeof MonCompteFacturesRoute
+  MonCompteSupportRoute: typeof MonCompteSupportRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
   MonCompteFacturesIdRoute: typeof MonCompteFacturesIdRoute
+  MonCompteSupportIdRoute: typeof MonCompteSupportIdRoute
   ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
 }
 
@@ -235,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/telecharger'
       fullPath: '/telecharger'
       preLoaderRoute: typeof TelechargerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/support-stream': {
+      id: '/api/support-stream'
+      path: '/api/support-stream'
+      fullPath: '/api/support-stream'
+      preLoaderRoute: typeof ApiSupportStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app-icon/$size': {
@@ -279,11 +325,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonCompteFacturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mon-compte_/support': {
+      id: '/mon-compte_/support'
+      path: '/mon-compte/support'
+      fullPath: '/mon-compte/support'
+      preLoaderRoute: typeof MonCompteSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mon-compte_/factures_/$id': {
       id: '/mon-compte_/factures_/$id'
       path: '/mon-compte/factures/$id'
       fullPath: '/mon-compte/factures/$id'
       preLoaderRoute: typeof MonCompteFacturesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte_/support_/$id': {
+      id: '/mon-compte_/support_/$id'
+      path: '/mon-compte/support/$id'
+      fullPath: '/mon-compte/support/$id'
+      preLoaderRoute: typeof MonCompteSupportIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/orders/$id/playlist': {
@@ -302,13 +362,16 @@ const rootRouteChildren: RootRouteChildren = {
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   MonCompteRoute: MonCompteRoute,
   TelechargerRoute: TelechargerRoute,
+  ApiSupportStreamRoute: ApiSupportStreamRoute,
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
   GuidesSlugRoute: GuidesSlugRoute,
   MonCompteFacturesRoute: MonCompteFacturesRoute,
+  MonCompteSupportRoute: MonCompteSupportRoute,
   GuidesIndexRoute: GuidesIndexRoute,
   MonCompteFacturesIdRoute: MonCompteFacturesIdRoute,
+  MonCompteSupportIdRoute: MonCompteSupportIdRoute,
   ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
 }
 export const routeTree = rootRouteImport
