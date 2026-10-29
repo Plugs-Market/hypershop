@@ -12,7 +12,6 @@ export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
     const data = loaderData as { shop?: { name?: string | null } } | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
-    void 0;
     return {
       meta: [
         { title: `Suivi de commande — ${shopName}` },
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/commande/$id")({
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 function OrderPage() {
-  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null } };
+  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null; logoUrl?: string | null } };
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
   const retry = useServerFn(retryActivation);
@@ -65,7 +64,7 @@ function OrderPage() {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
-    return (<div className="min-h-screen"><SiteHeader name={shop?.name} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
+    return (<div className="min-h-screen"><SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
   }
 
   const activated = order.activation_status === "activated";
@@ -74,7 +73,7 @@ function OrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader name={shop?.name} />
+      <SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
