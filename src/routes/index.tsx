@@ -6,7 +6,13 @@ import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
-const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: () => getCatalog() });
+// Les URL d'images de l'API expirent après 24 h : on relit le catalogue à chaque visite.
+const catalogQuery = queryOptions({
+  queryKey: ["catalog"],
+  queryFn: () => getCatalog(),
+  staleTime: 0,
+  refetchOnMount: "always",
+});
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/")({
@@ -69,7 +75,7 @@ function Home() {
               </ul>
               <div className="mt-auto pt-6">
               {p.price_cents !== null ? (
-                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Choisir</Link></Button>
+                <Button asChild variant="hero" className="w-full"><Link to="/commander/$planId" params={{ planId: p.id }}>Acheter</Link></Button>
               ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
               </div>
               </div>
