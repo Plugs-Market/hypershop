@@ -1,12 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Clock, Loader2, XCircle, Copy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, Clock, Loader2, XCircle, Copy, ExternalLink, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { getShopInfo, getOrder, retryActivation } from "@/lib/shop.functions";
-import { formatPrice } from "@/lib/hypertv-shared";
+import { QRCodeSVG } from "qrcode.react";
+import { getShopInfo, getOrder, getPaymentMethods, stripeCheckout, paypalTxid } from "@/lib/shop.functions";
+import type { ShopOrder, PaymentMethod } from "@/lib/hypertvClient.server";
+import { formatEur } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -15,7 +19,7 @@ export const Route = createFileRoute("/commande/$id")({
     return {
       meta: [
         { title: `Suivi de commande — ${shopName}` },
-        { name: "description", content: "Suivez le paiement et l'activation de votre abonnement." },
+        { name: "description", content: "Suivez le paiement et l'activation of your abonnement." },
         { name: "robots", content: "noindex" },
         { property: "og:title", content: `Suivi de commande — ${shopName}` },
         { property: "og:description", content: "Suivi de votre commande." },
@@ -27,49 +31,53 @@ export const Route = createFileRoute("/commande/$id")({
   loader: async ({ params }): Promise<{
     order: Awaited<ReturnType<typeof getOrder>>;
     shop: Awaited<ReturnType<typeof getShopInfo>>;
+    methods: Awaited<ReturnType<typeof getPaymentMethods>>;
   }> => {
-    const [order, shop] = await Promise.all([
+    const [order, shop, methods] = await Promise.all([
       getOrder({ data: { id: params.id } }),
       getShopInfo(),
+      getPaymentMethods(),
     ]);
-    return { order, shop };
+    return { order, shop, methods };
   },
   component: OrderPage,
 });
 
-type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
+type Order = ShopOrder;
+
+// États qui évoluent encore : on relance le suivi toutes les 20 s.
+const POLLING_STATES = new Set(["pending", "detected", "review", "paid"]);
+const CRYPTO_METHODS = new Set(["btc", "eth", "ltc", "ton"]);
 
 function OrderPage() {
-  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null; logoUrl: string | null } };
+  const { order: initial, shop, methods } = Route.useLoaderData() as {
+    order: Order | null;
+    shop: { name: string | null; logoUrl: string | null };
+    methods: { methods: PaymentMethod[]; error: string | null };
+  };
   const [order, setOrder] = useState<Order | null>(initial);
-  const [busy, setBusy] = useState(false);
-  const retry = useServerFn(retryActivation);
-  const tried = useRef(false);
+  const fetchOrder = useServerFn(getOrder);
 
-  async function doRetry() {
+  async function refresh() {
     if (!order) return;
-    setBusy(true);
-    try { setOrder(await retry({ data: { id: order.id } })); } finally { setBusy(false); }
+    try {
+      const fresh = await fetchOrder({ data: { id: order.id } });
+      if (fresh) setOrder(fresh as Order);
+    } catch {
+      // Erreur réseau temporaire : le prochain cycle de polling réessaiera.
+    }
   }
 
-  // Nouvel essai automatique (même clé d'idempotence) si l'activation est en attente.
+  // Polling toutes les 20 s tant que la commande évolue encore.
   useEffect(() => {
-    if (!order || tried.current) return;
-    if (order.payment_status === "paid" && (order.activation_status === "pending_retry" || order.activation_status === "pending")) {
-      tried.current = true;
-      const t = setTimeout(doRetry, 3000);
-      return () => clearTimeout(t);
-    }
-    return undefined;
+    if (!order || !POLLING_STATES.has(order.state)) return;
+    const t = setInterval(refresh, 20000);
+    return () => clearInterval(t);
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
     return (<div className="min-h-screen"><SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
   }
-
-  const activated = order.activation_status === "activated";
-  const failed = order.activation_status === "failed";
-  const waiting = order.payment_status === "paid" && !activated && !failed;
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -77,39 +85,314 @@ function OrderPage() {
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            {activated ? <CheckCircle2 className="h-8 w-8 text-success" /> : failed ? <XCircle className="h-8 w-8 text-destructive" /> : waiting ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Clock className="h-8 w-8 text-warning" />}
-            <div>
-              <p className="font-semibold">
-                {activated ? "Abonnement activé" : failed ? "Activation impossible" : waiting ? "Activation en cours…" : "En attente de paiement"}
-              </p>
-              {activated && order.expires_at && (
-                <p className="text-sm text-muted-foreground">Valable jusqu'au <strong className="text-foreground">{new Date(order.expires_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong></p>
-              )}
-            </div>
-          </div>
-          {order.activation_error && !activated && <p className="rounded-lg bg-muted p-3 text-sm">{order.activation_error}</p>}
+          <StateBadge order={order} />
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan_name}</dd>
-            <dt className="text-muted-foreground">Prix</dt><dd className="text-right">{formatPrice(order.price_cents)}</dd>
+            <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
+            <dt className="text-muted-foreground">Prix</dt><dd className="text-right">{formatEur(order.priceEur)}</dd>
             <dt className="text-muted-foreground">Appareil (MAC)</dt><dd className="text-right font-mono">{order.mac}</dd>
             <dt className="text-muted-foreground">Email</dt><dd className="truncate text-right">{order.email}</dd>
+            {order.payment?.label && (
+              <>
+                <dt className="text-muted-foreground">Paiement</dt><dd className="text-right">{order.payment.label}</dd>
+              </>
+            )}
           </dl>
 
-          {order.payment_status === "pending" && (
-            <div className="space-y-2 border-t border-border pt-5">
-              {/* Emplacement du paiement Stripe (à brancher plus tard). */}
-              <Button className="w-full" variant="hero" disabled>Payer (bientôt disponible)</Button>
-            </div>
+          {order.state === "activated" && (
+            <Button asChild variant="hero" className="w-full">
+              <a href="https://hypertv.win" target="_blank" rel="noreferrer">
+                <ExternalLink className="h-4 w-4" /> Ouvrir HyperTV
+              </a>
+            </Button>
           )}
-          {waiting && <Button className="w-full" variant="outline" onClick={doRetry} disabled={busy}>Réessayer l'activation</Button>}
+          {order.state === "expired" && (
+            <Button asChild variant="hero" className="w-full">
+              <Link to="/commander/$planId" params={{ planId: order.planId }}>
+                <RotateCcw className="h-4 w-4" /> Recommencer
+              </Link>
+            </Button>
+          )}
+
+          {order.state === "pending" && order.payment && (
+            <PaymentPanel order={order} methods={methods.methods} onReload={refresh} />
+          )}
 
           <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Lien copié"); }}>
             <Copy className="h-4 w-4" /> Copier le lien de suivi
           </Button>
         </div>
       </main>
+    </div>
+  );
+}
+
+function StateBadge({ order }: { order: Order }) {
+  const base = "flex items-center gap-3";
+  switch (order.state) {
+    case "pending":
+      return (
+        <div className={base}>
+          <Clock className="h-8 w-8 shrink-0 text-warning" />
+          <div>
+            <p className="font-semibold">En attente de paiement</p>
+            {order.expiresAt && <Countdown expiresAt={order.expiresAt} />}
+          </div>
+        </div>
+      );
+    case "detected":
+      return (
+        <div className={base}>
+          <Loader2 className="h-8 w-8 shrink-0 animate-spin text-primary" />
+          <p className="font-semibold">Paiement détecté, confirmation en cours…</p>
+        </div>
+      );
+    case "review":
+      return (
+        <div className={base}>
+          <ShieldCheck className="h-8 w-8 shrink-0 text-primary" />
+          <p className="font-semibold">Paiement en cours de vérification</p>
+        </div>
+      );
+    case "paid":
+      return (
+        <div className={base}>
+          <Loader2 className="h-8 w-8 shrink-0 animate-spin text-primary" />
+          <p className="font-semibold">Payé, activation en cours…</p>
+        </div>
+      );
+    case "activated":
+      return (
+        <div className={base}>
+          <CheckCircle2 className="h-8 w-8 shrink-0 text-success" />
+          <div>
+            <p className="font-semibold">Abonnement activé ✅</p>
+            {order.subscriptionExpiresAt && (
+              <p className="text-sm text-muted-foreground">
+                Valable jusqu'au <strong className="text-foreground">{new Date(order.subscriptionExpiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong>
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    case "paid_activation_failed":
+      return (
+        <div className={base}>
+          <Clock className="h-8 w-8 shrink-0 text-warning" />
+          <p className="font-semibold">Paiement reçu, activation en cours de traitement. Contactez le support si cela dure.</p>
+        </div>
+      );
+    case "expired":
+      return (
+        <div className={base}>
+          <XCircle className="h-8 w-8 shrink-0 text-destructive" />
+          <p className="font-semibold">Commande expirée</p>
+        </div>
+      );
+    case "cancelled":
+      return (
+        <div className={base}>
+          <XCircle className="h-8 w-8 shrink-0 text-destructive" />
+          <p className="font-semibold">Commande annulée</p>
+        </div>
+      );
+    default:
+      return (
+        <div className={base}>
+          <Clock className="h-8 w-8 shrink-0 text-muted-foreground" />
+          <p className="font-semibold">{order.state}</p>
+        </div>
+      );
+  }
+}
+
+function Countdown({ expiresAt }: { expiresAt: string }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const remaining = Math.max(0, new Date(expiresAt).getTime() - now);
+  const totalSeconds = Math.floor(remaining / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const text = h > 0
+    ? `${h} h ${String(m).padStart(2, "0")} min`
+    : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return (
+    <p className="text-sm text-muted-foreground">
+      Expire dans <strong className="font-mono text-foreground">{text}</strong>
+    </p>
+  );
+}
+
+function CopyField({ label, value, big }: { label: string; value: string; big?: boolean }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-2">
+        <code className={`flex-1 break-all rounded-lg bg-muted px-3 py-2 font-mono ${big ? "text-base font-bold" : "text-sm"}`}>{value}</code>
+        <Button type="button" variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(value); toast.success("Copié"); }}>
+          <Copy className="h-4 w-4" /> Copier
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentPanel({ order, methods, onReload }: { order: Order; methods: PaymentMethod[]; onReload: () => Promise<void> }) {
+  const payment = order.payment;
+  const method = payment.method;
+
+  if (CRYPTO_METHODS.has(method)) {
+    return (
+      <div className="space-y-4 border-t border-border pt-5">
+        <p className="text-center">
+          <span className="text-2xl font-extrabold">{payment.amount} {payment.symbol}</span>
+        </p>
+        {payment.address && (
+          <>
+            <CopyField label={`Adresse ${payment.symbol ?? ""}`} value={payment.address} />
+            <div className="flex justify-center rounded-lg bg-white p-4">
+              <QRCodeSVG value={payment.address} size={160} />
+            </div>
+          </>
+        )}
+        {method === "ton" && payment.memo && (
+          <div className="space-y-2">
+            <CopyField label="Mémo / commentaire" value={payment.memo} big />
+            <p className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-center text-sm font-semibold text-warning">
+              Mémo obligatoire : sans lui, votre paiement ne pourra pas être rattaché à votre commande.
+            </p>
+          </div>
+        )}
+        <p className="text-center text-sm text-muted-foreground">
+          Envoyez exactement ce montant avant l'expiration. La validation est automatique.
+        </p>
+      </div>
+    );
+  }
+
+  if (method === "stripe") {
+    return <StripePanel orderId={order.id} onReload={onReload} />;
+  }
+
+  if (method === "paypal_ff") {
+    const declaration = methods.find((m) => m.code === "paypal_ff")?.txidDeclaration ?? false;
+    return <PaypalPanel order={order} txidDeclaration={declaration} onReload={onReload} />;
+  }
+
+  return (
+    <p className="border-t border-border pt-5 text-center text-sm text-muted-foreground">
+      Suivez les instructions de paiement de {payment.label}.
+    </p>
+  );
+}
+
+function StripePanel({ orderId, onReload }: { orderId: string; onReload: () => Promise<void> }) {
+  const checkout = useServerFn(stripeCheckout);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function pay() {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await checkout({ data: { id: orderId, returnUrl: window.location.href } });
+      if (r.ok) {
+        window.location.href = r.url;
+        return;
+      }
+      if (r.code === "order_not_payable") {
+        await onReload();
+        return;
+      }
+      setError(r.message);
+    } catch {
+      setError("Erreur lors de la création du paiement.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 border-t border-border pt-5">
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button className="w-full" variant="hero" size="lg" onClick={pay} disabled={busy}>
+        {busy ? "Redirection…" : "Payer par carte"}
+      </Button>
+    </div>
+  );
+}
+
+function PaypalPanel({ order, txidDeclaration, onReload }: { order: Order; txidDeclaration: boolean; onReload: () => Promise<void> }) {
+  const declareTx = useServerFn(paypalTxid);
+  const [txid, setTxid] = useState("");
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const payment = order.payment;
+
+  async function submitTx(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const r = await declareTx({ data: { id: order.id, txid, paypalEmail, name } });
+      if (r.ok) {
+        setSent(true);
+        return;
+      }
+      if (r.code === "order_not_payable") {
+        await onReload();
+        return;
+      }
+      setError(r.message);
+    } catch {
+      setError("Erreur lors de l'envoi.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 border-t border-border pt-5">
+      <p className="text-sm">
+        Envoyez <strong>{formatEur(order.priceEur)}</strong> en PayPal « Entre proches » à l'adresse ci-dessous
+        avec EXACTEMENT la note indiquée.
+      </p>
+      {payment.address && <CopyField label="Adresse PayPal" value={payment.address} />}
+      {payment.memo && <CopyField label="Note (obligatoire, à copier exactement)" value={payment.memo} big />}
+
+      {txidDeclaration && !sent && (
+        <form onSubmit={submitTx} className="space-y-3 rounded-lg border border-border p-4">
+          <p className="text-sm font-semibold">J'ai payé</p>
+          <div className="space-y-1">
+            <Label htmlFor="txid">ID de transaction</Label>
+            <Input id="txid" value={txid} onChange={(e) => setTxid(e.target.value)} placeholder="Ex. 8AB12345CD678901E" required />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="pp-email">Email PayPal</Label>
+            <Input id="pp-email" type="email" value={paypalEmail} onChange={(e) => setPaypalEmail(e.target.value)} placeholder="vous@exemple.fr" required />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="pp-name">Nom</Label>
+            <Input id="pp-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du compte PayPal" required />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" variant="hero" className="w-full" disabled={busy}>
+            {busy ? "Envoi…" : "Déclarer mon paiement"}
+          </Button>
+        </form>
+      )}
+      {txidDeclaration && sent && (
+        <p className="rounded-lg bg-muted p-3 text-center text-sm font-semibold">
+          En vérification — votre paiement est en cours de contrôle.
+        </p>
+      )}
     </div>
   );
 }
