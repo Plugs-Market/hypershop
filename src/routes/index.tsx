@@ -81,14 +81,14 @@ function Home() {
   const categories: { id: Category; label: string; description: string; icon: typeof Tv; count: number }[] = [
     {
       id: "hypertv",
-      label: "Abonnements HyperTV",
+      label: "Applications HYPER TV",
       description: "Formules HyperTV activées automatiquement sur votre appareil après paiement.",
       icon: Tv,
       count: data.plans.length,
     },
     {
       id: "trex",
-      label: "Abonnements TREX",
+      label: "TREX Abonnements",
       description: "Lignes M3U prêtes pour votre application, avec abonnement HyperTV inclus selon la formule.",
       icon: ListMusic,
       count: data.trexPlans.length,
@@ -143,7 +143,7 @@ function Home() {
         )}
 
         {!data.error && category !== null && (
-          <section aria-label={category === "hypertv" ? "Abonnements HyperTV" : "Abonnements TREX"}>
+          <section aria-label={category === "hypertv" ? "Applications HYPER TV" : "TREX Abonnements"}>
             <div className="mb-5 flex items-center justify-between gap-4">
               <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
                 <ArrowLeft className="h-4 w-4" /> Toutes les catégories
