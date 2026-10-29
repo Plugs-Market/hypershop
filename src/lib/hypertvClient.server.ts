@@ -68,7 +68,13 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
   return json as T;
 }
 
+export type ShopInfo = {
+  name: string;
+  domain?: string | null;
+};
+
 export const hypertv = {
+  getShop: () => call<ShopInfo>("/shop"),
   getOffers: () =>
     call<{ resellerOffers: unknown[]; subscriptionPlans: SubscriptionPlan[] }>("/offers"),
   getBalance: () => call<{ credits: number }>("/balance"),
