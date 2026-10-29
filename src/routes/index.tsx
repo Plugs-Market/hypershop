@@ -78,11 +78,12 @@ function Home() {
     window.addEventListener("shop:home", reset);
     return () => window.removeEventListener("shop:home", reset);
   }, []);
-  const categories: { id: Category; label: string; description: string; icon: typeof Tv; count: number }[] = [
+  const categories: { id: Category; label: string; description: string; image: string | null; icon: typeof Tv; count: number }[] = [
     {
       id: "hypertv",
       label: "HYPER TV",
       description: "Abonnements pour activer votre application HYPERTV.",
+      image: data.plans[0]?.cover_url ?? null,
       icon: Tv,
       count: data.plans.length,
     },
@@ -90,6 +91,7 @@ function Home() {
       id: "trex",
       label: "TREX",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
+      image: data.trexPlans[0]?.cover_url ?? null,
       icon: ListMusic,
       count: data.trexPlans.length,
     },
@@ -130,8 +132,12 @@ function Home() {
                 onClick={() => setCategory(c.id)}
                 className="group flex items-center gap-5 rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
               >
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-                  <c.icon className="h-7 w-7 text-primary-foreground" />
+                <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-primary shadow-glow">
+                  {c.image ? (
+                    <img src={c.image} alt="" loading="lazy" suppressHydrationWarning className="h-full w-full object-cover" />
+                  ) : (
+                    <c.icon className="h-7 w-7 text-primary-foreground" />
+                  )}
                 </span>
                 <span className="flex-1">
                   <span className="block text-xl font-bold">{c.label}</span>
