@@ -1,4 +1,4 @@
-import { Apple, Download, ExternalLink, Globe, Monitor, Smartphone, Tv } from "lucide-react";
+import { Apple, Download, Globe, Monitor, Smartphone, Tv } from "lucide-react";
 import { formatFileSize, type AppsBlock } from "@/lib/apps";
 
 function PlatformIcon({ platform }: { platform: string }) {
@@ -69,16 +69,6 @@ export function DownloadApps({ data }: { data: AppsBlock }) {
           <p className="font-bold">{data.downloader.label}</p>
           <p className="mt-1 text-sm text-muted-foreground">Ouvrez l'app Downloader et tapez le code :</p>
           <p className="mt-2 font-mono text-4xl font-bold tracking-widest text-primary">{data.downloader.code}</p>
-          {data.downloader.guideUrl && (
-            <a
-              href={data.downloader.guideUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-            >
-              Voir le guide d'installation <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
         </div>
       )}
     </section>
