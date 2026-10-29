@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as TelechargerRouteImport } from './routes/telecharger'
 import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
@@ -24,9 +26,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConnexionRoute = ConnexionRouteImport.update({
+  id: '/connexion',
+  path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
   id: '/manifest.webmanifest',
   path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteRoute = MonCompteRouteImport.update({
+  id: '/mon-compte',
+  path: '/mon-compte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TelechargerRoute = TelechargerRouteImport.update({
@@ -68,7 +80,9 @@ const ApiPublicOrdersIdPlaylistRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -79,7 +93,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -91,7 +107,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/connexion': typeof ConnexionRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/mon-compte': typeof MonCompteRoute
   '/telecharger': typeof TelechargerRoute
   '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
@@ -104,7 +122,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/connexion'
     | '/manifest.webmanifest'
+    | '/mon-compte'
     | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -115,7 +135,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/connexion'
     | '/manifest.webmanifest'
+    | '/mon-compte'
     | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -126,7 +148,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/connexion'
     | '/manifest.webmanifest'
+    | '/mon-compte'
     | '/telecharger'
     | '/app-icon/$size'
     | '/commande/$id'
@@ -138,7 +162,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConnexionRoute: typeof ConnexionRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  MonCompteRoute: typeof MonCompteRoute
   TelechargerRoute: typeof TelechargerRoute
   AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
@@ -157,11 +183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connexion': {
+      id: '/connexion'
+      path: '/connexion'
+      fullPath: '/connexion'
+      preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manifest.webmanifest': {
       id: '/manifest.webmanifest'
       path: '/manifest.webmanifest'
       fullPath: '/manifest.webmanifest'
       preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte': {
+      id: '/mon-compte'
+      path: '/mon-compte'
+      fullPath: '/mon-compte'
+      preLoaderRoute: typeof MonCompteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/telecharger': {
@@ -218,7 +258,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConnexionRoute: ConnexionRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  MonCompteRoute: MonCompteRoute,
   TelechargerRoute: TelechargerRoute,
   AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,

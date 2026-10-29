@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Download, ShoppingBag, Tv } from "lucide-react";
+import { BookOpen, Download, ShoppingBag, Tv, UserRound } from "lucide-react";
+import { accountStatusQuery } from "@/lib/account.functions";
 import { appsQuery } from "@/lib/apps.functions";
 
 export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | null; logoUrl?: string | null; guidesEnabled?: boolean }) {
   const { data: apps } = useQuery(appsQuery);
+  const { data: status } = useQuery(accountStatusQuery);
   const brand = (name ?? "").trim() || "Boutique";
   const parts = brand.split(/\s+/);
   const last = parts.length > 1 ? parts.pop() : null;
@@ -47,6 +49,12 @@ export function SiteHeader({ name, logoUrl, guidesEnabled }: { name?: string | n
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-2 sm:px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
           >
             <ShoppingBag className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Boutique</span>
+          </Link>
+          <Link aria-label={status?.loggedIn ? "Mon compte" : "Connexion"}
+            to={status?.loggedIn ? "/mon-compte" : "/connexion"}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-2 sm:px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/60 hover:bg-accent"
+          >
+            <UserRound className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">{status?.loggedIn ? "Mon compte" : "Connexion"}</span>
           </Link>
         </nav>
       </div>
