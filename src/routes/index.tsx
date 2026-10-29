@@ -98,7 +98,8 @@ function Home() {
     <div className="min-h-screen bg-gradient-hero">
       <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
-        <section className={category === null ? "py-10 text-center md:py-16" : "pt-10 pb-10 text-center md:pt-14 md:pb-12"}>
+        {category === null ? (
+        <section className="py-10 text-center md:py-16">
           <h1 className={`mx-auto max-w-2xl font-bold leading-tight tracking-tight text-balance ${category === null ? "text-2xl sm:text-3xl md:text-4xl" : "text-xl md:text-2xl"}`}>
             {shop.description ?? <>Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes</>}
           </h1>
@@ -111,6 +112,9 @@ function Home() {
             <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
           </p>
         </section>
+        ) : (
+          <div className="pt-6" />
+        )}
 
         {data.error && <p className="text-center text-destructive">{data.error}</p>}
         {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && (
