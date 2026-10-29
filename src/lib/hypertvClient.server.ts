@@ -82,7 +82,7 @@ export type ShopOrder = OrderProgress & {
   trexPlanId?: string;
   priceEur: number;
   mac: string;
-  email: string;
+  email?: string | null;
   expiresAt: string | null;
   subscriptionExpiresAt: string | null;
   payment: OrderPayment;

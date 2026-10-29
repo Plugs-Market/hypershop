@@ -2,9 +2,9 @@ import { z } from "zod";
 import { MAC_REGEX, normalizeMac, translateHypertvError } from "./hypertv-shared";
 
 const commonFields = {
-  email: z.string().trim().email().max(255),
   mac: z.string().transform(normalizeMac).refine((mac) => MAC_REGEX.test(mac), "Adresse MAC invalide"),
-  method: z.string().min(1).max(50),
+  // Absent pour une formule gratuite : l'API ne propose aucun mode de paiement.
+  method: z.string().min(1).max(50).optional(),
   idempotencyKey: z.string().uuid(),
 };
 // strict empêche toute combinaison des deux identifiants ou tout prix envoyé par le navigateur.
