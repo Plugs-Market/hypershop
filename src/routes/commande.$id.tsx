@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
-    const shopName = loaderData?.shop?.name ?? "Boutique";
+    const data = loaderData as { shop?: { name?: string | null } } | undefined;
+    const shopName = data?.shop?.name ?? "Boutique";
     return {
       meta: [
         { title: `Suivi de commande — ${shopName}` },
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/commande/$id")({
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 function OrderPage() {
-  const { order: initial, shop } = Route.useLoaderData();
+  const { order: initial, shop } = Route.useLoaderData() as { order: Order | null; shop: { name: string | null } };
   const [order, setOrder] = useState<Order | null>(initial);
   const [busy, setBusy] = useState(false);
   const retry = useServerFn(retryActivation);

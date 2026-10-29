@@ -11,7 +11,8 @@ type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
-    const shopName = loaderData?.shopName ?? "Boutique";
+    const data = loaderData as { shopName?: string | null } | undefined;
+    const shopName = data?.shopName ?? "Boutique";
     return {
       meta: [
         { title: `${shopName} — Abonnements activés instantanément` },
