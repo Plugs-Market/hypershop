@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock, Loader2, XCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { getOrder, retryActivation } from "@/lib/shop.functions";
+import { getShopInfo, getOrder, retryActivation } from "@/lib/shop.functions";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,7 @@ function OrderPage() {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!order) {
-    return (<div className="min-h-screen"><SiteHeader /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
+    return (<div className="min-h-screen"><SiteHeader name={shop?.name} /><p className="p-12 text-center text-muted-foreground">Commande introuvable.</p></div>);
   }
 
   const activated = order.activation_status === "activated";
@@ -69,7 +69,7 @@ function OrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader />
+      <SiteHeader name={shop?.name} />
       <main className="mx-auto max-w-lg px-4 py-12">
         <h1 className="text-3xl font-bold">Suivi de commande</h1>
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
