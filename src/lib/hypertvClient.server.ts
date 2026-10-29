@@ -71,6 +71,9 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
 export type ShopInfo = {
   name: string;
   domain?: string | null;
+  slogan?: string | null;
+  description?: string | null;
+  logoUrl?: string | null;
 };
 
 export const hypertv = {

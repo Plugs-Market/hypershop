@@ -25,20 +25,34 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
       cover_url: p.cover_url ?? null, duration_days: p.duration_days, max_devices: p.max_devices,
       price_cents: planPriceCents(p),
     }));
-    return { plans, shopName: shop?.name ?? null, error: null as string | null };
+    return { plans, shop: shopInfo(shop), error: null as string | null };
   } catch (e) {
     console.error("getCatalog failed", errInfo(e).code);
-    return { plans: [], shopName: null, error: "Catalogue momentanément indisponible." };
+    return { plans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
   }
 });
 
-// Titre de la boutique, défini dans le panel revendeur.
+// Identité de la boutique (nom, slogan, description, logo), définie dans le panel revendeur.
+export type ShopIdentity = {
+  name: string | null;
+  slogan: string | null;
+  description: string | null;
+  logoUrl: string | null;
+};
+function shopInfo(s: { name?: string; slogan?: string | null; description?: string | null; logoUrl?: string | null } | null): ShopIdentity {
+  return {
+    name: s?.name ?? null,
+    slogan: s?.slogan ?? null,
+    description: s?.description ?? null,
+    logoUrl: s?.logoUrl ?? null,
+  };
+}
+
 export const getShopInfo = createServerFn({ method: "GET" }).handler(async () => {
   try {
-    const s = await hypertv.getShop();
-    return { name: s.name as string | null };
+    return shopInfo(await hypertv.getShop());
   } catch {
-    return { name: null as string | null };
+    return shopInfo(null);
   }
 });
 
