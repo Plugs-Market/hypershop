@@ -37,7 +37,7 @@ function useConversationViewport(enabled: boolean) {
       else height = window.innerHeight;
       el.style.height = `${Math.round(height)}px`;
       el.style.transform = keyboard && vv ? `translateY(${Math.round(vv.offsetTop)}px)` : "";
-      el.dataset.keyboard = keyboard ? "true" : "false";
+      el.dataset["keyboard"] = keyboard ? "true" : "false";
     };
     update();
     vv?.addEventListener("resize", update);
