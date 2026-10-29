@@ -28,16 +28,17 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data } = useSuspenseQuery(catalogQuery);
+  const shopName = data.shopName ?? null;
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <SiteHeader />
+      <SiteHeader name={shopName} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
         <section className="py-16 text-center md:py-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <Zap className="h-3 w-3 text-primary" /> Activation automatique après paiement
           </p>
           <h1 className="mx-auto max-w-3xl text-4xl font-extrabold md:text-6xl">
-            Votre abonnement <span className="text-primary">HyperTV</span>, prêt en quelques secondes
+            Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
             Choisissez une formule, saisissez l'adresse MAC de votre appareil, c'est tout.
