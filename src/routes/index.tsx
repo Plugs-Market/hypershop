@@ -148,35 +148,34 @@ function Home() {
               <p className="text-center text-muted-foreground">Aucune formule disponible dans cette catégorie pour le moment.</p>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {(category === "hypertv" ? data.plans : data.trexPlans).map((p) => (
-                  <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
-                    {p.cover_url && <img src={p.cover_url} alt={p.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
-                    <div className="flex flex-1 flex-col p-6">
-                      <h2 className="text-xl font-bold">{p.name}</h2>
-                      {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
-                      <p className="mt-4 text-3xl font-extrabold">{p.price_cents !== null ? formatPrice(p.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
-                      {category === "hypertv" ? (
-                        <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
-                          <li className="flex items-center gap-2"><MonitorSmartphone className="h-4 w-4 text-primary" /> {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</li>
-                          {p.features.map((f) => <li key={f} className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> {f}</li>)}
-                        </ul>
-                      ) : (
-                        <div className="mt-5 flex flex-wrap gap-2 text-xs">
-                          <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
-                          {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
-                        </div>
-                      )}
-                      <div className="mt-auto pt-6">
-                        {p.price_cents !== null ? (
-                          <Button asChild variant="hero" className="w-full">
-                            <Link to="/commander/$planId" params={{ planId: p.id }} {...(category === "trex" ? { search: { type: "trex" } } : {})}>Acheter</Link>
-                          </Button>
-                        ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                {category === "hypertv"
+                  ? data.plans.map((p) => (
+                      <PlanCard
+                        key={p.id}
+                        plan={p}
+                        trex={false}
+                        details={
+                          <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                            <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
+                            <li className="flex items-center gap-2"><MonitorSmartphone className="h-4 w-4 text-primary" /> {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</li>
+                            {p.features.map((f) => <li key={f} className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> {f}</li>)}
+                          </ul>
+                        }
+                      />
+                    ))
+                  : data.trexPlans.map((p) => (
+                      <PlanCard
+                        key={p.id}
+                        plan={p}
+                        trex
+                        details={
+                          <div className="mt-5 flex flex-wrap gap-2 text-xs">
+                            <span className="inline-flex items-center gap-2 rounded-md border border-border bg-accent px-3 py-2"><Clock className="h-4 w-4 shrink-0 text-primary" />Ligne M3U {p.line.months} mois</span>
+                            {p.includesHypertvSubscription && <span className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
+                          </div>
+                        }
+                      />
+                    ))}
               </div>
             )}
           </section>
