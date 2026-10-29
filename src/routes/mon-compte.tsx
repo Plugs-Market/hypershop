@@ -147,7 +147,7 @@ function AccountPage() {
         </div>
 
         <Button asChild className="w-full">
-          <Link to="/" search={account.mac ? { mac: account.mac } : {}}><RefreshCw className="h-4 w-4" /> Renouveler</Link>
+          <Link to="/"><RefreshCw className="h-4 w-4" /> Renouveler</Link>
         </Button>
       </div>
     </GuidesShell>

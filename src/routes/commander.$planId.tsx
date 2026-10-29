@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { accountStatusQuery } from "@/lib/account.functions";
 import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -61,6 +63,15 @@ function Checkout() {
   const create = useServerFn(createOrder);
   const [selected, setSelected] = useState(planId);
   const [mac, setMac] = useState("");
+  // MAC du client connecté pré-remplie (toujours modifiable).
+  const { data: status } = useQuery(accountStatusQuery);
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!prefilled.current && status?.mac) {
+      prefilled.current = true;
+      setMac((m) => m || status.mac!);
+    }
+  }, [status?.mac]);
   const [method, setMethod] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
