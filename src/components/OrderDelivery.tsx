@@ -31,7 +31,7 @@ export function OrderDelivery({ id, authorized }: { id: string; authorized: bool
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   async function reload() {
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setFile(null);
     try { const result = await read({ data: { id } }); setDelivery(result.delivery); setError(result.error); }
     catch { setError("Impossible de récupérer vos accès. Réessayez."); }
     finally { setBusy(false); }
