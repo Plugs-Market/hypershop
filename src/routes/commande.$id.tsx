@@ -19,7 +19,7 @@ export const Route = createFileRoute("/commande/$id")({
     return {
       meta: [
         { title: `Suivi de commande — ${shopName}` },
-        { name: "description", content: "Suivez le paiement et l'activation of your abonnement." },
+        { name: "description", content: "Suivez le paiement et l'activation de votre abonnement." },
         { name: "robots", content: "noindex" },
         { property: "og:title", content: `Suivi de commande — ${shopName}` },
         { property: "og:description", content: "Suivi de votre commande." },
