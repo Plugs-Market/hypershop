@@ -10,9 +10,9 @@ type Shop = { name: string | null; logoUrl: string | null; slogan: string | null
 export function GuidesShell({ shop, children }: { shop: Shop; children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader name={shop?.name} logoUrl={shop?.logoUrl} guidesEnabled={shop?.guidesEnabled} />
+      <SiteHeader name={shop?.name ?? null} logoUrl={shop?.logoUrl ?? null} guidesEnabled={shop?.guidesEnabled ?? false} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-      <SiteFooter name={shop?.name} slogan={shop?.slogan} />
+      <SiteFooter name={shop?.name ?? null} slogan={shop?.slogan ?? null} />
     </div>
   );
 }
