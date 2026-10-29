@@ -194,8 +194,8 @@ function Home() {
                                 </li>
                               ))}
                             </ul>
-                            {p.includesHypertvSubscription && <span className="inline-block rounded-md border border-primary/30 bg-primary/5 px-3 py-2">+ Abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.maxDevices} écrans)</span>}
                           </div>
+
                         }
                       />
                     ))}
