@@ -60,7 +60,7 @@ export function GuidesShell({ shop, children, conversation = false }: { shop: Sh
       ref={ref}
       className={
         conversation
-          ? "group fixed inset-0 z-40 flex min-h-0 flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)]"
+          ? "group fixed inset-0 z-40 flex min-h-0 flex-col overflow-hidden bg-background"
           : "flex min-h-screen flex-col"
       }
     >
