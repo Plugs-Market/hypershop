@@ -12,6 +12,7 @@ export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
     const data = loaderData as { shop?: { name?: string | null } } | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
+    void 0;
     return {
       meta: [
         { title: `Suivi de commande — ${shopName}` },
