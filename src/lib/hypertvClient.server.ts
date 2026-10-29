@@ -4,23 +4,6 @@ import type { OffersResponse } from "./shop-offers";
 const BASE_URL = "https://hypertv.win/api/public/shop/v1";
 
 export type { SubscriptionPlan } from "./shop-offers";
-export type Customer = {
-  mac: string;
-  username: string;
-  activatedAt: string;
-  status: string;
-  expiresAt: string;
-  plan: string;
-};
-export type ActivateResult = {
-  ok: boolean;
-  mac: string;
-  username: string;
-  plan: string;
-  expiresAt: string;
-  credits: number;
-  replayed?: boolean;
-};
 
 export class HypertvError extends Error {
   constructor(public status: number, public code: string, message: string) {
@@ -54,7 +37,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
   if (!res.ok) {
     const err = typeof json?.error === "string" ? json.error : "unknown";
     const message = typeof json?.message === "string" ? json.message : err;
-    throw new HypertvError(res.status, res.status === 422 ? "message" : err, message);
+    throw new HypertvError(res.status, err, message);
   }
   return json as T;
 }
@@ -67,11 +50,47 @@ export type ShopInfo = {
   logoUrl?: string | null;
 };
 
+export type PaymentMethod = {
+  code: string;
+  label: string;
+  symbol: string | null;
+  minEur: number | null;
+  maxEur: number | null;
+  instructions: string | null;
+  txidDeclaration: boolean;
+};
+
+export type OrderPayment = {
+  method: string;
+  label: string;
+  amount?: string | number | null;
+  symbol?: string | null;
+  address?: string | null;
+  memo?: string | null;
+};
+
+export type ShopOrder = {
+  id: string;
+  state: string;
+  plan: string;
+  planId: string;
+  priceEur: number;
+  mac: string;
+  email: string;
+  expiresAt: string | null;
+  subscriptionExpiresAt: string | null;
+  payment: OrderPayment;
+};
+
 export const hypertv = {
   getShop: () => call<ShopInfo>("/shop"),
   getOffers: () => call<OffersResponse>("/offers"),
-  getBalance: () => call<{ credits: number }>("/balance"),
-  getCustomers: () => call<{ customers: Customer[] }>("/customers"),
-  activate: (body: { mac: string; planId: string; idempotencyKey: string }) =>
-    call<ActivateResult>("/activate", { method: "POST", body }),
+  getPaymentMethods: () => call<{ methods: PaymentMethod[] }>("/payment-methods"),
+  createOrder: (body: { mac: string; planId: string; email: string; method: string; idempotencyKey: string }) =>
+    call<ShopOrder>("/orders", { method: "POST", body }),
+  getOrder: (id: string) => call<ShopOrder>(`/orders/${encodeURIComponent(id)}`),
+  stripeCheckout: (id: string, returnUrl: string) =>
+    call<{ url: string }>(`/orders/${encodeURIComponent(id)}/stripe-checkout`, { method: "POST", body: { returnUrl } }),
+  paypalTxid: (id: string, body: { txid: string; paypalEmail: string; name: string }) =>
+    call<{ ok: boolean }>(`/orders/${encodeURIComponent(id)}/paypal-txid`, { method: "POST", body }),
 };

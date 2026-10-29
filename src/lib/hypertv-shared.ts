@@ -9,41 +9,43 @@ export function isValidMac(input: string): boolean {
   return MAC_REGEX.test(normalizeMac(input));
 }
 
+// Traduction des codes d'erreur de l'API revendeur HyperTV.
 export function translateHypertvError(status: number, code?: string, message?: string): string {
+  if (status === 401 || status === 403) return "Boutique temporairement indisponible.";
   switch (code) {
     case "invalid_request":
-      return "Les informations envoyées sont invalides. Vérifiez l'adresse MAC et la formule.";
-    case "unauthorized":
-      return "La boutique n'est pas autorisée auprès d'HyperTV. Contactez le vendeur.";
-    case "shop_not_active":
-      return "La boutique est temporairement inactive. Contactez le vendeur.";
-    case "origin_not_allowed":
-      return "Cette boutique n'est pas autorisée à activer des abonnements. Contactez le vendeur.";
-    case "customer_locked_to_other_reseller":
-      return "Cet appareil est déjà rattaché à un autre revendeur. Contactez le vendeur.";
+      return "Vérifiez la MAC et l'email.";
     case "customer_not_found":
-      return "Appareil introuvable. Ouvrez l'app HyperTV une première fois puis vérifiez l'adresse MAC.";
-    case "in_progress":
-      return "Activation en cours de traitement. Nouvel essai dans quelques instants.";
+      return "Aucun compte HyperTV avec cette MAC. Installez l'app et créez votre compte, puis réessayez.";
+    case "customer_locked_to_other_reseller":
+      return "Cet appareil est géré par un autre revendeur.";
+    case "plan_not_for_sale":
+      return "Formule indisponible.";
+    case "payment_method_unavailable":
+      return "Mode de paiement indisponible.";
+    case "order_not_payable":
+      return "Cette commande ne peut plus être payée.";
+    case "txid_already_used":
+      return "Cet ID de transaction a déjà été utilisé.";
+    case "invalid_txid":
+      return "ID de transaction invalide.";
+    case "unauthorized":
+    case "shop_not_active":
+    case "origin_not_allowed":
+      return "Boutique temporairement indisponible.";
     case "network_error":
-      return "Le service d'activation ne répond pas. Nouvel essai dans quelques instants.";
+      return "Le service ne répond pas. Nouvel essai dans quelques instants.";
     case "timeout":
-      return "Le service d'activation a mis trop de temps à répondre. Nouvel essai dans quelques instants.";
+      return "Le service a mis trop de temps à répondre. Nouvel essai dans quelques instants.";
   }
-  if (status === 422) {
-    const m = (message || "").toLowerCase();
-    if (m.includes("crédit") || m.includes("credit"))
-      return "Activation momentanément impossible (stock revendeur insuffisant). Le vendeur a été prévenu.";
-    if (m.includes("formule") || m.includes("plan")) return "Cette formule n'est plus disponible.";
-    return message || "Activation refusée.";
-  }
+  if (status === 422) return message || "Demande refusée.";
   return "Une erreur inattendue est survenue. Réessayez plus tard.";
-}
-
-export function isRetryableCode(code?: string): boolean {
-  return code === "in_progress" || code === "network_error" || code === "timeout";
 }
 
 export function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+}
+
+export function formatEur(eur: number): string {
+  return eur.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 }
