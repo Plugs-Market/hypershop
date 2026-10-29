@@ -1,6 +1,6 @@
 # Intégration TREX
 - [ ] Accès M3U/Xtream privés et dates TREX depuis delivery.
-- [ ] Preuve propriétaire serveur et téléchargement fournisseur protégé.
+- [ ] Preuve propriétaire serveur et téléchargement fournisseur protégé ; les anciennes commandes sans preuve ne doivent pas révéler leurs accès.
 - [ ] Tests autorisation, états et fichier M3U ; vérification mobile.
 - [ ] Catalogue et badges TREX depuis l’API revendeur.
 - [ ] Achat exclusif planId ou trexPlanId et clé conservée lors des réessais réseau.
