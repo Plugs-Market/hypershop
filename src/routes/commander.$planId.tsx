@@ -124,9 +124,6 @@ function Checkout() {
                       De {m.minEur ?? 0} € à {m.maxEur ?? "∞"} €
                     </span>
                   )}
-                  {m.code === "paypal_ff" && m.instructions && (
-                    <span className="mt-1 block text-xs text-muted-foreground">{m.instructions}</span>
-                  )}
                 </button>
               ))}
             </div>
