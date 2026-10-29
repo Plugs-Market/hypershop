@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
+import { ArrowLeft, ChevronRight, CircleCheck, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
 import { getCatalog } from "@/lib/shop.functions";
+import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
