@@ -47,7 +47,7 @@ function Conversation() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const lastAt = useRef<string | undefined>(undefined);
-  const bottom = useRef<HTMLDivElement>(null);
+  const messagesArea = useRef<HTMLDivElement>(null);
 
   const handle = useCallback((e: unknown) => {
     const m = e instanceof Error ? e.message : "Support momentanément indisponible.";
@@ -81,7 +81,10 @@ function Conversation() {
 
   useEffect(() => { if (ctx) { void load(true); void markSupportRead({ data: { id } }).catch(() => null); } }, [ctx, id, load]);
   useEffect(() => { if (ctxError) handle(ctxError); }, [ctxError, handle]);
-  useEffect(() => { bottom.current?.scrollIntoView({ block: "end" }); }, [msgs.length]);
+  useEffect(() => {
+    const area = messagesArea.current;
+    if (area) area.scrollTop = area.scrollHeight;
+  }, [msgs.length]);
   useSupportLive(() => void load(), !!ctx && !noKey);
 
   async function changeStatus(status: "resolved" | "open") {
@@ -97,39 +100,38 @@ function Conversation() {
   }
 
   const readId = readMessageId(msgs, staffReadAt);
-  const back = <Button variant="ghost" size="sm" asChild><Link to="/mon-compte/support"><ArrowLeft />Mes demandes</Link></Button>;
+  const back = <Button variant="ghost" size="sm" className="shrink-0 px-2" asChild><Link to="/mon-compte/support" aria-label="Retour aux demandes" title="Retour aux demandes"><ArrowLeft /><span className="hidden sm:inline">Mes demandes</span></Link></Button>;
 
-  if (notFound) return <GuidesShell shop={shop}><div className="mx-auto max-w-3xl space-y-4">{back}<h1 className="text-2xl font-bold">Demande introuvable</h1></div></GuidesShell>;
+  if (notFound) return <GuidesShell shop={shop} conversation><div className="mx-auto w-full max-w-3xl space-y-4 p-4">{back}<h1 className="text-2xl font-bold">Demande introuvable</h1></div></GuidesShell>;
 
   return (
-    <GuidesShell shop={shop}>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-        {back}
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold">{ticket?.subject ?? "Demande d'assistance"}</h1>
-            {ticket && <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><Lock className="h-3 w-3" />{categoryLabel(ticket.category)} · chiffré de bout en bout</p>}
+    <GuidesShell shop={shop} conversation>
+      <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-3 sm:gap-3 sm:px-4">
+          {back}
+          <div className="min-w-0 flex-1">
+            <h1 className="line-clamp-2 break-words text-sm font-bold sm:text-lg" title={ticket?.subject ?? undefined}>{ticket?.subject ?? "Demande d'assistance"}</h1>
+            {ticket && <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3 shrink-0" aria-label="Chiffré de bout en bout" /><span>{categoryLabel(ticket.category)}</span><span className="hidden sm:inline"> · chiffré de bout en bout</span></p>}
           </div>
-          {ticket && <div className="flex items-center gap-2">
+          {ticket && <div className="flex max-w-[45%] shrink-0 items-center gap-1 sm:max-w-none sm:gap-2">
             <SupportStatusBadge status={ticket.status} />
             {key && ticket.status !== "closed" && (ticket.status === "resolved"
               ? <ConfirmStatus label="Non résolu" icon={<RotateCcw />} text="La demande sera rouverte." onConfirm={() => changeStatus("open")} />
               : <ConfirmStatus label="Résolu" icon={<Check />} text="La demande sera marquée comme résolue." onConfirm={() => changeStatus("resolved")} />)}
           </div>}
         </div>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        {noKey && <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Cette demande a été ouverte sur un autre appareil : son contenu n'est pas lisible ici.</p>}
-        {!ticket && !error && <p className="text-sm text-muted-foreground">Déchiffrement…</p>}
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+        <div ref={messagesArea} role="region" aria-label="Messages de la discussion" tabIndex={0} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 py-5">
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {noKey && <p className="text-sm text-muted-foreground">Cette demande a été ouverte sur un autre appareil : son contenu n'est pas lisible ici.</p>}
+          {!ticket && !error && <p className="text-sm text-muted-foreground">Déchiffrement…</p>}
           {msgs.length === 0 && ticket && !noKey && <p className="py-6 text-center text-sm text-muted-foreground">Aucun message.</p>}
           {msgs.map((m) => m.statusChange ? (
             <p key={m.id} className="mx-auto rounded-full bg-muted px-3 py-1 text-center text-xs text-muted-foreground">
               {m.text || `Statut : ${supportStatusLabel(m.statusChange)}`} · {time(m.createdAt)}
             </p>
           ) : (
-            <div key={m.id} className={`flex flex-col ${m.from === "customer" ? "items-end" : "items-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${m.from === "customer" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground"}`}>
+            <div key={m.id} className={`flex shrink-0 flex-col ${m.from === "customer" ? "items-end" : "items-start"}`}>
+              <div className={`min-w-0 max-w-[85%] rounded-2xl px-4 py-2 text-sm ${m.from === "customer" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground"}`}>
                 {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                 {key && m.atts.length > 0 && <div className="mt-2 grid grid-cols-3 gap-2">{m.atts.map((a) => <AttachmentImage key={a.p} ticketId={id} att={a} ticketKey={key} />)}</div>}
               </div>
@@ -139,7 +141,6 @@ function Conversation() {
               </span>
             </div>
           ))}
-          <div ref={bottom} />
         </div>
 
         {key && ticket?.status !== "closed" && <Composer ticketId={id} ticketKey={key} name={ctx?.username ?? null} onSent={() => load()} onError={handle} />}
@@ -151,7 +152,7 @@ function Conversation() {
 function ConfirmStatus({ label, icon, text, onConfirm }: { label: string; icon: React.ReactNode; text: string; onConfirm: () => void }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild><Button size="sm" variant="outline">{icon}{label}</Button></AlertDialogTrigger>
+      <AlertDialogTrigger asChild><Button size="sm" variant="outline" className="shrink-0 px-2 sm:px-3" aria-label={label} title={label}>{icon}<span className="hidden sm:inline">{label}</span></Button></AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader><AlertDialogTitle>Marquer « {label} » ?</AlertDialogTitle><AlertDialogDescription>{text}</AlertDialogDescription></AlertDialogHeader>
         <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={onConfirm}>Confirmer</AlertDialogAction></AlertDialogFooter>
@@ -191,7 +192,8 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
         const uploads = await requestSupportUploads({ data: { id: ticketId, files: encrypted.map((e) => ({ mime: e.f.type, size: e.data.byteLength })) } });
         if (uploads.length !== encrypted.length) throw new Error("Envoi des photos impossible.");
         await Promise.all(uploads.map(async (u, i) => {
-          const enc = encrypted[i]!;
+          const enc = encrypted[i];
+          if (!enc) throw new Error("Envoi des photos impossible.");
           const r = await fetch(u.uploadUrl, { method: "PUT", body: enc.data, headers: { "Content-Type": "application/octet-stream" } });
           if (!r.ok) throw new Error("Envoi des photos impossible.");
           atts.push({ p: u.path, m: enc.f.type, s: enc.f.size, iv: enc.iv });
@@ -208,16 +210,16 @@ function Composer({ ticketId, ticketKey, name, onSent, onError }: { ticketId: st
   }
 
   return (
-    <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+    <div className="shrink-0 space-y-2 border-t border-border bg-background px-3 py-3 sm:px-4">
       {previews.length > 0 && <div className="flex flex-wrap gap-2">{previews.map((u, i) => (
         <div key={u} className="relative h-16 w-16 overflow-hidden rounded-lg border border-border">
           <img src={u} alt="" className="h-full w-full object-cover" />
-          <button type="button" aria-label="Retirer la photo" className="absolute right-0 top-0 rounded-bl bg-background/80 p-0.5" onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+          <Button type="button" size="icon" variant="ghost" aria-label="Retirer la photo" className="absolute right-0 top-0 h-6 w-6 rounded-bl bg-background/80" onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
         </div>))}</div>}
       <div className="flex items-end gap-2">
         <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
         <Button type="button" variant="ghost" size="icon" aria-label="Ajouter des photos" disabled={busy || files.length >= 6} onClick={() => input.current?.click()}><ImagePlus /></Button>
-        <Textarea rows={1} value={text} maxLength={5000} placeholder="Votre message…" className="min-h-10 flex-1 resize-none"
+        <Textarea rows={1} value={text} maxLength={5000} aria-label="Votre message" placeholder="Votre message…" className="max-h-32 min-h-10 min-w-0 flex-1 resize-none text-base"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} />
         <Button type="button" size="icon" aria-label="Envoyer" disabled={busy} onClick={() => void send()}><Send /></Button>
@@ -247,7 +249,7 @@ function AttachmentImage({ ticketId, att, ticketKey }: { ticketId: string; att: 
   if (!url) return <div className="aspect-square animate-pulse rounded-lg bg-background/40" />;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="overflow-hidden rounded-lg"><img src={url} alt="Photo jointe" className="aspect-square w-full object-cover" /></button>
+      <Button type="button" variant="ghost" aria-label="Agrandir la photo jointe" onClick={() => setOpen(true)} className="h-auto overflow-hidden rounded-lg p-0"><img src={url} alt="Photo jointe" className="aspect-square w-full object-cover" /></Button>
       <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-3xl"><DialogTitle className="sr-only">Photo jointe</DialogTitle><img src={url} alt="Photo jointe" className="max-h-[80vh] w-full object-contain" /></DialogContent></Dialog>
     </>
   );

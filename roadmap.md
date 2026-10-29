@@ -1,4 +1,6 @@
 # Intégration TREX
+- [x] Discussion support : réponse fixe, messages seuls défilants, barre supérieure compacte et aucun pied de page ; compilation et 6 tests support validés.
+- [ ] Vérification visuelle de la discussion connectée — session client HyperTV indisponible dans l’aperçu de test, redirection vers connexion constatée.
 - [x] Mes factures : liste privée, filtres, détails, paiement, annulation et tests ; redirection des visiteurs vérifiée.
 - [ ] Essai connecté de Mes factures avec une facture réelle — session client HyperTV indisponible dans l’aperçu de test ; aucun paiement ni annulation réel effectué.
 - [x] Accès M3U/Xtream privés et dates TREX depuis delivery.
