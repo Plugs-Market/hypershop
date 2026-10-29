@@ -25,7 +25,7 @@ const methodsQuery = queryOptions({
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
-  validateSearch: (search: Record<string, unknown>): { type?: "trex" } => ({ type: search.type === "trex" ? "trex" : undefined }),
+  validateSearch: (search: Record<string, unknown>): { type?: "trex" } => (search["type"] === "trex" ? { type: "trex" } : {}),
   head: ({ loaderData }) => {
     const data = loaderData as Catalog | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
