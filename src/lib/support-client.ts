@@ -40,7 +40,7 @@ export async function shareTicketKey(ticketId: string, key: CryptoKey, devices: 
 export function rememberTicketKey(id: string, key: CryptoKey) { keyCache.set(id, key); }
 
 // Lit un ticket et renvoie sa clé déchiffrée (null si cet appareil n'y a pas accès).
-export type TicketReadOptions = { after?: string; includeDevices?: boolean; etag?: string | null };
+export type TicketReadOptions = { after?: string | undefined; includeDevices?: boolean | undefined; etag?: string | null | undefined };
 export async function loadTicket(id: string, device: DeviceRecord, opts: TicketReadOptions = {}) {
   const res = await getSupportTicket({ data: { id, deviceId: device.deviceId, ...(opts.after ? { after: opts.after } : {}), ...(opts.includeDevices ? { includeDevices: true } : {}), ...(opts.etag ? { etag: opts.etag } : {}) } });
   if (res.notModified) return { notModified: true as const, detail: null, key: keyCache.get(id) ?? null };

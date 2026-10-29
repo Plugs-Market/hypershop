@@ -159,7 +159,7 @@ export const hypertv = {
   supportCreate: (session: string, body: unknown) => call<unknown>("/account/support/tickets", { method: "POST", body, session }),
   supportKeys: (session: string, id: string, keys: unknown[]) =>
     call<unknown>(`/account/support/tickets/${encodeURIComponent(id)}/keys`, { method: "POST", body: { keys }, session }),
-  supportTicket: (session: string, id: string, deviceId: string, opts: { after?: string; includeDevices?: boolean; etag?: string } = {}) =>
+  supportTicket: (session: string, id: string, deviceId: string, opts: { after?: string | undefined; includeDevices?: boolean | undefined; etag?: string | undefined } = {}) =>
     request<unknown>(`/account/support/tickets/${encodeURIComponent(id)}?${new URLSearchParams({ deviceId, ...(opts.after ? { after: opts.after } : {}), ...(opts.includeDevices ? { include: "devices" } : {}) })}`, { session, ...(opts.etag ? { headers: { "If-None-Match": opts.etag } } : {}) }),
   supportMessage: (session: string, id: string, body: { ct: string; iv: string }) =>
     call<any>(`/account/support/tickets/${encodeURIComponent(id)}/messages`, { method: "POST", body, session }),
