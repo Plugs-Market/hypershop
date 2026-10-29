@@ -1,5 +1,6 @@
 # Intégration TREX
-- [ ] Mes factures : liste privée, filtres, détails, paiement, annulation et tests.
+- [x] Mes factures : liste privée, filtres, détails, paiement, annulation et tests ; redirection des visiteurs vérifiée.
+- [ ] Essai connecté de Mes factures avec une facture réelle — session client HyperTV indisponible dans l’aperçu de test ; aucun paiement ni annulation réel effectué.
 - [x] Accès M3U/Xtream privés et dates TREX depuis delivery.
 - [x] Preuve propriétaire serveur et téléchargement fournisseur protégé ; anciennes commandes sans preuve exclues.
 - [x] Tests autorisation, états et contenu M3U ; copie et affichage mobile vérifiés sur une commande gratuite activée avec preuve de test retirée ensuite.
