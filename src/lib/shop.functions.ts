@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
 import { isRetryableCode, normalizeMac, MAC_REGEX, translateHypertvError } from "./hypertv-shared";
+import { catalogPlans, enabledSubscriptionPlans, planPriceCents } from "./shop-offers";
 
 function errInfo(e: unknown) {
   if (e instanceof HypertvError)
@@ -9,10 +10,6 @@ function errInfo(e: unknown) {
   return { status: 500, code: "unknown", message: "Erreur inattendue." };
 }
 // ---------- Public ----------
-function planPriceCents(p: { price_eur?: number | null }) {
-  return typeof p.price_eur === "number" && p.price_eur >= 0 ? Math.round(p.price_eur * 100) : null;
-}
-
 // Tout le catalogue vient de l'API HyperTV (géré depuis le panel revendeur).
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
   try {
@@ -20,11 +17,7 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
       hypertv.getOffers(),
       hypertv.getShop().catch(() => null),
     ]);
-    const plans = offers.subscriptionPlans.map((p) => ({
-      id: p.id, name: p.name, description: p.description ?? null, features: p.features ?? [],
-      cover_url: p.cover_url ?? null, duration_days: p.duration_days, max_devices: p.max_devices,
-      price_cents: planPriceCents(p),
-    }));
+    const plans = catalogPlans(offers);
     return { plans, shop: shopInfo(shop), error: null as string | null };
   } catch (e) {
     console.error("getCatalog failed", errInfo(e).code);
@@ -68,7 +61,7 @@ export const createOrder = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const offers = await hypertv.getOffers();
-    const plan = offers.subscriptionPlans.find((p) => p.id === data.planId);
+    const plan = enabledSubscriptionPlans(offers).find((p) => p.id === data.planId);
     if (!plan) throw new Error("Cette formule n'est plus disponible.");
     const price = planPriceCents(plan);
     if (price === null) throw new Error("Le prix de cette formule n'est pas encore disponible.");
