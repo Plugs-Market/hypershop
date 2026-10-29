@@ -1,6 +1,7 @@
 // Seul module qui parle à l'API HyperTV. Serveur uniquement.
 import type { OffersResponse } from "./shop-offers";
 import type { OrderInput, OrderProgress } from "./shop-order";
+import type { Delivery } from "./playlist-security";
 
 const BASE_URL = "https://hypertv.win/api/public/shop/v1";
 
@@ -71,6 +72,9 @@ export type OrderPayment = {
 };
 
 export type ShopOrder = OrderProgress & {
+  delivery?: Delivery | null;
+  deliveryError?: string | null;
+  deliveryAuthorized?: boolean;
   id: string;
   state: string;
   plan: string;
