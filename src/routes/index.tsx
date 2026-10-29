@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
@@ -38,6 +38,35 @@ export const Route = createFileRoute("/")({
 });
 
 type Category = "hypertv" | "trex";
+
+type PlanCardData = {
+  id: string;
+  name: string;
+  description: string | null;
+  cover_url: string | null;
+  price_cents: number | null;
+};
+
+function PlanCard({ plan, trex, details }: { plan: PlanCardData; trex: boolean; details: ReactNode }) {
+  return (
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
+      {plan.cover_url && <img src={plan.cover_url} alt={plan.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="text-xl font-bold">{plan.name}</h2>
+        {plan.description && <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>}
+        <p className="mt-4 text-3xl font-extrabold">{plan.price_cents !== null ? formatPrice(plan.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
+        {details}
+        <div className="mt-auto pt-6">
+          {plan.price_cents !== null ? (
+            <Button asChild variant="hero" className="w-full">
+              <Link to="/commander/$planId" params={{ planId: plan.id }} {...(trex ? { search: { type: "trex" } } : {})}>Acheter</Link>
+            </Button>
+          ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
+        </div>
+      </div>
+    </article>
+  );
+}
 
 function Home() {
   const { data } = useSuspenseQuery(catalogQuery);
