@@ -88,7 +88,7 @@ function Home() {
     },
     {
       id: "trex",
-      label: "TREX Abonnements",
+      label: "TREX",
       description: "Lignes M3U prêtes automatiquement sur votre application, avec abonnement HYPERTV inclus selon la formule.",
       icon: ListMusic,
       count: data.trexPlans.length,
@@ -147,7 +147,7 @@ function Home() {
         )}
 
         {!data.error && category !== null && (
-          <section aria-label={category === "hypertv" ? "HYPER TV" : "TREX Abonnements"}>
+          <section aria-label={category === "hypertv" ? "HYPER TV" : "TREX"}>
             <div className="mb-5 flex items-center justify-between gap-4">
               <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
                 <ArrowLeft className="h-4 w-4" /> Toutes les catégories
