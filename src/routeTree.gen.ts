@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as AppIconSizeRouteImport } from './routes/app-icon.$size'
 import { Route as CommandeIdRouteImport } from './routes/commande.$id'
 import { Route as CommanderPlanIdRouteImport } from './routes/commander.$planId'
 import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/public/orders.$id.playlist'
@@ -17,6 +19,16 @@ import { Route as ApiPublicOrdersIdPlaylistRouteImport } from './routes/api/publ
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIconSizeRoute = AppIconSizeRouteImport.update({
+  id: '/app-icon/$size',
+  path: '/app-icon/$size',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommandeIdRoute = CommandeIdRouteImport.update({
@@ -38,12 +50,16 @@ const ApiPublicOrdersIdPlaylistRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
@@ -51,6 +67,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/app-icon/$size': typeof AppIconSizeRoute
   '/commande/$id': typeof CommandeIdRoute
   '/commander/$planId': typeof CommanderPlanIdRoute
   '/api/public/orders/$id/playlist': typeof ApiPublicOrdersIdPlaylistRoute
@@ -59,18 +77,24 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/manifest.webmanifest'
+    | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/api/public/orders/$id/playlist'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/manifest.webmanifest'
+    | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/api/public/orders/$id/playlist'
   id:
     | '__root__'
     | '/'
+    | '/manifest.webmanifest'
+    | '/app-icon/$size'
     | '/commande/$id'
     | '/commander/$planId'
     | '/api/public/orders/$id/playlist'
@@ -78,6 +102,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  AppIconSizeRoute: typeof AppIconSizeRoute
   CommandeIdRoute: typeof CommandeIdRoute
   CommanderPlanIdRoute: typeof CommanderPlanIdRoute
   ApiPublicOrdersIdPlaylistRoute: typeof ApiPublicOrdersIdPlaylistRoute
@@ -90,6 +116,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app-icon/$size': {
+      id: '/app-icon/$size'
+      path: '/app-icon/$size'
+      fullPath: '/app-icon/$size'
+      preLoaderRoute: typeof AppIconSizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/commande/$id': {
@@ -118,6 +158,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  AppIconSizeRoute: AppIconSizeRoute,
   CommandeIdRoute: CommandeIdRoute,
   CommanderPlanIdRoute: CommanderPlanIdRoute,
   ApiPublicOrdersIdPlaylistRoute: ApiPublicOrdersIdPlaylistRoute,
