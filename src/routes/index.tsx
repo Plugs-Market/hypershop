@@ -93,12 +93,12 @@ function Home() {
     <div className="min-h-screen bg-gradient-hero">
       <SiteHeader name={shopName} logoUrl={shop.logoUrl} />
       <main className="mx-auto max-w-6xl px-4 pb-20">
-        <section className={category === null ? "py-16 text-center md:py-24" : "pt-10 pb-10 text-center md:pt-14 md:pb-12"}>
-          <h1 className={`mx-auto max-w-3xl font-extrabold ${category === null ? "text-4xl md:text-6xl" : "text-3xl md:text-4xl"}`}>
+        <section className={category === null ? "py-10 text-center md:py-16" : "pt-10 pb-10 text-center md:pt-14 md:pb-12"}>
+          <h1 className={`mx-auto max-w-2xl font-bold leading-tight tracking-tight text-balance ${category === null ? "text-2xl sm:text-3xl md:text-4xl" : "text-xl md:text-2xl"}`}>
             {shop.description ?? <>Votre abonnement {shopName && <span className="text-primary">{shopName}</span>}, prêt en quelques secondes</>}
           </h1>
           {category === null && (
-            <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
+            <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground md:text-base">
               {shop.slogan ?? "Choisissez une catégorie, saisissez l'adresse MAC de votre appareil, c'est tout."}
             </p>
           )}
