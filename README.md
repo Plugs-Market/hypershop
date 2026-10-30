@@ -4,9 +4,9 @@ Boutique en ligne prête à l'emploi pour les revendeurs HyperTV : catalogue d'a
 
 Le **nom, le logo, le slogan, les couleurs, les formules et les prix** viennent automatiquement de votre **panel revendeur HyperTV**. Vous n'avez rien à coder.
 
-[![Remix sur Lovable](https://img.shields.io/badge/Remix%20sur-Lovable-e11d48?style=for-the-badge)](https://lovable.dev/projects/04784d22-f96a-45c9-a8ec-e16e5fe48e57/remix)
+👉 **[Remixer ce projet sur Lovable](https://lovable.dev/projects/04784d22-f96a-45c9-a8ec-e16e5fe48e57/remix)**
 
-**Démo** : https://hypershop.lovable.app
+**Démo** : [shop.hypertv.win](https://shop.hypertv.win)
 
 ---
 
