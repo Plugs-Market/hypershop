@@ -1,26 +1,26 @@
 # Hypershop
 
-Implement exactly the screenshot and nothing else
+Implémenter exactement la capture d'écran, rien d'autre
 
-This project was built with [Lovable](https://lovable.dev).
+Ce projet a été créé avec [Lovable](https://lovable.dev).
 
-**Live app**: https://hypershop.lovable.app
+**Application en ligne** : https://hypershop.lovable.app
 
-## Build with Lovable
+## Développer avec Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/04784d22-f96a-45c9-a8ec-e16e5fe48e57).
+Continuez à développer ce projet dans l'[éditeur Lovable](https://lovable.dev/projects/04784d22-f96a-45c9-a8ec-e16e5fe48e57).
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- **Livrez plus vite** : décrivez ce que vous voulez construire et Lovable s'occupe du code.
+- **Restez synchronisé** : chaque modification faite dans Lovable est enregistrée directement dans ce dépôt.
+- **Propriété totale** : ce code vous appartient. Poussez sur `main` sur GitHub et vos changements se synchronisent dans Lovable, prêts pour votre prochaine demande.
 
-## Development
+## Développement
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Vous préférez travailler en local ? Il vous faut Node.js et npm — [installation avec nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
+git clone <url-de-ce-depot>
+cd <nom-du-depot>
 npm i
 npm run dev
 ```
