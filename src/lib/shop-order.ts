@@ -7,10 +7,11 @@ const commonFields = {
   method: z.string().min(1).max(50).optional(),
   idempotencyKey: z.string().uuid(),
 };
-// strict empêche toute combinaison des deux identifiants ou tout prix envoyé par le navigateur.
+// strict empêche toute combinaison des identifiants ou tout prix envoyé par le navigateur.
 export const orderInputSchema = z.union([
   z.object({ ...commonFields, planId: z.string().min(1).max(100) }).strict(),
   z.object({ ...commonFields, trexPlanId: z.string().min(1).max(100) }).strict(),
+  z.object({ ...commonFields, lionPlanId: z.string().min(1).max(100) }).strict(),
 ]);
 export type OrderInput = z.infer<typeof orderInputSchema>;
 
@@ -22,9 +23,19 @@ export function resolveOrderAttempt(previous: OrderAttempt | null, signature: st
 export type OrderProgress = {
   state: string;
   type?: string;
+  lionPlanId?: string;
   activationError?: string | null;
   steps?: { trexLine: boolean; playlist: boolean; subscription: "done" | null } | null;
   includesHypertvSubscription?: null | { name: string; durationDays: number; maxDevices: number };
+};
+
+// Livraison manuelle d'une commande LION OTT : le revendeur livre dans le ticket support.
+export type LionDelivery = {
+  mode: "manual";
+  status: "awaiting_payment" | "awaiting_ticket" | "awaiting_reseller" | "delivered";
+  supportTicketId?: string | null;
+  deliveredAt?: string | null;
+  suggestedTicket?: { category: string; subject: string; message: string } | null;
 };
 
 export function activationNotice(order: OrderProgress): string | null {
