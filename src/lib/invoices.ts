@@ -11,6 +11,7 @@ export type Invoice = {
   id: string; number: string; plan: string; createdAt: string | null; priceEur: number;
   state: string; source: string; payable: boolean; cancellable: boolean; expiresAt: string | null;
   orderId: string | null; payment: InvoicePayment; hasDelivery: boolean;
+  type: string; lionDelivery: { status: string; supportTicketId: string | null } | null;
 };
 export const INVOICE_STATES = ["pending", "detected", "review", "paid", "activated", "expired", "cancelled"] as const;
 export const INVOICE_POLL_INTERVAL = 20_000;
@@ -19,18 +20,22 @@ export function invoicePolls(state: string) { return state === "pending" || stat
 export function invoiceCanPay(i: Pick<Invoice, "priceEur" | "payable" | "source">) { return i.payable && i.priceEur > 0 && i.source !== "hypertv"; }
 export function invoiceCanCancel(i: Pick<Invoice, "state" | "source" | "cancellable">) { return i.source !== "hypertv" && i.cancellable && invoicePolls(i.state); }
 export function invoiceCurrency(value: number) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(value); }
-type ApiRecord = Partial<Record<"invoice" | "payment" | "order" | "priceEur" | "id" | "number" | "plan" | "name" | "createdAt" | "date" | "state" | "status" | "source" | "payable" | "cancellable" | "cancelable" | "expiresAt" | "orderId" | "delivery" | "method" | "label" | "amount" | "symbol" | "address" | "memo" | "xtream" | "m3uUrl" | "serverUrl" | "username" | "password" | "replacedId" | "total" | "page" | "pageSize" | "limit" | "invoices", unknown>>;
+type ApiRecord = Partial<Record<"invoice" | "payment" | "order" | "priceEur" | "id" | "number" | "plan" | "name" | "createdAt" | "date" | "state" | "status" | "source" | "payable" | "cancellable" | "cancelable" | "expiresAt" | "orderId" | "delivery" | "method" | "label" | "amount" | "symbol" | "address" | "memo" | "xtream" | "m3uUrl" | "serverUrl" | "username" | "password" | "replacedId" | "total" | "page" | "pageSize" | "limit" | "invoices" | "type" | "mode" | "supportTicketId", unknown>>;
 export function record(value: unknown): ApiRecord { return value && typeof value === "object" && !Array.isArray(value) ? value as ApiRecord : {}; }
 const text = (v: unknown): string | null => typeof v === "string" ? v : null;
 export function normalizeInvoice(raw: unknown): Invoice {
   const outer = record(raw), i = record(outer.invoice ?? raw), p = record(i.payment), o = record(i.order);
   const price = typeof i.priceEur === "number" ? i.priceEur : Number(i.priceEur);
+  const d = record(i.delivery);
+  // Livraison manuelle LION OTT : statut + ticket support, jamais d'identifiants de ligne.
+  const lionDelivery = d.mode === "manual" ? { status: text(d.status) ?? "awaiting_payment", supportTicketId: text(d.supportTicketId) } : null;
   return {
     id: text(i.id) ?? "", number: String(i.number ?? "—"), plan: text(i.plan) ?? text(record(i.plan).name) ?? "Abonnement",
     createdAt: text(i.createdAt) ?? text(i.date), priceEur: Number.isFinite(price) ? price : 0,
     state: text(i.state) ?? text(i.status) ?? "unknown", source: text(i.source) ?? "shop",
     payable: i.payable === true, cancellable: i.cancellable !== false && i.cancelable !== false,
-    expiresAt: text(i.expiresAt), orderId: text(o.id) ?? text(i.orderId) ?? text(i.id), hasDelivery: !!i.delivery,
+    expiresAt: text(i.expiresAt), orderId: text(o.id) ?? text(i.orderId) ?? text(i.id), hasDelivery: !!i.delivery && d.mode !== "manual",
+    type: text(i.type) ?? "subscription", lionDelivery,
     payment: { method: text(p.method) ?? "", label: text(p.label) ?? "—", amount: typeof p.amount === "number" || typeof p.amount === "string" ? p.amount : null, symbol: text(p.symbol), address: text(p.address), memo: text(p.memo) },
   };
 }
