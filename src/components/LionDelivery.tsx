@@ -48,20 +48,19 @@ export function LionDeliveryPanel({ orderId }: { orderId: string }) {
 
   // Tant que la livraison n'est pas terminée, on relit le suivi toutes les 20 s.
   useEffect(() => {
-    if (!delivery || delivery.status === "delivered" || delivery.status === "awaiting_payment") return;
+    if (!delivery || delivery.status === "delivered" || (delivery.status === "awaiting_payment" && !delivery.supportTicketRequired)) return;
     const t = setInterval(() => void load(), POLL_MS);
     return () => clearInterval(t);
   }, [delivery, load]);
 
-  // Commande payée : ouverture automatique du ticket chiffré, puis redirection.
-  // Si un ticket existe déjà (rafraîchissement), on redirige sans rien recréer.
+  // Ticket requis (aucun ticket lié) : création automatique une seule fois.
+  // Verrou en mémoire + sessionStorage pour éviter les doublons (double rendu, rafraîchissement).
   useEffect(() => {
-    if (!delivery || delivery.status !== "awaiting_ticket") return;
-    if (delivery.supportTicketId) {
-      void navigate({ to: "/mon-compte/support/$id", params: { id: delivery.supportTicketId } });
-      return;
-    }
-    if (!loggedIn || !ctx || !delivery.suggestedTicket || creating.current) return;
+    if (!delivery || delivery.supportTicketId) return;
+    const required = delivery.supportTicketRequired === true || delivery.status === "awaiting_ticket";
+    if (!required || !loggedIn || !ctx || !delivery.suggestedTicket || creating.current) return;
+    const lockKey = `lion-ticket:${orderId}`;
+    try { if (sessionStorage.getItem(lockKey)) return; sessionStorage.setItem(lockKey, String(Date.now())); } catch { /* stockage indisponible */ }
     creating.current = true;
     const suggested = delivery.suggestedTicket;
     const category = (SUPPORT_CATEGORIES.some((c) => c.value === suggested.category) ? suggested.category : "subscription") as SupportCategory;
@@ -71,12 +70,14 @@ export function LionDeliveryPanel({ orderId }: { orderId: string }) {
       rememberTicketKey(created.id, key);
       await shareTicketKey(created.id, key, created.devices, ctx.device, true);
       await sendSupportMessage({ data: { id: created.id, ...(await encryptJson(key, { t: suggested.message, ...(ctx.username ? { n: ctx.username } : {}) })) } });
+      await load();
       await navigate({ to: "/mon-compte/support/$id", params: { id: created.id } });
     })().catch((e) => {
       creating.current = false;
+      try { sessionStorage.removeItem(lockKey); } catch { /* ignore */ }
       setError(e instanceof Error ? e.message : "Création du ticket impossible. Réessayez.");
     });
-  }, [delivery, loggedIn, ctx, orderId, navigate]);
+  }, [delivery, loggedIn, ctx, orderId, navigate, load]);
 
   if (!delivery) {
     return (
@@ -93,9 +94,9 @@ export function LionDeliveryPanel({ orderId }: { orderId: string }) {
     );
   }
 
-  if (delivery.status === "awaiting_payment") return null;
+  if (delivery.status === "awaiting_payment" && !delivery.supportTicketId && !delivery.supportTicketRequired) return null;
 
-  if (delivery.status === "awaiting_ticket") {
+  if (delivery.status === "awaiting_ticket" && !delivery.supportTicketId) {
     return (
       <div className="space-y-3 border-t border-border pt-5">
         <div className="flex items-center gap-3">

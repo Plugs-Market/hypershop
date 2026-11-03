@@ -113,7 +113,7 @@ export const getOrder = createServerFn({ method: "GET" })
       const authorized = await ownsOrder(data.id);
       const order = await hypertv.getOrder(data.id);
       // Never serialize delivery into loader/SSR hydration or router caches.
-      return { ...order, delivery: null, deliveryError: authorized ? order.deliveryError : null, deliveryAuthorized: authorized };
+      return { ...order, delivery: null, deliveryError: authorized && order.type !== "lion" && (order.delivery as { mode?: string } | null)?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
     } catch (e) {
       if (e instanceof HypertvError && e.status === 404) return null;
       throw new Error(errMessage(e));
@@ -132,7 +132,8 @@ export const getLionDelivery = createServerFn({ method: "POST" })
       if (order.type !== "lion") return { delivery: null, error: "Cette commande n'est pas une livraison manuelle." };
       const raw = (order.delivery ?? null) as unknown;
       const d = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-      if (!d || d["mode"] !== "manual") return { delivery: null, error: "Livraison momentanément indisponible. Réessayez." };
+      const required = (order as { supportTicketRequired?: unknown }).supportTicketRequired === true;
+      if (!d) return { delivery: { mode: "manual", status: order.state === "activated" || order.state === "paid" ? "awaiting_ticket" : "awaiting_payment", supportTicketId: null, deliveredAt: null, suggestedTicket: null, supportTicketRequired: required } as LionDelivery, error: null as string | null };
       const stRaw = d["suggestedTicket"];
       const st = stRaw && typeof stRaw === "object" ? (stRaw as Record<string, unknown>) : null;
       const status = String(d["status"]);
@@ -147,6 +148,7 @@ export const getLionDelivery = createServerFn({ method: "POST" })
           st && typeof st["subject"] === "string" && typeof st["message"] === "string"
             ? { category: typeof st["category"] === "string" ? st["category"] : "subscription", subject: st["subject"], message: st["message"] }
             : null,
+        supportTicketRequired: required,
       };
       return { delivery, error: null as string | null };
     } catch {
