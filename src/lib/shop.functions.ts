@@ -132,18 +132,20 @@ export const getLionDelivery = createServerFn({ method: "POST" })
       if (order.type !== "lion") return { delivery: null, error: "Cette commande n'est pas une livraison manuelle." };
       const raw = (order.delivery ?? null) as unknown;
       const d = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-      if (!d || d.mode !== "manual") return { delivery: null, error: "Livraison momentanément indisponible. Réessayez." };
-      const st = d.suggestedTicket && typeof d.suggestedTicket === "object" ? (d.suggestedTicket as Record<string, unknown>) : null;
+      if (!d || d["mode"] !== "manual") return { delivery: null, error: "Livraison momentanément indisponible. Réessayez." };
+      const stRaw = d["suggestedTicket"];
+      const st = stRaw && typeof stRaw === "object" ? (stRaw as Record<string, unknown>) : null;
+      const status = String(d["status"]);
       const delivery: LionDelivery = {
         mode: "manual",
-        status: ["awaiting_payment", "awaiting_ticket", "awaiting_reseller", "delivered"].includes(String(d.status))
-          ? (d.status as LionDelivery["status"])
+        status: ["awaiting_payment", "awaiting_ticket", "awaiting_reseller", "delivered"].includes(status)
+          ? (status as LionDelivery["status"])
           : "awaiting_payment",
-        supportTicketId: typeof d.supportTicketId === "string" ? d.supportTicketId : null,
-        deliveredAt: typeof d.deliveredAt === "string" ? d.deliveredAt : null,
+        supportTicketId: typeof d["supportTicketId"] === "string" ? d["supportTicketId"] : null,
+        deliveredAt: typeof d["deliveredAt"] === "string" ? d["deliveredAt"] : null,
         suggestedTicket:
-          st && typeof st.subject === "string" && typeof st.message === "string"
-            ? { category: typeof st.category === "string" ? st.category : "subscription", subject: st.subject, message: st.message }
+          st && typeof st["subject"] === "string" && typeof st["message"] === "string"
+            ? { category: typeof st["category"] === "string" ? st["category"] : "subscription", subject: st["subject"], message: st["message"] }
             : null,
       };
       return { delivery, error: null as string | null };
