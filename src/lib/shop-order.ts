@@ -36,6 +36,7 @@ export type LionDelivery = {
   supportTicketId?: string | null;
   deliveredAt?: string | null;
   suggestedTicket?: { category: string; subject: string; message: string } | null;
+  supportTicketRequired?: boolean;
 };
 
 export function activationNotice(order: OrderProgress): string | null {
