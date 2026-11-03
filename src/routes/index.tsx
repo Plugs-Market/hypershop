@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, CircleCheck, Clock, ListMusic, MonitorSmartphone, Tv, Zap } from "lucide-react";
+import { ArrowLeft, ChevronRight, CircleCheck, Clock, Crown, ListMusic, MonitorSmartphone, Truck, Tv, Zap } from "lucide-react";
 import { getCatalog } from "@/lib/shop.functions";
 import { trexLineLabels } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Category = "hypertv" | "trex";
+type Category = "hypertv" | "trex" | "lion";
 
 type PlanCardData = {
   id: string;
@@ -54,7 +54,7 @@ type PlanCardData = {
   price_cents: number | null;
 };
 
-function PlanCard({ plan, trex, details }: { plan: PlanCardData; trex: boolean; details: ReactNode }) {
+function PlanCard({ plan, type, details }: { plan: PlanCardData; type?: "trex" | "lion"; details: ReactNode }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
       {plan.cover_url && <img src={plan.cover_url} alt={plan.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
@@ -66,7 +66,7 @@ function PlanCard({ plan, trex, details }: { plan: PlanCardData; trex: boolean; 
         <div className="mt-auto pt-6">
           {plan.price_cents !== null ? (
             <Button asChild variant="hero" className="w-full">
-              <Link to="/commander/$planId" params={{ planId: plan.id }} {...(trex ? { search: { type: "trex" } } : {})}>Acheter</Link>
+              <Link to="/commander/$planId" params={{ planId: plan.id }} {...(type ? { search: { type } } : {})}>Acheter</Link>
             </Button>
           ) : <Button variant="secondary" className="w-full" disabled>Bientôt disponible</Button>}
         </div>
@@ -112,6 +112,14 @@ function Home() {
       icon: ListMusic,
       count: data.trexPlans.length,
     },
+    {
+      id: "lion",
+      label: "LION OTT",
+      description: "Abonnements livrés personnellement par votre revendeur.",
+      image: data.lionPlans[0]?.cover_url ?? null,
+      icon: Crown,
+      count: data.lionPlans.length,
+    },
   ];
   return (
     <div className="flex min-h-screen flex-col bg-gradient-hero">
@@ -136,11 +144,11 @@ function Home() {
         )}
 
         {data.error && <p className="text-center text-destructive">{data.error}</p>}
-        {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && (
+        {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && data.lionPlans.length === 0 && (
           <p className="text-center text-muted-foreground">Aucune formule disponible pour le moment.</p>
         )}
 
-        {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0) && category === null && (
+        {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0 || data.lionPlans.length > 0) && category === null && (
           <section aria-label="Choisissez une catégorie" className="grid gap-5 sm:grid-cols-2">
             {categories.map((c) => (
               <button
@@ -170,7 +178,7 @@ function Home() {
         )}
 
         {!data.error && category !== null && (
-          <section aria-label={category === "hypertv" ? "HYPER TV" : "TREX"}>
+          <section aria-label={category === "hypertv" ? "HYPER TV" : category === "lion" ? "LION OTT" : "TREX"}>
             <div className="mb-5 flex items-center justify-between gap-4">
               <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
                 <ArrowLeft className="h-4 w-4" /> Toutes les catégories
@@ -185,7 +193,6 @@ function Home() {
                       <PlanCard
                         key={p.id}
                         plan={p}
-                        trex={false}
                         details={
                           <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.duration_days} jours</li>
@@ -195,11 +202,31 @@ function Home() {
                         }
                       />
                     ))
+                  : category === "lion"
+                    ? data.lionPlans.map((p) => (
+                        <PlanCard
+                          key={p.id}
+                          plan={p}
+                          type="lion"
+                          details={
+                            <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                              {p.durationLabel && (
+                                <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.durationLabel}</li>
+                              )}
+                              <li>
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                                  <Truck className="h-3.5 w-3.5" /> Livraison par votre revendeur
+                                </span>
+                              </li>
+                            </ul>
+                          }
+                        />
+                      ))
                   : data.trexPlans.map((p) => (
                       <PlanCard
                         key={p.id}
                         plan={p}
-                        trex
+                        type="trex"
                         details={
                           <ul className="mt-5 space-y-2 text-xs">
                             {trexLineLabels(p.line).map((lbl, i) => (
