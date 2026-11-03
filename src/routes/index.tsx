@@ -154,7 +154,7 @@ function Home() {
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setCategory(c.id)}
+                onClick={() => { setCategory(c.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className="group flex items-center gap-5 rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
               >
                 <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-primary shadow-glow">
