@@ -54,7 +54,7 @@ export const listSupportTickets = createServerFn({ method: "GET" }).handler(() =
 );
 
 export const createSupportTicket = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ category: z.enum(SUPPORT_CATEGORIES.map((c) => c.value) as [string, ...string[]]), subject: cipherSchema }).parse(d))
+  .inputValidator((d: unknown) => z.object({ category: z.enum(SUPPORT_CATEGORIES.map((c) => c.value) as [string, ...string[]]), subject: cipherSchema, orderId: z.string().min(1).max(150).optional() }).parse(d))
   .handler(({ data }) => supportCall(async (session) => {
     const r = rec(await hypertv.supportCreate(session, data));
     const t = rec(r.ticket ?? r);
