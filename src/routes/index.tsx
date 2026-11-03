@@ -223,7 +223,7 @@ function Home() {
                               {p.includesHypertvSubscription && (
                                 <li className="flex items-start gap-2">
                                   <Zap className="mt-px h-4 w-4 shrink-0 text-primary" />
-                                  <span className="min-w-0 break-words">+ abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span>
+                                  <span className="min-w-0 break-words">+ HYPER {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span>
                                 </li>
                               )}
                               <li>
