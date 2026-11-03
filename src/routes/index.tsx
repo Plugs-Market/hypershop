@@ -115,7 +115,7 @@ function Home() {
     {
       id: "lion",
       label: "LION OTT",
-      description: "Abonnements livrés personnellement par votre revendeur.",
+      description: "Abonnements livrés manuellement par ticket-support après votre achat.",
       image: data.lionPlans[0]?.cover_url ?? null,
       icon: Crown,
       count: data.lionPlans.length,
