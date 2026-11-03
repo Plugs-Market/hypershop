@@ -209,9 +209,22 @@ function Home() {
                           plan={p}
                           type="lion"
                           details={
-                            <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                              {p.durationLabel && (
-                                <li className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {p.durationLabel}</li>
+                            <ul className="mt-5 space-y-2 text-xs">
+                              <li className="flex items-start gap-2">
+                                <Clock className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                <span>{p.line.isDemo ? "Démo" : `${p.line.months} mois`}</span>
+                              </li>
+                              {trexLineLabels(p.line).map((lbl, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                  <span className="min-w-0 break-words">{lbl}</span>
+                                </li>
+                              ))}
+                              {p.includesHypertvSubscription && (
+                                <li className="flex items-start gap-2">
+                                  <Zap className="mt-px h-4 w-4 shrink-0 text-primary" />
+                                  <span className="min-w-0 break-words">+ abonnement HyperTV {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span>
+                                </li>
                               )}
                               <li>
                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">

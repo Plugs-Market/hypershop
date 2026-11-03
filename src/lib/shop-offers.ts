@@ -88,6 +88,7 @@ export type LionPlan = {
   currency: string;
   durationLabel?: string | null;
   durationDays?: number | null;
+  line: { type: "lion"; label?: string; labels?: string[]; sub?: string; isDemo?: boolean; months?: number | null; durationDays?: number };
   includesHypertvSubscription: null | { name: string; durationDays: number; maxDevices: number };
 };
 
@@ -100,6 +101,7 @@ export function catalogLionPlans(offers: OffersResponse) {
     price_cents: planPriceCents(plan),
     durationLabel: plan.durationLabel ?? null,
     durationDays: plan.durationDays ?? null,
+    line: plan.line,
     includesHypertvSubscription: plan.includesHypertvSubscription ?? null,
   }));
 }

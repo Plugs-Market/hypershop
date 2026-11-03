@@ -124,7 +124,7 @@ function Checkout() {
               {buyable.map((p) => (
                 <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
                   className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"duration_days" in p ? <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</> : "durationLabel" in p ? p.durationLabel : null}</span></span>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"duration_days" in p ? <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</> : "durationLabel" in p ? (p.line.isDemo ? "Démo" : `${p.line.months} mois`) : null}</span></span>
                   <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
                 </Button>
               ))}
