@@ -17,6 +17,7 @@ export type OffersResponse = {
   resellerOffers: unknown[];
   subscriptionPlans: SubscriptionPlan[];
   trexPlans?: TrexPlan[];
+  lionPlans?: LionPlan[];
 };
 
 export type TrexPlan = {
@@ -71,6 +72,34 @@ export function catalogTrexPlans(offers: OffersResponse) {
     cover_url: plan.cover_url ?? null,
     price_cents: planPriceCents(plan),
     line: plan.line,
+    includesHypertvSubscription: plan.includesHypertvSubscription ?? null,
+  }));
+}
+
+// Abonnements LION OTT : livrés manuellement par le revendeur via un ticket support.
+export type LionPlan = {
+  id: string;
+  type: "lion";
+  delivery: "manual";
+  title: string;
+  description?: string | null;
+  cover_url?: string | null;
+  price_eur?: number | null;
+  currency: string;
+  durationLabel?: string | null;
+  durationDays?: number | null;
+  includesHypertvSubscription: null | { name: string; durationDays: number; maxDevices: number };
+};
+
+export function catalogLionPlans(offers: OffersResponse) {
+  return (offers.lionPlans ?? []).filter((plan) => plan.type === "lion").map((plan) => ({
+    id: plan.id,
+    name: plan.title,
+    description: plan.description ?? null,
+    cover_url: plan.cover_url ?? null,
+    price_cents: planPriceCents(plan),
+    durationLabel: plan.durationLabel ?? null,
+    durationDays: plan.durationDays ?? null,
     includesHypertvSubscription: plan.includesHypertvSubscription ?? null,
   }));
 }

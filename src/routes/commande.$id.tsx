@@ -16,6 +16,7 @@ import { activationNotice, shouldPollOrder, trexTimeline } from "@/lib/shop-orde
 import { queryOptions } from "@tanstack/react-query";
 import { getCatalog } from "@/lib/shop.functions";
 import { OrderDelivery } from "@/components/OrderDelivery";
+import { LionDeliveryPanel } from "@/components/LionDelivery";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -98,6 +99,7 @@ function OrderPage() {
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
           <StateBadge order={order} />
           {order.type === "trex" && <TrexTimeline order={{ ...order, includesHypertvSubscription: order.includesHypertvSubscription ?? includedSubscription ?? null }} />}
+          {order.type === "lion" && <LionDeliveryPanel key={order.id} orderId={order.id} />}
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
@@ -123,9 +125,9 @@ function OrderPage() {
             </div>
           )}
           {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} authorized={order.deliveryAuthorized === true} />}
-          {order.state === "expired" && (order.trexPlanId || order.planId) && (
+          {order.state === "expired" && (order.trexPlanId || order.planId || order.lionPlanId) && (
             <Button asChild variant="hero" className="w-full">
-              <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? "" }} search={order.type === "trex" ? { type: "trex" } : {}}>
+              <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? order.lionPlanId ?? "" }} search={order.type === "trex" ? { type: "trex" } : order.type === "lion" ? { type: "lion" } : {}}>
                 <RotateCcw className="h-4 w-4" /> Recommencer
               </Link>
             </Button>

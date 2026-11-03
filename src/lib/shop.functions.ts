@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
 import { translateHypertvError } from "./hypertv-shared";
-import { catalogPlans, catalogTrexPlans } from "./shop-offers";
-import { orderInputSchema } from "./shop-order";
+import { catalogPlans, catalogTrexPlans, catalogLionPlans } from "./shop-offers";
+import { orderInputSchema, type LionDelivery } from "./shop-order";
 import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/server";
 import { ownerHash, ownsOrder, hashValue } from "./order-access.server";
 import { canReadDelivery } from "./playlist-security";
@@ -22,10 +22,10 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
       hypertv.getShop().catch(() => null),
     ]);
     const plans = catalogPlans(offers);
-    return { plans, trexPlans: catalogTrexPlans(offers), shop: shopInfo(shop), error: null as string | null };
+    return { plans, trexPlans: catalogTrexPlans(offers), lionPlans: catalogLionPlans(offers), shop: shopInfo(shop), error: null as string | null };
   } catch (e) {
     console.error("getCatalog failed", e instanceof HypertvError ? e.code : e);
-    return { plans: [], trexPlans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
+    return { plans: [], trexPlans: [], lionPlans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
   }
 });
 
@@ -117,6 +117,40 @@ export const getOrder = createServerFn({ method: "GET" })
     } catch (e) {
       if (e instanceof HypertvError && e.status === 404) return null;
       throw new Error(errMessage(e));
+    }
+  });
+
+// Suivi de livraison manuelle LION OTT : réservé au propriétaire de la commande,
+// jamais dans un loader/SSR (même règle que les accès IPTV).
+export const getLionDelivery = createServerFn({ method: "POST" })
+  .inputValidator((d) => idSchema.parse(d))
+  .handler(async ({ data }) => {
+    setResponseHeader("Cache-Control", "no-store");
+    if (!(await ownsOrder(data.id))) return { delivery: null, error: "Accès privé : ouvrez le suivi depuis le navigateur utilisé pour votre achat." };
+    try {
+      const order = await hypertv.getOrder(data.id);
+      if (order.type !== "lion") return { delivery: null, error: "Cette commande n'est pas une livraison manuelle." };
+      const raw = (order.delivery ?? null) as unknown;
+      const d = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+      if (!d || d["mode"] !== "manual") return { delivery: null, error: "Livraison momentanément indisponible. Réessayez." };
+      const stRaw = d["suggestedTicket"];
+      const st = stRaw && typeof stRaw === "object" ? (stRaw as Record<string, unknown>) : null;
+      const status = String(d["status"]);
+      const delivery: LionDelivery = {
+        mode: "manual",
+        status: ["awaiting_payment", "awaiting_ticket", "awaiting_reseller", "delivered"].includes(status)
+          ? (status as LionDelivery["status"])
+          : "awaiting_payment",
+        supportTicketId: typeof d["supportTicketId"] === "string" ? d["supportTicketId"] : null,
+        deliveredAt: typeof d["deliveredAt"] === "string" ? d["deliveredAt"] : null,
+        suggestedTicket:
+          st && typeof st["subject"] === "string" && typeof st["message"] === "string"
+            ? { category: typeof st["category"] === "string" ? st["category"] : "subscription", subject: st["subject"], message: st["message"] }
+            : null,
+      };
+      return { delivery, error: null as string | null };
+    } catch {
+      return { delivery: null, error: "Impossible de récupérer le suivi de livraison. Réessayez." };
     }
   });
 
