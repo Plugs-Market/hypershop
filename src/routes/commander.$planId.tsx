@@ -28,7 +28,8 @@ const methodsQuery = queryOptions({
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
-  validateSearch: (search: Record<string, unknown>): { type?: "trex" } => (search["type"] === "trex" ? { type: "trex" } : {}),
+  validateSearch: (search: Record<string, unknown>): { type?: "trex" | "lion" } =>
+    search["type"] === "trex" ? { type: "trex" } : search["type"] === "lion" ? { type: "lion" } : {},
   head: ({ loaderData }) => {
     const data = loaderData as Catalog | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
@@ -57,6 +58,7 @@ function Checkout() {
   const { planId } = Route.useParams();
   const { type } = Route.useSearch();
   const isTrex = type === "trex";
+  const isLion = type === "lion";
   const { data } = useSuspenseQuery(catalogQuery);
   const { data: methodsData } = useSuspenseQuery(methodsQuery);
   const navigate = useNavigate();
@@ -78,7 +80,7 @@ function Checkout() {
   // Conservée après un échec réseau ; renouvelée seulement si le contenu de la tentative change.
   const attempt = useRef<OrderAttempt | null>(null);
   const submitting = useRef(false);
-  const available = isTrex ? data.trexPlans : data.plans;
+  const available = isTrex ? data.trexPlans : isLion ? data.lionPlans : data.plans;
   const buyable = available.filter((p): p is typeof p & { price_cents: number } => p.price_cents !== null);
   const plan = buyable.find((p) => p.id === selected);
   const isFree = plan?.price_cents === 0;
@@ -95,7 +97,7 @@ function Checkout() {
     submitting.current = true;
     setLoading(true);
     const details = isFree ? { mac: normalizeMac(mac) } : { mac: normalizeMac(mac), method: method! };
-    const product = isTrex ? { trexPlanId: plan.id } : { planId: plan.id };
+    const product = isTrex ? { trexPlanId: plan.id } : isLion ? { lionPlanId: plan.id } : { planId: plan.id };
     attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
       const r = await create({ data: { ...product, ...details, idempotencyKey: attempt.current.key } });
@@ -115,14 +117,14 @@ function Checkout() {
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="space-y-2">
-            <Label>{isTrex ? "Abonnement TREX" : "Formule"}</Label>
+            <Label>{isTrex ? "Abonnement TREX" : isLion ? "Abonnement LION OTT" : "Formule"}</Label>
             {data.error && <p className="text-sm text-destructive">{data.error}</p>}
             {!data.error && !plan && <p className="text-sm text-destructive">Cette formule n'est plus disponible</p>}
             <div className="grid gap-2">
               {buyable.map((p) => (
                 <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
                   className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"line" in p ? null : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"durationLabel" in p && p.durationLabel ? p.durationLabel : "line" in p ? null : <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</>}</span></span>
                   <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
                 </Button>
               ))}
