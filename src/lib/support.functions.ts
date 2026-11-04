@@ -6,6 +6,7 @@ import { clearSession, readSession } from "./account.server";
 import { SESSION_ERRORS } from "./account";
 import { cipherSchema, normalizeDevices, normalizeTicketDetail, normalizeTicketSummary, SUPPORT_CATEGORIES, SUPPORT_ERRORS, translateSupportError } from "./support";
 import { normalizeInvoice } from "./invoices";
+import { isOrderDelivered } from "./order-ticket";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rec = (v: unknown): any => (v && typeof v === "object" ? v : {});
@@ -61,6 +62,7 @@ export const createSupportTicket = createServerFn({ method: "POST" })
       const order = normalizeInvoice(await hypertv.getInvoice(session, data.orderId));
       if (order.orderId !== data.orderId) throw new Error("Commande non autorisée.");
       if (order.supportTicketId) return { id: order.supportTicketId, devices: [] };
+      if (isOrderDelivered(order)) throw new Error("Cette commande est déjà livrée et ne nécessite pas de ticket.");
       if (!order.supportTicketRequired) throw new Error("Cette commande ne nécessite pas de ticket.");
     }
     const r = rec(await hypertv.supportCreate(session, data));

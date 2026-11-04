@@ -15,6 +15,7 @@ export type Invoice = {
   type: string; lionDelivery: { status: string; supportTicketId: string | null } | null;
   supportTicketRequired: boolean; supportTicketId: string | null; suggestedTicket: SuggestedTicket | null;
   manualDeliveryStatus: string | null;
+  deliveryStatus: string | null;
 };
 export const INVOICE_STATES = ["pending", "detected", "review", "paid", "activated", "expired", "cancelled"] as const;
 export const INVOICE_POLL_INTERVAL = 20_000;
@@ -29,7 +30,7 @@ const text = (v: unknown): string | null => typeof v === "string" ? v : null;
 export function normalizeInvoice(raw: unknown): Invoice {
   const outer = record(raw), i = record(outer.invoice ?? raw), p = record(i.payment), o = record(i.order);
   const price = typeof i.priceEur === "number" ? i.priceEur : Number(i.priceEur);
-  const d = record(i.delivery);
+  const d = record(i.delivery ?? o.delivery);
   // Livraison manuelle LION OTT : statut + ticket support, jamais d'identifiants de ligne.
   const supportTicketId = text(i.supportTicketId) ?? text(o.supportTicketId);
   const st = record(i.suggestedTicket ?? o.suggestedTicket);
@@ -44,6 +45,7 @@ export function normalizeInvoice(raw: unknown): Invoice {
     type: text(i.type) ?? text(o.type) ?? "subscription", lionDelivery,
     supportTicketRequired: (i.supportTicketRequired ?? o.supportTicketRequired) === true, supportTicketId, suggestedTicket,
     manualDeliveryStatus: lionDelivery?.status ?? null,
+    deliveryStatus: text(d.status),
     payment: { method: text(p.method) ?? "", label: text(p.label) ?? "—", amount: typeof p.amount === "number" || typeof p.amount === "string" ? p.amount : null, symbol: text(p.symbol), address: text(p.address), memo: text(p.memo) },
   };
 }

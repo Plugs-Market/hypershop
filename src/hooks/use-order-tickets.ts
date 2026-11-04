@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ensureCustomerOrderTicket } from "@/lib/order-ticket-client";
-import type { TicketOrder } from "@/lib/order-ticket";
+import { isOrderDelivered, type TicketOrder } from "@/lib/order-ticket";
 import { listCustomerInvoices } from "@/lib/invoices.functions";
 import { useSupportContext } from "@/lib/support-client";
 
@@ -13,6 +13,7 @@ export function useOrderTickets(orders: TicketOrder[], onUpdated?: (order: Ticke
     if (!ctx) return;
     let alive = true;
     const process = async (order: TicketOrder) => {
+      if (isOrderDelivered(order)) return;
       if (alive && order.supportTicketRequired && !order.supportTicketId) setOpening(prev => new Set(prev).add(order.id));
       try {
         const next = await ensureCustomerOrderTicket(order, ctx);
