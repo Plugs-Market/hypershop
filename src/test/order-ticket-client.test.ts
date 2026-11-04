@@ -15,6 +15,15 @@ const ctx = { customerId: "customer", username: null, device: { deviceId: "devic
 const order = { id: "free-lion", supportTicketRequired: true, suggestedTicket: { category: "subscription", subject: "Subject", message: "Private formula and price" } };
 beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); mocks.draft = null; mocks.share.mockResolvedValue(undefined); mocks.read.mockResolvedValue({ notModified: false, ticket: { subject: { ct: "encrypted-subject", iv: "encrypted-iv" } }, devices: [], messages: [] }); });
 describe("encrypted order ticket recovery", () => {
+  it("does not create a ticket from a persisted draft when the order was delivered", async () => {
+    mocks.draft = { key: {}, category: "subscription", subject: { ct: "encrypted-subject", iv: "encrypted-iv" }, message: { ct: "encrypted-message", iv: "encrypted-iv" } };
+    mocks.reload.mockResolvedValue({ ...order, manualDeliveryStatus: "delivered" });
+    mocks.create.mockResolvedValue({ id: "unwanted" });
+    await ensureCustomerOrderTicket(order, ctx);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.draft).toBeNull();
+  });
   it("sends encrypted subject and message for an immediately paid free order", async () => {
     mocks.reload.mockResolvedValueOnce(order).mockResolvedValueOnce({ ...order, supportTicketId: "ticket" });
     mocks.create.mockResolvedValue({ id: "ticket" }); mocks.send.mockResolvedValue({ ok: true });

@@ -3,6 +3,18 @@ import { ensureOrderTicket, type TicketOrder } from "@/lib/order-ticket";
 const suggestedTicket = { category: "subscription", subject: "Commande", message: "Formule et prix" };
 const lock = async <T>(_id: string, run: () => Promise<T>) => run();
 describe("automatic encrypted order tickets", () => {
+  it.each([{ delivery: { status: "delivered" } }, { manualDeliveryStatus: "delivered" }, { state: "delivered" }])("never creates a catch-up ticket for delivered metadata %j", async metadata => {
+    const order = { id: "old-delivered", supportTicketRequired: true, suggestedTicket, ...metadata };
+    const create = vi.fn();
+    await ensureOrderTicket(order, { lock, create, reload: async () => order });
+    expect(create).not.toHaveBeenCalled();
+  });
+  it("rechecks delivery after acquiring the lock", async () => {
+    const order = { id: "delivered-under-lock", supportTicketRequired: true, suggestedTicket };
+    const create = vi.fn();
+    await ensureOrderTicket(order, { lock, create, reload: async () => ({ ...order, manualDeliveryStatus: "delivered" }) });
+    expect(create).not.toHaveBeenCalled();
+  });
   it.each(["lion-free", "lion-paid", "trex-paid_activation_failed", "old-account-order"])("creates and reloads %s", async id => {
     let order: TicketOrder = { id, supportTicketRequired: true, suggestedTicket };
     const create = vi.fn(async () => { order = { ...order, supportTicketRequired: false, supportTicketId: "ticket-1" }; });

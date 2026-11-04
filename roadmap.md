@@ -1,4 +1,5 @@
 # Intégration TREX
+- [ ] Exclure les commandes déjà livrées de toute création automatique de ticket, y compris la reprise de brouillons, et tester cette règle.
 - [x] Unifier les tickets chiffrés de commande, leur reprise sans doublon et les boutons LION/TREX dans le suivi et les factures ; 58 tests ciblés validés.
 - [ ] Vérifier les cinq parcours tickets sur des commandes réelles ; bloqué par l’absence de session client HyperTV, redirection vers connexion vérifiée.
 - [x] Discussion support : réponse fixe, messages seuls défilants, barre supérieure compacte et aucun pied de page ; compilation et 6 tests support validés.
