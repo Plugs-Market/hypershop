@@ -5,6 +5,7 @@ import { hypertv, HypertvError } from "./hypertvClient.server";
 import { clearSession, readSession } from "./account.server";
 import { SESSION_ERRORS } from "./account";
 import { cipherSchema, normalizeDevices, normalizeTicketDetail, normalizeTicketSummary, SUPPORT_CATEGORIES, SUPPORT_ERRORS, translateSupportError } from "./support";
+import { normalizeInvoice } from "./invoices";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rec = (v: unknown): any => (v && typeof v === "object" ? v : {});
@@ -56,9 +57,17 @@ export const listSupportTickets = createServerFn({ method: "GET" }).handler(() =
 export const createSupportTicket = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ category: z.enum(SUPPORT_CATEGORIES.map((c) => c.value) as [string, ...string[]]), subject: cipherSchema, orderId: z.string().min(1).max(150).optional() }).parse(d))
   .handler(({ data }) => supportCall(async (session) => {
+    if (data.orderId) {
+      const order = normalizeInvoice(await hypertv.getInvoice(session, data.orderId));
+      if (order.orderId !== data.orderId) throw new Error("Commande non autorisée.");
+      if (order.supportTicketId) return { id: order.supportTicketId, devices: [] };
+      if (!order.supportTicketRequired) throw new Error("Cette commande ne nécessite pas de ticket.");
+    }
     const r = rec(await hypertv.supportCreate(session, data));
     const t = rec(r.ticket ?? r);
-    return { id: String(t.id ?? r.id), devices: normalizeDevices(r.devices) };
+    const ticketId = t.id ?? r.id;
+    if (typeof ticketId !== "string" || !ticketId) throw new Error("Ticket indisponible.");
+    return { id: ticketId, devices: normalizeDevices(r.devices ?? t.devices) };
   }));
 
 export const addSupportKeys = createServerFn({ method: "POST" })
