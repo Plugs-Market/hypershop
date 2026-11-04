@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { invoiceCanPay, invoiceCanCancel, invoicePolls, normalizeInvoice, normalizeInvoiceDelivery, invoiceSearchSchema, replacementInvoiceId, newestInvoices, INVOICE_POLL_INTERVAL } from "@/lib/invoices";
 describe("customer invoices", () => {
+  it("preserves delivered status from direct or nested order delivery without credentials", () => {
+    for (const raw of [{ id: "old", delivery: { status: "delivered", password: "private-pass" } }, { id: "old", order: { id: "old", delivery: { mode: "manual", status: "delivered", password: "private-pass" } } }]) {
+      const invoice = normalizeInvoice(raw);
+      expect(invoice.deliveryStatus).toBe("delivered");
+      expect(JSON.stringify(invoice)).not.toContain("private-pass");
+    }
+  });
   it("uses root ticket fields for failed TREX and manual LION orders", () => {
     for (const type of ["trex", "lion"]) {
       const invoice = normalizeInvoice({ id: "order", type, state: "paid_activation_failed", supportTicketRequired: true, supportTicketId: "root-ticket", suggestedTicket: { category: "subscription", subject: "Subject", message: "Message" }, delivery: { mode: "manual", status: "awaiting_reseller", supportTicketId: "wrong-nested-ticket" } });

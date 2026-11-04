@@ -5,7 +5,7 @@ vi.mock("@tanstack/react-start/server", () => ({ setResponseHeader: mocks.header
 vi.mock("@/lib/account.server", () => ({ readSession: mocks.session, clearSession: mocks.clear }));
 vi.mock("@/lib/hypertvClient.server", () => ({ HypertvError: class extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }, hypertv: { getInvoice: mocks.invoice, getInvoices: mocks.invoices, getPaymentMethods: mocks.methods, payInvoice: mocks.pay, stripeCheckout: mocks.stripe, paypalTxid: mocks.paypal, cancelInvoice: mocks.cancel } }));
 import { HypertvError } from "@/lib/hypertvClient.server";
-import { getCustomerInvoice, listCustomerInvoices, payCustomerInvoice, cancelCustomerInvoice, invoicePaypalTxid } from "@/lib/invoices.functions";
+import { getCustomerInvoice, getCustomerOrderTicket, listCustomerInvoices, payCustomerInvoice, cancelCustomerInvoice, invoicePaypalTxid } from "@/lib/invoices.functions";
 // Mocked RPC builder exposes the handler directly, with its runtime {data} contract.
 const read = getCustomerInvoice as unknown as (args: { data: { id: string } }) => Promise<unknown>;
 const list = listCustomerInvoices as unknown as (args: { data: { q: string; status: string; method: string; page: number } }) => Promise<{ pageSize: number }>;
@@ -19,6 +19,13 @@ beforeEach(() => {
   mocks.pay.mockResolvedValue({ replacedId: "invoice", order: { id: "new-invoice" } }); mocks.stripe.mockResolvedValue({ url: "https://checkout.stripe.com/test" });
 });
 describe("private invoice handlers", () => {
+  it("returns delivered metadata for the catch-up guard without private delivery", async () => {
+    mocks.invoice.mockResolvedValue({ id: "old-order", state: "paid", supportTicketRequired: true, delivery: { status: "delivered", password: "private-pass" } });
+    const ticketRead = getCustomerOrderTicket as unknown as (args: { data: { id: string } }) => Promise<{ deliveryStatus: string }>;
+    const result = await ticketRead({ data: { id: "old-order" } });
+    expect(result.deliveryStatus).toBe("delivered");
+    expect(JSON.stringify(result)).not.toContain("private-pass");
+  });
   it("refuse toute lecture sans connexion HyperTV", async () => { mocks.session.mockReturnValue(null); await expect(read({ data: { id: "invoice" } })).rejects.toThrow("Session expirée"); expect(mocks.invoice).not.toHaveBeenCalled(); expect(mocks.header).toHaveBeenCalledWith("Cache-Control", "no-store"); });
   it("transmet la session client aux lectures et modes, sans retourner delivery", async () => { mocks.invoice.mockResolvedValue({ id: "invoice", delivery: { password: "private" } }); const result = await read({ data: { id: "invoice" } }); expect(mocks.invoice).toHaveBeenCalledWith("test-customer-session", "invoice"); expect(mocks.methods).toHaveBeenCalledWith("test-customer-session"); expect(JSON.stringify(result)).not.toContain("private"); });
   it.each(["customer_unauthorized", "customer_session_expired"])("supprime la session sur 401 %s", async code => { mocks.invoice.mockRejectedValue(new HypertvError(401, code, "")); await expect(read({ data: { id: "invoice" } })).rejects.toThrow("Session expirée"); expect(mocks.clear).toHaveBeenCalled(); });

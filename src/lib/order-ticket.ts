@@ -6,7 +6,7 @@ export type TicketOrder = {
   suggestedTicket?: SuggestedTicket | null;
   state?: string;
   deliveryStatus?: string | null;
-  manualDeliveryStatus?: string | null;
+  manualDeliveryStatus?: string | null | undefined;
   delivery?: { status?: string } | null;
 };
 export type TicketDependencies = {
