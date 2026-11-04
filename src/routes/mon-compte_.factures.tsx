@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { ArrowDownWideNarrow, ArrowLeft, ChevronLeft, ChevronRight, LifeBuoy, Receipt, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowDownWideNarrow, ArrowLeft, ChevronLeft, ChevronRight, Receipt, Search } from "lucide-react";
 import { listCustomerInvoices } from "@/lib/invoices.functions";
 import { invoiceSearchSchema, INVOICE_STATES, invoiceStatusLabels, invoiceCurrency, newestInvoices, type InvoiceSearch } from "@/lib/invoices";
 import { formatFrDate } from "@/lib/account";
@@ -9,6 +9,8 @@ import { shopQuery } from "./mon-compte";
 import { GuidesShell } from "@/components/GuidesShell";
 import { InvoiceStatus, InvoiceError, InvoiceNotFound } from "@/components/InvoiceShared";
 import { Button } from "@/components/ui/button";
+import { useOrderTickets } from "@/hooks/use-order-tickets";
+import { OrderTicketPanel } from "@/components/OrderTicketPanel";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -31,6 +33,8 @@ export const Route = createFileRoute("/mon-compte_/factures")({
 function InvoicesPage() {
   const search = Route.useSearch(), navigate = useNavigate();
   const { data } = useSuspenseQuery(invoicesQuery(search)), { data: shop } = useSuspenseQuery(shopQuery);
+  const ticketOrders = useMemo(() => data.invoices.filter(i => i.orderId).map(i => ({ ...i, id: i.orderId ?? i.id })), [data.invoices]);
+  const opening = useOrderTickets(ticketOrders);
   const [draft, setDraft] = useState(search.q);
   const change = (patch: Partial<InvoiceSearch>) => navigate({ to: "/mon-compte/factures", search: { ...search, page: 1, ...patch } });
   const count = data.invoices.length;
@@ -59,7 +63,7 @@ function InvoicesPage() {
     </div>
     <p className="flex items-center gap-2 text-sm text-muted-foreground"><ArrowDownWideNarrow className="h-4 w-4" />Plus récentes</p>
     {count === 0 ? <p className="border-y border-border py-12 text-center text-muted-foreground">Aucune facture trouvée.</p> : <div className="grid gap-4 sm:grid-cols-2">{newestInvoices(data.invoices).map(i => <article key={i.id} className="min-w-0 space-y-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs text-muted-foreground">N° {i.number}</span><InvoiceStatus state={i.state} /></div><h2 className="break-words text-lg font-semibold">{i.plan}</h2><p className="text-sm text-muted-foreground">{formatFrDate(i.createdAt)} · {i.payment.label}</p><div className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl">{invoiceCurrency(i.priceEur)}</strong>{i.source === "hypertv" && <span className="rounded-md bg-muted px-2 py-1 text-xs">HyperTV · Lecture seule</span>}</div>{i.type === "lion" && i.lionDelivery && i.lionDelivery.status !== "awaiting_payment" && <div className="space-y-2">{i.lionDelivery.status === "delivered" ? <p className="text-sm font-medium text-success">Livré</p> : <p className="text-sm font-medium text-warning">En attente de livraison par votre revendeur</p>}{i.lionDelivery.supportTicketId && <Button variant="outline" size="sm" asChild className="w-full"><Link to="/mon-compte/support/$id" params={{ id: i.lionDelivery.supportTicketId }}><LifeBuoy className="h-4 w-4" />Ouvrir le ticket</Link></Button>}</div>}<Button variant="outline" asChild className="w-full"><Link to="/mon-compte/factures/$id" params={{ id: i.id }}>Voir la facture<ChevronRight /></Link></Button>
+      <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs text-muted-foreground">N° {i.number}</span><InvoiceStatus state={i.state} /></div><h2 className="break-words text-lg font-semibold">{i.plan}</h2><p className="text-sm text-muted-foreground">{formatFrDate(i.createdAt)} · {i.payment.label}</p><div className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl">{invoiceCurrency(i.priceEur)}</strong>{i.source === "hypertv" && <span className="rounded-md bg-muted px-2 py-1 text-xs">HyperTV · Lecture seule</span>}</div><OrderTicketPanel order={i} opening={opening.has(i.orderId ?? i.id)} /><Button variant="outline" asChild className="w-full"><Link to="/mon-compte/factures/$id" params={{ id: i.id }}>Voir la facture<ChevronRight /></Link></Button>
     </article>)}</div>}
     <nav className="flex items-center justify-center gap-4" aria-label="Pagination"><Button variant="outline" size="icon" title="Page précédente" aria-label="Page précédente" disabled={data.page <= 1} onClick={() => change({ page: data.page - 1 })}><ChevronLeft /></Button><span className="text-sm">Page {data.page}</span><Button variant="outline" size="icon" title="Page suivante" aria-label="Page suivante" disabled={!more} onClick={() => change({ page: data.page + 1 })}><ChevronRight /></Button></nav>
   </div></GuidesShell>;

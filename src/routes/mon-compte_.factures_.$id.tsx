@@ -1,8 +1,8 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { CreditCard, LifeBuoy, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CreditCard, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getCustomerInvoice, payCustomerInvoice, cancelCustomerInvoice, invoiceStripeCheckout, invoicePaypalTxid } from "@/lib/invoices.functions";
 import { invoiceCanPay, invoiceCanCancel, invoiceCurrency, invoicePolls, INVOICE_POLL_INTERVAL } from "@/lib/invoices";
@@ -10,6 +10,8 @@ import { formatFrDate } from "@/lib/account";
 import { shopQuery } from "./mon-compte";
 import { GuidesShell } from "@/components/GuidesShell";
 import { InvoiceBack, InvoiceStatus, InvoiceError, InvoiceNotFound, InvoiceCountdown } from "@/components/InvoiceShared";
+import { useOrderTickets } from "@/hooks/use-order-tickets";
+import { OrderTicketPanel } from "@/components/OrderTicketPanel";
 import { InvoiceDelivery } from "@/components/InvoiceDelivery";
 import { PrivateField } from "@/components/OrderDelivery";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,8 @@ function InvoicePage() {
   const { id } = Route.useParams(), navigate = useNavigate(), qc = useQueryClient();
   const { data } = useSuspenseQuery(detailQuery(id)), { data: shop } = useSuspenseQuery(shopQuery);
   const i = data.invoice, p = i.payment;
+  const ticketOrders = useMemo(() => i.orderId ? [{ ...i, id: i.orderId }] : [], [i]);
+  const opening = useOrderTickets(ticketOrders);
   const pay = useServerFn(payCustomerInvoice), cancel = useServerFn(cancelCustomerInvoice), stripe = useServerFn(invoiceStripeCheckout), paypal = useServerFn(invoicePaypalTxid);
   const [txid, setTxid] = useState(""), [email, setEmail] = useState(""), [notice, setNotice] = useState<string | null>(null);
   function onError(e: Error) { if (e.message.startsWith("Session expirée")) { qc.removeQueries({ queryKey: ["customer-invoices"] }); qc.removeQueries({ queryKey: ["customer-invoice"] }); void navigate({ to: "/connexion", replace: true }); } }
@@ -44,7 +48,7 @@ function InvoicePage() {
   return <GuidesShell shop={shop}><div className="mx-auto max-w-2xl space-y-6"><InvoiceBack />
     <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="break-all text-2xl font-bold">Facture N° {i.number}</h1><InvoiceStatus state={i.state} /></div>
     <div className="space-y-2 border-y border-border py-6"><h2 className="break-words text-xl font-semibold">{i.plan}</h2><p className="text-sm text-muted-foreground">{formatFrDate(i.createdAt)} · {p.label}</p><p className="text-3xl font-bold">{invoiceCurrency(i.priceEur)}</p>{i.source === "hypertv" && <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs">HyperTV · Lecture seule</span>}</div>
-    {i.type === "lion" && i.lionDelivery && i.lionDelivery.status !== "awaiting_payment" && <section className="space-y-3 rounded-xl border border-border bg-card p-4">{i.lionDelivery.status === "delivered" ? <p className="font-semibold text-success">Livré</p> : <p className="font-semibold text-warning">En attente de livraison par votre revendeur</p>}<p className="text-sm text-muted-foreground">Vos accès sont transmis par votre revendeur dans le ticket support sécurisé.</p>{i.lionDelivery.supportTicketId && <Button variant="outline" asChild><Link to="/mon-compte/support/$id" params={{ id: i.lionDelivery.supportTicketId }}><LifeBuoy />Ouvrir le ticket</Link></Button>}</section>}
+    <OrderTicketPanel order={i} opening={opening.has(i.orderId ?? i.id)} />
     {i.priceEur > 0 && p.address && p.method !== "paypal_ff" && p.method !== "stripe" && <section className="space-y-4"><h2 className="text-xl font-semibold">Paiement {p.label}</h2><p className="text-2xl font-bold">{p.amount} {p.symbol}</p><PrivateField label="Adresse de paiement" value={p.address} /><div className="flex justify-center"><div className="rounded-lg bg-qr-surface p-4"><QRCodeSVG value={p.address} size={180} /></div></div>{p.memo && <PrivateField label="Mémo / commentaire" value={p.memo} />}{invoicePolls(i.state) && <InvoiceCountdown expiresAt={i.expiresAt} />}</section>}
     {invoiceCanPay(i) && <section className="space-y-3 border-t border-border pt-6"><h2 className="text-xl font-semibold">Choisir un mode de paiement</h2><div className="grid gap-2 sm:grid-cols-2">{data.methods.map(m => <Button key={m.code} variant="outline" className="h-auto min-h-10 whitespace-normal py-3" disabled={busy || (m.minEur != null && i.priceEur < m.minEur) || (m.maxEur != null && i.priceEur > m.maxEur)} onClick={() => payment.mutate(m.code)}>{m.code === "stripe" && <CreditCard />}{m.label}</Button>)}</div></section>}
     {mutable && p.method === "stripe" && i.orderId && <Button className="w-full" disabled={busy} onClick={() => card.mutate()}><CreditCard />{card.isPending ? "Redirection…" : "Payer par carte"}</Button>}

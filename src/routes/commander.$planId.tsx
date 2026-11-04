@@ -4,13 +4,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { accountStatusQuery } from "@/lib/account.functions";
-import { createOrder, getCatalog, getPaymentMethods } from "@/lib/shop.functions";
+import { createOrder, getCatalog, getPaymentMethods, getOrder } from "@/lib/shop.functions";
 import { formatPrice, isValidMac, normalizeMac } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ensureCustomerOrderTicket } from "@/lib/order-ticket-client";
+import { useSupportContext } from "@/lib/support-client";
 import { resolveOrderAttempt, type OrderAttempt } from "@/lib/shop-order";
 
 const catalogQuery = queryOptions({
@@ -63,6 +65,8 @@ function Checkout() {
   const { data: methodsData } = useSuspenseQuery(methodsQuery);
   const navigate = useNavigate();
   const create = useServerFn(createOrder);
+  const fetchOrder = useServerFn(getOrder);
+  const { ctx } = useSupportContext();
   const [selected, setSelected] = useState(planId);
   const [mac, setMac] = useState("");
   // MAC du client connecté pré-remplie (toujours modifiable).
@@ -71,7 +75,8 @@ function Checkout() {
   useEffect(() => {
     if (!prefilled.current && status?.mac) {
       prefilled.current = true;
-      setMac((m) => m || status.mac!);
+      const accountMac = status.mac;
+      setMac((m) => m || accountMac);
     }
   }, [status?.mac]);
   const [method, setMethod] = useState<string | null>(null);
@@ -96,11 +101,17 @@ function Checkout() {
     if (!isFree && !method) return setError("Choisissez un mode de paiement.");
     submitting.current = true;
     setLoading(true);
-    const details = isFree ? { mac: normalizeMac(mac) } : { mac: normalizeMac(mac), method: method! };
+    const details = isFree ? { mac: normalizeMac(mac) } : { mac: normalizeMac(mac), method: method ?? undefined };
     const product = isTrex ? { trexPlanId: plan.id } : isLion ? { lionPlanId: plan.id } : { planId: plan.id };
     attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
       const r = await create({ data: { ...product, ...details, idempotencyKey: attempt.current.key } });
+      if (ctx) {
+        try {
+          const order = await fetchOrder({ data: { id: r.id } });
+          if (order) await ensureCustomerOrderTicket(order, ctx);
+        } catch { /* Tracking retries without making checkout fail. */ }
+      }
       await navigate({ to: "/commande/$id", params: { id: r.id } });
     } catch (err) {
       setError((err as Error).message || "Erreur lors de la commande.");
