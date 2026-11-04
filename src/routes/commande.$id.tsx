@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock, Loader2, XCircle, Copy, Rocket, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -16,7 +16,9 @@ import { activationNotice, shouldPollOrder, trexTimeline } from "@/lib/shop-orde
 import { queryOptions } from "@tanstack/react-query";
 import { getCatalog } from "@/lib/shop.functions";
 import { OrderDelivery } from "@/components/OrderDelivery";
-import { LionDeliveryPanel } from "@/components/LionDelivery";
+import { OrderTicketPanel } from "@/components/OrderTicketPanel";
+import { useOrderTickets } from "@/hooks/use-order-tickets";
+import type { TicketOrder } from "@/lib/order-ticket";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -69,6 +71,12 @@ function OrderPage() {
   };
   const [order, setOrder] = useState<Order | null>(initial);
   const fetchOrder = useServerFn(getOrder);
+  const ticketOrders = useMemo(() => order ? [order] : [], [order]);
+  const updateTicket = useCallback((next: TicketOrder) => {
+    setOrder(previous => previous && (previous.supportTicketId !== next.supportTicketId || previous.supportTicketRequired !== next.supportTicketRequired)
+      ? { ...previous, supportTicketId: next.supportTicketId ?? null, supportTicketRequired: next.supportTicketRequired === true } : previous);
+  }, []);
+  const opening = useOrderTickets(ticketOrders, updateTicket);
 
   async function refresh() {
     if (!order) return;
@@ -99,7 +107,7 @@ function OrderPage() {
         <div className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
           <StateBadge order={order} />
           {order.type === "trex" && <TrexTimeline order={{ ...order, includesHypertvSubscription: order.includesHypertvSubscription ?? includedSubscription ?? null }} />}
-          {order.type === "lion" && <LionDeliveryPanel key={order.id} orderId={order.id} />}
+          <OrderTicketPanel order={order} opening={opening.has(order.id)} />
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
@@ -113,7 +121,7 @@ function OrderPage() {
             )}
           </dl>
 
-          {order.state === "activated" && (
+          {order.state === "activated" && order.type !== "lion" && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <p className="flex items-center justify-center gap-2 text-center font-semibold">
                 <Rocket className="h-5 w-5 shrink-0 text-primary" />

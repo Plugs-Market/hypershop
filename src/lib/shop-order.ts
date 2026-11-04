@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAC_REGEX, normalizeMac, translateHypertvError } from "./hypertv-shared";
+import type { SuggestedTicket } from "./order-ticket";
 
 const commonFields = {
   mac: z.string().transform(normalizeMac).refine((mac) => MAC_REGEX.test(mac), "Adresse MAC invalide"),
@@ -22,6 +23,10 @@ export function resolveOrderAttempt(previous: OrderAttempt | null, signature: st
 
 export type OrderProgress = {
   state: string;
+  supportTicketRequired?: boolean;
+  supportTicketId?: string | null;
+  suggestedTicket?: SuggestedTicket | null;
+  manualDeliveryStatus?: string | null;
   type?: string;
   lionPlanId?: string;
   activationError?: string | null;
@@ -41,6 +46,7 @@ export type LionDelivery = {
 
 export function activationNotice(order: OrderProgress): string | null {
   if (order.state === "activated") return null;
+  if (order.type === "trex" && order.state === "paid_activation_failed") return "Votre ligne n'a pas pu être livrée automatiquement. Le vendeur va vous la fournir dans le ticket support.";
   if (order.activationError === "trex_line_state_unknown_contact_support" || order.state === "trex_line_state_unknown_contact_support") {
     return translateHypertvError(0, "trex_line_state_unknown_contact_support");
   }
@@ -51,6 +57,9 @@ export function activationNotice(order: OrderProgress): string | null {
 }
 
 export function shouldPollOrder(order: OrderProgress): boolean {
+  if ((order.type === "lion" || order.manualDeliveryStatus) && !["expired", "cancelled"].includes(order.state)) {
+    return order.manualDeliveryStatus !== "delivered";
+  }
   if (["activated", "expired", "cancelled"].includes(order.state)) return false;
   return ["pending", "detected", "review", "paid", "paid_activation_failed"].includes(order.state) || activationNotice(order) !== null;
 }

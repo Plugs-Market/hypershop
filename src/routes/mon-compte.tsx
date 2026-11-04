@@ -1,9 +1,10 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Copy, LifeBuoy, LogOut, RefreshCw, Receipt } from "lucide-react";
 import { getMyAccount, logoutCustomer, updateUsername } from "@/lib/account.functions";
+import { useOrderTickets } from "@/hooks/use-order-tickets";
 import { clearSupportDevices } from "@/lib/support-crypto";
 import { formatFrDate, usernameSchema } from "@/lib/account";
 import { getShopInfo } from "@/lib/shop.functions";
@@ -54,6 +55,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 function AccountPage() {
   const { account } = Route.useLoaderData();
+  const noOrders = useMemo(() => [], []);
+  useOrderTickets(noOrders, undefined, true);
   const { data: shop } = useSuspenseQuery(shopQuery);
   const navigate = useNavigate();
   const qc = useQueryClient();

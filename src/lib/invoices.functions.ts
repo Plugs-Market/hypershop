@@ -40,6 +40,13 @@ export const getCustomerInvoice = createServerFn({ method: "GET" }).inputValidat
     const [raw, methods] = await Promise.all([hypertv.getInvoice(session, data.id), hypertv.getPaymentMethods(session)]);
     return { invoice: normalizeInvoice(raw), methods: methods.methods };
   }));
+// Authenticated reread of ticket metadata; no IPTV delivery is serialized.
+export const getCustomerOrderTicket = createServerFn({ method: "POST" }).inputValidator((d: unknown) => idSchema.parse(d))
+  .handler(({ data }) => privateCall(async session => {
+    const invoice = normalizeInvoice(await hypertv.getInvoice(session, data.id));
+    if (invoice.orderId !== data.id) throw new Error("Commande non autorisée.");
+    return { id: data.id, supportTicketRequired: invoice.supportTicketRequired, supportTicketId: invoice.supportTicketId, suggestedTicket: invoice.suggestedTicket };
+  }));
 // IPTV credentials never enter loader data, SSR hydration or Query caches.
 export const getCustomerInvoiceDelivery = createServerFn({ method: "POST" }).inputValidator((d: unknown) => idSchema.parse(d))
   .handler(({ data }) => privateCall(async session => normalizeInvoiceDelivery(await hypertv.getInvoice(session, data.id))));
