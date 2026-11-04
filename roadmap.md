@@ -1,7 +1,7 @@
 # Intégration TREX
-- [ ] Exclure les commandes déjà livrées de toute création automatique de ticket, y compris la reprise de brouillons, et tester cette règle.
+- [x] Exclure les commandes déjà livrées de toute création automatique de ticket, y compris la reprise de brouillons et l'appel serveur ; 67 tests ciblés validés.
 - [x] Unifier les tickets chiffrés de commande, leur reprise sans doublon et les boutons LION/TREX dans le suivi et les factures ; 58 tests ciblés validés.
-- [ ] Vérifier les cinq parcours tickets sur des commandes réelles ; bloqué par l’absence de session client HyperTV, redirection vers connexion vérifiée.
+- [ ] Vérifier les six parcours tickets sur des commandes réelles, dont une ancienne commande déjà livrée ; bloqué par l’absence de session client HyperTV, redirection vers connexion vérifiée.
 - [x] Discussion support : réponse fixe, messages seuls défilants, barre supérieure compacte et aucun pied de page ; compilation et 6 tests support validés.
 - [x] Espacement discussion/réponse réduit à 8 px pour les discussions courtes ; disposition isolée contrôlée en 390 × 844 et 1280 × 1800, seuls les messages défilent.
 - [ ] Vérification visuelle de la discussion connectée — session client HyperTV indisponible dans l’aperçu de test, redirection vers connexion constatée.
