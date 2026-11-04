@@ -1,4 +1,4 @@
-import { ensureOrderTicket, type TicketOrder } from "./order-ticket";
+import { ensureOrderTicket, isOrderDelivered, type TicketOrder } from "./order-ticket";
 import { getCustomerOrderTicket } from "./invoices.functions";
 import { createSupportTicket, getSupportTicket, sendSupportMessage } from "./support.functions";
 import { encryptJson, newTicketKey, readOrderTicketDraft, saveOrderTicketDraft, deleteOrderTicketDraft } from "./support-crypto";
@@ -25,8 +25,17 @@ async function withOrderLock<T>(id: string, run: () => Promise<T>): Promise<T> {
 }
 
 export async function ensureCustomerOrderTicket(order: TicketOrder, ctx: SupportContext): Promise<TicketOrder> {
+  if (isOrderDelivered(order)) {
+    await deleteOrderTicketDraft(ctx.customerId, order.id);
+    return order;
+  }
   const reload = () => getCustomerOrderTicket({ data: { id: order.id } });
   const create = async (fresh: TicketOrder) => {
+    if (isOrderDelivered(fresh)) {
+      await deleteOrderTicketDraft(ctx.customerId, order.id);
+      return;
+    }
+    if (!fresh.supportTicketId && fresh.supportTicketRequired !== true) return;
     let draft = await readOrderTicketDraft(ctx.customerId, order.id);
     if (!draft) {
       if (!fresh.suggestedTicket) return;

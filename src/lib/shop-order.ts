@@ -27,6 +27,7 @@ export type OrderProgress = {
   supportTicketId?: string | null;
   suggestedTicket?: SuggestedTicket | null;
   manualDeliveryStatus?: string | null;
+  deliveryStatus?: string | null;
   type?: string;
   lionPlanId?: string;
   activationError?: string | null;
