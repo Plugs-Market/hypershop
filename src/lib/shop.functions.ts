@@ -113,7 +113,7 @@ export const getOrder = createServerFn({ method: "GET" })
       const authorized = await ownsOrder(data.id);
       const order = await hypertv.getOrder(data.id);
       // Never serialize delivery into loader/SSR hydration or router caches.
-      return { ...order, delivery: null, deliveryError: authorized && order.type !== "lion" && (order.delivery as { mode?: string } | null)?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
+      return { ...order, suggestedTicket: authorized ? order.suggestedTicket : null, supportTicketId: authorized ? order.supportTicketId : null, supportTicketRequired: authorized && order.supportTicketRequired === true, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
     } catch (e) {
       if (e instanceof HypertvError && e.status === 404) return null;
       throw new Error(errMessage(e));
@@ -134,7 +134,7 @@ export const getLionDelivery = createServerFn({ method: "POST" })
       const d = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
       const required = (order as { supportTicketRequired?: unknown }).supportTicketRequired === true;
       if (!d) return { delivery: { mode: "manual", status: order.state === "activated" || order.state === "paid" ? "awaiting_ticket" : "awaiting_payment", supportTicketId: null, deliveredAt: null, suggestedTicket: null, supportTicketRequired: required } as LionDelivery, error: null as string | null };
-      const stRaw = d["suggestedTicket"];
+      const stRaw = order.suggestedTicket;
       const st = stRaw && typeof stRaw === "object" ? (stRaw as Record<string, unknown>) : null;
       const status = String(d["status"]);
       const delivery: LionDelivery = {
@@ -142,7 +142,7 @@ export const getLionDelivery = createServerFn({ method: "POST" })
         status: ["awaiting_payment", "awaiting_ticket", "awaiting_reseller", "delivered"].includes(status)
           ? (status as LionDelivery["status"])
           : "awaiting_payment",
-        supportTicketId: typeof d["supportTicketId"] === "string" ? d["supportTicketId"] : null,
+        supportTicketId: order.supportTicketId ?? null,
         deliveredAt: typeof d["deliveredAt"] === "string" ? d["deliveredAt"] : null,
         suggestedTicket:
           st && typeof st["subject"] === "string" && typeof st["message"] === "string"
@@ -164,7 +164,8 @@ export const getDelivery = createServerFn({ method: "POST" })
     try {
       const order = await hypertv.getOrder(data.id);
       if (!canReadDelivery(order, true)) return { delivery: null, error: "Les accès seront disponibles après activation." };
-      return { delivery: order.delivery ?? null, error: order.delivery ? null : "Vos accès IPTV sont momentanément indisponibles. Réessayez dans quelques instants." };
+      const delivery = order.delivery && "m3uUrl" in order.delivery ? order.delivery : null;
+      return { delivery, error: delivery ? null : "Vos accès IPTV sont momentanément indisponibles. Réessayez dans quelques instants." };
     } catch { return { delivery: null, error: "Impossible de récupérer vos accès. Réessayez." }; }
   });
 
@@ -176,7 +177,7 @@ export const downloadPlaylist = createServerOnlyFn(async (id: string) => {
   if (getRequestHeader("sec-fetch-site") === "cross-site") return new Response("Accès non autorisé.", { status: 403, headers });
   try {
     const order = await hypertv.getOrder(id);
-    if (!canReadDelivery(order, true) || !order.delivery?.m3uUrl) return new Response("Playlist indisponible. Réessayez après activation.", { status: 409, headers });
+    if (!canReadDelivery(order, true) || !order.delivery || !("m3uUrl" in order.delivery) || !order.delivery.m3uUrl) return new Response("Playlist indisponible. Réessayez après activation.", { status: 409, headers });
     const { fetchPlaylist } = await import("./playlist-download.server");
     const bytes = await fetchPlaylist(order.delivery.m3uUrl);
     return new Response(new Blob([bytes as BlobPart], { type: "audio/x-mpegurl" }), { headers: { ...headers, "Content-Type": "audio/x-mpegurl", "Content-Disposition": 'attachment; filename="playlist.m3u"' } });

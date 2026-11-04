@@ -126,3 +126,15 @@ export async function writeTicketCache<M>(customerId: string, ticketId: string, 
   if (typeof indexedDB === "undefined") return;
   try { await tx("readwrite", (s) => s.put(value, `${customerId}:${ticketId}`), "tickets"); } catch { /* cache facultatif */ }
 }
+
+// Pending creation state stores only encrypted content and a WebCrypto key, never plaintext.
+export type OrderTicketDraft = { key: CryptoKey; subject: Cipher; message: Cipher; category: string };
+export async function readOrderTicketDraft(customerId: string, orderId: string): Promise<OrderTicketDraft | undefined> {
+  return tx("readonly", s => s.get(`order-draft:${customerId}:${orderId}`), "tickets");
+}
+export async function saveOrderTicketDraft(customerId: string, orderId: string, draft: OrderTicketDraft): Promise<void> {
+  await tx("readwrite", s => s.put(draft, `order-draft:${customerId}:${orderId}`), "tickets");
+}
+export async function deleteOrderTicketDraft(customerId: string, orderId: string): Promise<void> {
+  await tx("readwrite", s => s.delete(`order-draft:${customerId}:${orderId}`), "tickets");
+}

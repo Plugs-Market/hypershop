@@ -1,6 +1,7 @@
 // Seul module qui parle à l'API HyperTV. Serveur uniquement.
 import type { OffersResponse } from "./shop-offers";
 import type { OrderInput, OrderProgress } from "./shop-order";
+import type { LionDelivery } from "./shop-order";
 import type { Delivery } from "./playlist-security";
 import type { GuideCategoriesResponse, GuidesListResponse, GuideDetail } from "./guides";
 
@@ -93,7 +94,7 @@ export type OrderPayment = {
 };
 
 export type ShopOrder = OrderProgress & {
-  delivery?: Delivery | null;
+  delivery?: (Delivery & Partial<LionDelivery>) | LionDelivery | null;
   deliveryError?: string | null;
   deliveryAuthorized?: boolean;
   id: string;
