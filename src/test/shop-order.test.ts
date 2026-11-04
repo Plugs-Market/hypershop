@@ -23,6 +23,10 @@ describe("commande TREX", () => {
   });
 });
 describe("suivi TREX", () => {
+  it("continues manual delivery tracking until the seller delivers", () => {
+    expect(shouldPollOrder({ state: "activated", type: "lion", manualDeliveryStatus: "awaiting_reseller" })).toBe(true);
+    expect(shouldPollOrder({ state: "activated", type: "lion", manualDeliveryStatus: "delivered" })).toBe(false);
+  });
   it("continue les interrogations après un échec d'activation payé", () => expect(shouldPollOrder({ state: "paid_activation_failed", type: "trex" })).toBe(true));
   it("continue avec une erreur de crédits ou TREX", () => {
     for (const activationError of ["Crédits HyperTV insuffisants.", "trex_unavailable", "trex_line_state_unknown_contact_support"]) {

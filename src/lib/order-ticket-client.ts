@@ -36,14 +36,13 @@ export async function ensureCustomerOrderTicket(order: TicketOrder, ctx: Support
       await saveOrderTicketDraft(ctx.customerId, order.id, draft);
     }
     const ticketId = fresh.supportTicketId ?? (await createSupportTicket({ data: { category: draft.category, subject: draft.subject, orderId: order.id } })).id;
-    rememberTicketKey(ticketId, draft.key);
-    await shareTicketKey(ticketId, draft.key, [], ctx.device, true);
     const detail = await getSupportTicket({ data: { id: ticketId, deviceId: ctx.device.deviceId, includeDevices: true } });
     if (detail.notModified) throw new Error("Ticket indisponible");
     if (detail.ticket.subject?.ct !== draft.subject.ct || detail.ticket.subject.iv !== draft.subject.iv) {
       await deleteOrderTicketDraft(ctx.customerId, order.id);
       return;
     }
+    rememberTicketKey(ticketId, draft.key);
     await shareTicketKey(ticketId, draft.key, detail.devices, ctx.device, true);
     // Reuse exactly the same ciphertext on retry and confirm whether it was already sent.
     if (!detail.messages.some(m => m.ct === draft.message.ct && m.iv === draft.message.iv)) {

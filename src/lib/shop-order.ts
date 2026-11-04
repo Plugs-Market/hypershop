@@ -57,6 +57,9 @@ export function activationNotice(order: OrderProgress): string | null {
 }
 
 export function shouldPollOrder(order: OrderProgress): boolean {
+  if ((order.type === "lion" || order.manualDeliveryStatus) && !["expired", "cancelled"].includes(order.state)) {
+    return order.manualDeliveryStatus !== "delivered";
+  }
   if (["activated", "expired", "cancelled"].includes(order.state)) return false;
   return ["pending", "detected", "review", "paid", "paid_activation_failed"].includes(order.state) || activationNotice(order) !== null;
 }
