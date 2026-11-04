@@ -113,7 +113,7 @@ export const getOrder = createServerFn({ method: "GET" })
       const authorized = await ownsOrder(data.id);
       const order = await hypertv.getOrder(data.id);
       // Never serialize delivery into loader/SSR hydration or router caches.
-      return { ...order, suggestedTicket: authorized ? order.suggestedTicket : null, supportTicketId: authorized ? order.supportTicketId : null, supportTicketRequired: authorized && order.supportTicketRequired === true, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
+      return { ...order, suggestedTicket: authorized ? order.suggestedTicket ?? null : null, supportTicketId: authorized ? order.supportTicketId ?? null : null, supportTicketRequired: authorized && order.supportTicketRequired === true, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
     } catch (e) {
       if (e instanceof HypertvError && e.status === 404) return null;
       throw new Error(errMessage(e));

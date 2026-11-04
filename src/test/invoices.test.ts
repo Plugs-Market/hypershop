@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { invoiceCanPay, invoiceCanCancel, invoicePolls, normalizeInvoice, normalizeInvoiceDelivery, invoiceSearchSchema, replacementInvoiceId, newestInvoices, INVOICE_POLL_INTERVAL } from "@/lib/invoices";
 describe("customer invoices", () => {
+  it("uses root ticket fields for failed TREX and manual LION orders", () => {
+    for (const type of ["trex", "lion"]) {
+      const invoice = normalizeInvoice({ id: "order", type, state: "paid_activation_failed", supportTicketRequired: true, supportTicketId: "root-ticket", suggestedTicket: { category: "subscription", subject: "Subject", message: "Message" }, delivery: { mode: "manual", status: "awaiting_reseller", supportTicketId: "wrong-nested-ticket" } });
+      expect(invoice.supportTicketId).toBe("root-ticket");
+      expect(invoice.supportTicketRequired).toBe(true);
+      expect(invoice.suggestedTicket?.message).toBe("Message");
+      expect(invoice.lionDelivery?.supportTicketId).toBe("root-ticket");
+    }
+  });
   it("interdit tout mode pour une facture gratuite même payable", () => { expect(invoiceCanPay({ priceEur: 0, payable: true, source: "shop" })).toBe(false); expect(invoiceCanPay({ priceEur: 20, payable: true, source: "shop" })).toBe(true); });
   it("garde les factures HyperTV en lecture seule", () => { expect(invoiceCanPay({ priceEur: 20, payable: true, source: "hypertv" })).toBe(false); expect(invoiceCanCancel({ state: "pending", source: "hypertv", cancellable: true })).toBe(false); });
   it("actualise uniquement pending et detected toutes les 20 secondes", () => { expect(INVOICE_POLL_INTERVAL).toBe(20_000); expect(invoicePolls("pending")).toBe(true); expect(invoicePolls("detected")).toBe(true); for (const s of ["review", "paid", "activated", "expired", "cancelled"]) expect(invoicePolls(s)).toBe(false); });

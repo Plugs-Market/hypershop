@@ -74,7 +74,7 @@ function OrderPage() {
   const ticketOrders = useMemo(() => order ? [order] : [], [order]);
   const updateTicket = useCallback((next: TicketOrder) => {
     setOrder(previous => previous && (previous.supportTicketId !== next.supportTicketId || previous.supportTicketRequired !== next.supportTicketRequired)
-      ? { ...previous, supportTicketId: next.supportTicketId, supportTicketRequired: next.supportTicketRequired } : previous);
+      ? { ...previous, supportTicketId: next.supportTicketId ?? null, supportTicketRequired: next.supportTicketRequired === true } : previous);
   }, []);
   const opening = useOrderTickets(ticketOrders, updateTicket);
 

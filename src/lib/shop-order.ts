@@ -26,7 +26,7 @@ export type OrderProgress = {
   supportTicketRequired?: boolean;
   supportTicketId?: string | null;
   suggestedTicket?: SuggestedTicket | null;
-  manualDeliveryStatus?: LionDelivery["status"] | null;
+  manualDeliveryStatus?: string | null;
   type?: string;
   lionPlanId?: string;
   activationError?: string | null;

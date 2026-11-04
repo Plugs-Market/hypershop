@@ -2,7 +2,7 @@ export type SuggestedTicket = { category: string; subject: string; message: stri
 export type TicketOrder = {
   id: string;
   supportTicketRequired?: boolean;
-  supportTicketId?: string | null;
+  supportTicketId?: string | null | undefined;
   suggestedTicket?: SuggestedTicket | null;
 };
 export type TicketDependencies = {
