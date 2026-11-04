@@ -1,6 +1,6 @@
 # Intégration TREX
-- [ ] Unifier les tickets chiffrés de commande, leur reprise sans doublon et les boutons LION/TREX dans le suivi et les factures.
-- [ ] Vérifier les cinq parcours tickets demandés ; les achats et comptes HyperTV réels nécessitent une session client disponible.
+- [x] Unifier les tickets chiffrés de commande, leur reprise sans doublon et les boutons LION/TREX dans le suivi et les factures ; 58 tests ciblés validés.
+- [ ] Vérifier les cinq parcours tickets sur des commandes réelles ; bloqué par l’absence de session client HyperTV, redirection vers connexion vérifiée.
 - [x] Discussion support : réponse fixe, messages seuls défilants, barre supérieure compacte et aucun pied de page ; compilation et 6 tests support validés.
 - [x] Espacement discussion/réponse réduit à 8 px pour les discussions courtes ; disposition isolée contrôlée en 390 × 844 et 1280 × 1800, seuls les messages défilent.
 - [ ] Vérification visuelle de la discussion connectée — session client HyperTV indisponible dans l’aperçu de test, redirection vers connexion constatée.

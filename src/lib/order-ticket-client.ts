@@ -13,7 +13,7 @@ async function withOrderLock<T>(id: string, run: () => Promise<T>): Promise<T> {
     };
     const write = () => { try { localStorage.setItem(key, JSON.stringify({ token, until: Date.now() + 45_000 })); } catch { /* Web Locks still protect when storage is disabled */ } };
     const current = read();
-    if (current && current.until > Date.now()) throw new Error("Ticket en cours");
+    if (!navigator.locks && current && current.until > Date.now()) throw new Error("Ticket en cours");
     write();
     const check = read();
     if (check && check.token !== token) throw new Error("Ticket en cours");
