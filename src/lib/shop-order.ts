@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MAC_REGEX, normalizeMac, translateHypertvError } from "./hypertv-shared";
 import type { SuggestedTicket } from "./order-ticket";
+import { lineProviderName, type LineProvider } from "./shop-offers";
 
 const commonFields = {
   mac: z.string().transform(normalizeMac).refine((mac) => MAC_REGEX.test(mac), "Adresse MAC invalide"),
@@ -23,6 +24,7 @@ export function resolveOrderAttempt(previous: OrderAttempt | null, signature: st
 
 export type OrderProgress = {
   state: string;
+  provider?: LineProvider;
   supportTicketRequired?: boolean;
   supportTicketId?: string | null;
   suggestedTicket?: SuggestedTicket | null;
@@ -69,7 +71,7 @@ export function trexTimeline(order: OrderProgress) {
   const activated = order.state === "activated";
   const result = [
     { label: "Paiement", done: activated || ["paid", "paid_activation_failed"].includes(order.state) || activationNotice(order) !== null || order.steps?.trexLine === true },
-    { label: "Ligne TREX créée", done: activated || order.steps?.trexLine === true },
+    { label: `Ligne ${lineProviderName(order.provider)} créée`, done: activated || order.steps?.trexLine === true },
     { label: "Playlist ajoutée dans l'app HyperTV", done: activated || order.steps?.playlist === true },
   ];
   // null signifie qu'aucune prolongation n'est incluse ; "done" suffit aussi à identifier une inclusion.

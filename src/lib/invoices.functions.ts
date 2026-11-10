@@ -25,7 +25,7 @@ async function privateCall<T>(run: (session: string) => Promise<T>): Promise<T> 
 export const listCustomerInvoices = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => invoiceSearchSchema.parse(d))
   .handler(({ data }) => privateCall(async session => {
-    const [raw, methods] = await Promise.all([hypertv.getInvoices(session, data), hypertv.getPaymentMethods(session)]);
+    const [raw, methods, offers] = await Promise.all([hypertv.getInvoices(session, data), hypertv.getPaymentMethods(session), hypertv.getOffers().catch(() => null)]);
     const r = record(raw);
     let pageSize = typeof r.pageSize === "number" ? r.pageSize : typeof r.limit === "number" ? r.limit : null;
     // The API contract has no page size. Read page one rather than guessing from a partial last page.
@@ -33,12 +33,12 @@ export const listCustomerInvoices = createServerFn({ method: "GET" })
       const first = data.page === 1 ? r : record(await hypertv.getInvoices(session, { ...data, page: 1 }));
       pageSize = Array.isArray(first.invoices) ? first.invoices.length : 0;
     }
-    return { total: Number(r.total) || 0, page: Number(r.page) || data.page, pageSize, invoices: Array.isArray(r.invoices) ? r.invoices.map(normalizeInvoice) : [], methods: methods.methods };
+    return { total: Number(r.total) || 0, page: Number(r.page) || data.page, pageSize, invoices: Array.isArray(r.invoices) ? r.invoices.map(raw => normalizeInvoice(raw, offers?.trexPlans)) : [], methods: methods.methods };
   }));
 export const getCustomerInvoice = createServerFn({ method: "GET" }).inputValidator((d: unknown) => idSchema.parse(d))
   .handler(({ data }) => privateCall(async session => {
-    const [raw, methods] = await Promise.all([hypertv.getInvoice(session, data.id), hypertv.getPaymentMethods(session)]);
-    return { invoice: normalizeInvoice(raw), methods: methods.methods };
+    const [raw, methods, offers] = await Promise.all([hypertv.getInvoice(session, data.id), hypertv.getPaymentMethods(session), hypertv.getOffers().catch(() => null)]);
+    return { invoice: normalizeInvoice(raw, offers?.trexPlans), methods: methods.methods };
   }));
 // Authenticated reread of ticket metadata; no IPTV delivery is serialized.
 export const getCustomerOrderTicket = createServerFn({ method: "POST" }).inputValidator((d: unknown) => idSchema.parse(d))

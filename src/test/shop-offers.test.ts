@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { catalogPlans, catalogTrexPlans, enabledSubscriptionPlans, planPriceCents, trexLineLabels, type SubscriptionPlan, type TrexPlan } from "@/lib/shop-offers";
+import { catalogPlans, catalogTrexPlans, enabledSubscriptionPlans, planPriceCents, trexLineLabels, plansForProvider, type SubscriptionPlan, type TrexPlan } from "@/lib/shop-offers";
 
 const vip: SubscriptionPlan = {
   id: "vip", name: "VIP", description: "Texte personnalisé",
@@ -40,6 +40,19 @@ describe("nouveau schéma des offres HyperTV", () => {
 
 describe("offres TREX", () => {
   const trex: TrexPlan = { id: "trex-12", type: "trex", title: "TREX annuel", price_eur: 59.90, currency: "EUR", line: { type: "m3u", months: 12, durationDays: 365 }, includesHypertvSubscription: { name: "PRO", durationDays: 365, maxDevices: 2 } };
+  it("sépare 8KPRO et TREX et considère un provider absent comme TREX", () => {
+    const plans = catalogTrexPlans({ resellerOffers: [], subscriptionPlans: [], trexPlans: [trex, { ...trex, id: "explicit", provider: "trex" }, { ...trex, id: "8k-12", provider: "8kpro" }] });
+    expect(plansForProvider(plans, "trex").map(p => p.id)).toEqual(["trex-12", "explicit"]);
+    expect(plansForProvider(plans, "8kpro").map(p => p.id)).toEqual(["8k-12"]);
+    expect(plansForProvider(plans.slice(0, 2), "8kpro")).toEqual([]);
+  });
+  it("préserve le prix API, les badges, la démo et l’inclusion HyperTV de 8KPRO", () => {
+    const plan = { ...trex, provider: "8kpro" as const, price_eur: 0, line: { ...trex.line, isDemo: true, labels: ["Démo", "Ultra 4K"] } };
+    const [result] = catalogTrexPlans({ resellerOffers: [], subscriptionPlans: [], trexPlans: [plan] });
+    expect(result?.price_cents).toBe(0);
+    expect(result?.line).toEqual(plan.line);
+    expect(result?.includesHypertvSubscription).toEqual(trex.includesHypertvSubscription);
+  });
   it("utilise uniquement le prix de l'API et conserve la ligne et l'abonnement inclus", () => {
     const [plan] = catalogTrexPlans({ resellerOffers: [{ id: "credit-pack" }], subscriptionPlans: [vip], trexPlans: [trex] });
     expect(plan?.price_cents).toBe(5990);

@@ -23,6 +23,10 @@ export function translateHypertvError(status: number, code?: string, message?: s
       return "Cette formule n'est plus disponible";
     case "trex_unavailable":
       return "Formule temporairement indisponible";
+    case "trex_demo_already_used":
+      return "Vous avez déjà demandé une démo pour cet appareil sur cette boutique. Choisissez un abonnement.";
+    case "trex_delivery_unavailable":
+      return "Vos accès IPTV sont momentanément indisponibles. Réessayez dans quelques instants.";
     case "trex_line_state_unknown_contact_support":
       return "Paiement reçu, notre équipe finalise votre activation";
     case "paid_activation_failed":

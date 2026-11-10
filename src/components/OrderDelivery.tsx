@@ -4,6 +4,7 @@ import { Copy, Download, Eye, EyeOff, RotateCcw, Share2 } from "lucide-react";
 import { getDelivery } from "@/lib/shop.functions";
 import type { Delivery } from "@/lib/playlist-security";
 import { Button } from "@/components/ui/button";
+import { lineProviderName, type LineProvider } from "@/lib/shop-offers";
 
 export function PrivateField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
   const [visible, setVisible] = useState(false);
@@ -24,7 +25,7 @@ export function PrivateField({ label, value, secret = false }: { label: string; 
   </div>;
 }
 
-export function OrderDelivery({ id, authorized }: { id: string; authorized: boolean }) {
+export function OrderDelivery({ id, authorized, provider }: { id: string; authorized: boolean; provider?: LineProvider }) {
   const read = useServerFn(getDelivery);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export function OrderDelivery({ id, authorized }: { id: string; authorized: bool
     <h2 id="iptv-title" className="text-xl font-semibold">Ma ligne IPTV</h2>
     {!authorized ? <p className="text-sm text-muted-foreground">Accès privé : ouvrez ce suivi depuis le navigateur utilisé pour votre achat. Pour une ancienne commande, contactez votre revendeur afin de récupérer vos accès de manière sécurisée.</p> : <>
       {delivery && <>
-        {delivery.expiresAt && <p className="text-sm text-muted-foreground">Ligne TREX valable jusqu’au {new Date(delivery.expiresAt).toLocaleDateString("fr-FR")}</p>}
+        {delivery.expiresAt && <p className="text-sm text-muted-foreground">Ligne {lineProviderName(provider)} valable jusqu’au {new Date(delivery.expiresAt).toLocaleDateString("fr-FR")}</p>}
         <PrivateField label="Lien M3U" value={delivery.m3uUrl} />
         <div className="flex flex-wrap gap-2">
           {!file ? <Button variant="outline" disabled={busy} onClick={prepare}><Download className="h-4 w-4" />{busy ? "Préparation…" : "Préparer la playlist M3U"}</Button> : <>

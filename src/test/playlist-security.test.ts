@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { canReadDelivery, lineExpiry, supplierUrl, publicAddress, MAX_PLAYLIST_BYTES } from "@/lib/playlist-security";
 
 describe("livraison IPTV privée", () => {
+  it("applique la même preuve propriétaire aux lignes 8KPRO", () => {
+    const order = { type: "trex", provider: "8kpro", state: "activated" };
+    expect(canReadDelivery(order, false)).toBe(false);
+    expect(canReadDelivery(order, true)).toBe(true);
+    expect(canReadDelivery({ ...order, state: "pending" }, true)).toBe(false);
+  });
   it("refuse un accès non autorisé même pour une commande activée", () => expect(canReadDelivery({ type: "trex", state: "activated" }, false)).toBe(false));
   it("autorise une commande gratuite activée avec preuve propriétaire", () => expect(canReadDelivery({ type: "trex", state: "activated", priceEur: 0 } as { type: string; state: string }, true)).toBe(true));
   it("refuse la lecture en attente ou pour un abonnement sans ligne", () => {

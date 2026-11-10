@@ -3,6 +3,14 @@ import { activationNotice, orderInputSchema, resolveOrderAttempt, shouldPollOrde
 
 const common = { mac: "00:1A:79:AB:CD:EF", method: "btc", idempotencyKey: "12345678-1234-4123-8123-123456789abc" };
 describe("commande TREX", () => {
+  it("commande 8KPRO par trexPlanId sans envoyer de provider ni prix", () => {
+    expect(orderInputSchema.parse({ ...common, trexPlanId: "8kpro-12" })).toEqual({ ...common, trexPlanId: "8kpro-12" });
+    expect(orderInputSchema.safeParse({ ...common, trexPlanId: "8kpro-12", provider: "8kpro" }).success).toBe(false);
+  });
+  it("accepte une démo 8KPRO gratuite par le parcours commun", () => {
+    const { method, ...free } = common;
+    expect(orderInputSchema.parse({ ...free, trexPlanId: "8kpro-demo", method: "free" })).toEqual({ ...free, trexPlanId: "8kpro-demo", method: "free" });
+  });
   it("envoie trexPlanId à la place de planId", () => {
     const data = orderInputSchema.parse({ ...common, trexPlanId: "trex-12" });
     expect(data).toEqual({ ...common, trexPlanId: "trex-12" });
@@ -23,6 +31,12 @@ describe("commande TREX", () => {
   });
 });
 describe("suivi TREX", () => {
+  it("réutilise les étapes et le suivi après échec pour 8KPRO", () => {
+    const order = { state: "paid_activation_failed", type: "trex", provider: "8kpro", steps: { trexLine: true, playlist: false, subscription: null } } as const;
+    expect(shouldPollOrder(order)).toBe(true);
+    expect(trexTimeline(order).map(step => step.done)).toEqual([true, true, false]);
+    expect(shouldPollOrder({ ...order, state: "activated" })).toBe(false);
+  });
   it("continues manual delivery tracking until the seller delivers", () => {
     expect(shouldPollOrder({ state: "activated", type: "lion", manualDeliveryStatus: "awaiting_reseller" })).toBe(true);
     expect(shouldPollOrder({ state: "activated", type: "lion", manualDeliveryStatus: "delivered" })).toBe(false);

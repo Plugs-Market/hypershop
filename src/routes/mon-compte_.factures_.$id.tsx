@@ -17,6 +17,7 @@ import { PrivateField } from "@/components/OrderDelivery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { lineProviderName } from "@/lib/shop-offers";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 const detailQuery = (id: string) => queryOptions({ queryKey: ["customer-invoice", id], queryFn: () => getCustomerInvoice({ data: { id } }), staleTime: 0, gcTime: 0, retry: false, refetchInterval: query => invoicePolls(query.state.data?.invoice.state ?? "") ? INVOICE_POLL_INTERVAL : false, throwOnError: e => e.message.startsWith("Session expirée") });
@@ -49,6 +50,7 @@ function InvoicePage() {
     <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="break-all text-2xl font-bold">Facture N° {i.number}</h1><InvoiceStatus state={i.state} /></div>
     <div className="space-y-2 border-y border-border py-6"><h2 className="break-words text-xl font-semibold">{i.plan}</h2><p className="text-sm text-muted-foreground">{formatFrDate(i.createdAt)} · {p.label}</p><p className="text-3xl font-bold">{invoiceCurrency(i.priceEur)}</p>{i.source === "hypertv" && <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs">HyperTV · Lecture seule</span>}</div>
     <OrderTicketPanel order={i} opening={opening.has(i.orderId ?? i.id)} />
+    {i.type === "trex" && <p className="text-sm font-medium text-primary">Abonnement {lineProviderName(i.provider)}</p>}
     {i.priceEur > 0 && p.address && p.method !== "paypal_ff" && p.method !== "stripe" && <section className="space-y-4"><h2 className="text-xl font-semibold">Paiement {p.label}</h2><p className="text-2xl font-bold">{p.amount} {p.symbol}</p><PrivateField label="Adresse de paiement" value={p.address} /><div className="flex justify-center"><div className="rounded-lg bg-qr-surface p-4"><QRCodeSVG value={p.address} size={180} /></div></div>{p.memo && <PrivateField label="Mémo / commentaire" value={p.memo} />}{invoicePolls(i.state) && <InvoiceCountdown expiresAt={i.expiresAt} />}</section>}
     {invoiceCanPay(i) && <section className="space-y-3 border-t border-border pt-6"><h2 className="text-xl font-semibold">Choisir un mode de paiement</h2><div className="grid gap-2 sm:grid-cols-2">{data.methods.map(m => <Button key={m.code} variant="outline" className="h-auto min-h-10 whitespace-normal py-3" disabled={busy || (m.minEur != null && i.priceEur < m.minEur) || (m.maxEur != null && i.priceEur > m.maxEur)} onClick={() => payment.mutate(m.code)}>{m.code === "stripe" && <CreditCard />}{m.label}</Button>)}</div></section>}
     {mutable && p.method === "stripe" && i.orderId && <Button className="w-full" disabled={busy} onClick={() => card.mutate()}><CreditCard />{card.isPending ? "Redirection…" : "Payer par carte"}</Button>}
