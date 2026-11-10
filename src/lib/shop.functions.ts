@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
 import { translateHypertvError } from "./hypertv-shared";
-import { catalogPlans, catalogTrexPlans, catalogLionPlans } from "./shop-offers";
+import { catalogPlans, catalogTrexPlans, catalogLionPlans, lineProvider, lineProductText } from "./shop-offers";
 import { orderInputSchema, type LionDelivery } from "./shop-order";
 import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/server";
 import { ownerHash, ownsOrder, hashValue } from "./order-access.server";
@@ -112,6 +112,11 @@ export const getOrder = createServerFn({ method: "GET" })
       setResponseHeader("Cache-Control", "no-store");
       const authorized = await ownsOrder(data.id);
       const order = await hypertv.getOrder(data.id);
+      if (order.type === "trex") {
+        const offers = order.provider === undefined ? await hypertv.getOffers().catch(() => null) : null;
+        order.provider = lineProvider(order.provider ?? offers?.trexPlans?.find(plan => plan.id === order.trexPlanId)?.provider);
+        order.plan = lineProductText(order.plan, order.provider);
+      }
       // Never serialize delivery into loader/SSR hydration or router caches.
       return { ...order, suggestedTicket: authorized ? order.suggestedTicket ?? null : null, supportTicketId: authorized ? order.supportTicketId ?? null : null, supportTicketRequired: authorized && order.supportTicketRequired === true, deliveryStatus: order.delivery && "status" in order.delivery && typeof order.delivery.status === "string" ? order.delivery.status : null, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
     } catch (e) {

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { invoiceCanPay, invoiceCanCancel, invoicePolls, normalizeInvoice, normalizeInvoiceDelivery, invoiceSearchSchema, replacementInvoiceId, newestInvoices, INVOICE_POLL_INTERVAL } from "@/lib/invoices";
 describe("customer invoices", () => {
+  it("résout le fournisseur de la formule commandée sans conserver les accès", () => {
+    const raw = { id: "8k", type: "trex", order: { trexPlanId: "8k-plan" }, delivery: { xtream: { password: "private-pass" } } };
+    const plans = [{ id: "8k-plan", type: "trex", provider: "8kpro", title: "Annuel", currency: "EUR", line: { type: "m3u", months: 12, durationDays: 365 }, includesHypertvSubscription: null }] as const;
+    expect(normalizeInvoice(raw, [...plans]).provider).toBe("8kpro");
+    expect(normalizeInvoice({ id: "legacy", type: "trex" }).provider).toBe("trex");
+    expect(normalizeInvoice({ ...raw, provider: "8kpro" }).provider).toBe("8kpro");
+    expect(JSON.stringify(normalizeInvoice(raw, [...plans]))).not.toContain("private-pass");
+  });
   it("preserves delivered status from direct or nested order delivery without credentials", () => {
     for (const raw of [{ id: "old", delivery: { status: "delivered", password: "private-pass" } }, { id: "old", order: { id: "old", delivery: { mode: "manual", status: "delivered", password: "private-pass" } } }]) {
       const invoice = normalizeInvoice(raw);

@@ -133,7 +133,7 @@ function OrderPage() {
               </p>}
             </div>
           )}
-          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} provider={order.provider} authorized={order.deliveryAuthorized === true} />}
+          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} provider={order.provider ?? "trex"} authorized={order.deliveryAuthorized === true} />}
           {order.state === "expired" && (order.trexPlanId || order.planId || order.lionPlanId) && (
             <Button asChild variant="hero" className="w-full">
               <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? order.lionPlanId ?? "" }} search={order.type === "trex" ? { type: "trex" } : order.type === "lion" ? { type: "lion" } : {}}>

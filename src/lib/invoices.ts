@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Delivery } from "./playlist-security";
 import type { SuggestedTicket } from "./order-ticket";
+import { lineProvider, lineProductText, type TrexPlan, type LineProvider } from "./shop-offers";
 
 export const invoiceSearchSchema = z.object({
   status: z.string().max(40).catch(""), method: z.string().max(40).catch(""),
@@ -16,6 +17,7 @@ export type Invoice = {
   supportTicketRequired: boolean; supportTicketId: string | null; suggestedTicket: SuggestedTicket | null;
   manualDeliveryStatus: string | null;
   deliveryStatus: string | null;
+  provider: LineProvider;
 };
 export const INVOICE_STATES = ["pending", "detected", "review", "paid", "activated", "expired", "cancelled"] as const;
 export const INVOICE_POLL_INTERVAL = 20_000;
@@ -24,10 +26,10 @@ export function invoicePolls(state: string) { return state === "pending" || stat
 export function invoiceCanPay(i: Pick<Invoice, "priceEur" | "payable" | "source">) { return i.payable && i.priceEur > 0 && i.source !== "hypertv"; }
 export function invoiceCanCancel(i: Pick<Invoice, "state" | "source" | "cancellable">) { return i.source !== "hypertv" && i.cancellable && invoicePolls(i.state); }
 export function invoiceCurrency(value: number) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(value); }
-type ApiRecord = Partial<Record<"invoice" | "payment" | "order" | "priceEur" | "id" | "number" | "plan" | "name" | "createdAt" | "date" | "state" | "status" | "source" | "payable" | "cancellable" | "cancelable" | "expiresAt" | "orderId" | "delivery" | "method" | "label" | "amount" | "symbol" | "address" | "memo" | "xtream" | "m3uUrl" | "serverUrl" | "username" | "password" | "replacedId" | "total" | "page" | "pageSize" | "limit" | "invoices" | "type" | "mode" | "supportTicketId" | "supportTicketRequired" | "suggestedTicket" | "category" | "subject" | "message", unknown>>;
+type ApiRecord = Partial<Record<"provider" | "trexPlanId" | "trexPlan" | "invoice" | "payment" | "order" | "priceEur" | "id" | "number" | "plan" | "name" | "createdAt" | "date" | "state" | "status" | "source" | "payable" | "cancellable" | "cancelable" | "expiresAt" | "orderId" | "delivery" | "method" | "label" | "amount" | "symbol" | "address" | "memo" | "xtream" | "m3uUrl" | "serverUrl" | "username" | "password" | "replacedId" | "total" | "page" | "pageSize" | "limit" | "invoices" | "type" | "mode" | "supportTicketId" | "supportTicketRequired" | "suggestedTicket" | "category" | "subject" | "message", unknown>>;
 export function record(value: unknown): ApiRecord { return value && typeof value === "object" && !Array.isArray(value) ? value as ApiRecord : {}; }
 const text = (v: unknown): string | null => typeof v === "string" ? v : null;
-export function normalizeInvoice(raw: unknown): Invoice {
+export function normalizeInvoice(raw: unknown, plans: TrexPlan[] = []): Invoice {
   const outer = record(raw), i = record(outer.invoice ?? raw), p = record(i.payment), o = record(i.order);
   const price = typeof i.priceEur === "number" ? i.priceEur : Number(i.priceEur);
   const d = record(i.delivery ?? o.delivery);
@@ -36,8 +38,9 @@ export function normalizeInvoice(raw: unknown): Invoice {
   const st = record(i.suggestedTicket ?? o.suggestedTicket);
   const suggestedTicket = typeof st.category === "string" && typeof st.subject === "string" && typeof st.message === "string" ? { category: st.category, subject: st.subject, message: st.message } : null;
   const lionDelivery = d.mode === "manual" ? { status: text(d.status) ?? "awaiting_payment", supportTicketId } : null;
+  const provider = lineProvider(i.provider ?? o.provider ?? record(i.trexPlan ?? o.trexPlan).provider ?? record(i.plan).provider ?? plans.find(plan => plan.id === (i.trexPlanId ?? o.trexPlanId ?? record(i.plan).id))?.provider);
   return {
-    id: text(i.id) ?? "", number: String(i.number ?? "—"), plan: text(i.plan) ?? text(record(i.plan).name) ?? "Abonnement",
+    id: text(i.id) ?? "", number: String(i.number ?? "—"), provider, plan: lineProductText(text(i.plan) ?? text(record(i.plan).name) ?? "Abonnement", provider),
     createdAt: text(i.createdAt) ?? text(i.date), priceEur: Number.isFinite(price) ? price : 0,
     state: text(i.state) ?? text(i.status) ?? "unknown", source: text(i.source) ?? "shop",
     payable: i.payable === true, cancellable: i.cancellable !== false && i.cancelable !== false,
