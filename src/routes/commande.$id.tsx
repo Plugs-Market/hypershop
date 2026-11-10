@@ -19,6 +19,7 @@ import { OrderDelivery } from "@/components/OrderDelivery";
 import { OrderTicketPanel } from "@/components/OrderTicketPanel";
 import { useOrderTickets } from "@/hooks/use-order-tickets";
 import type { TicketOrder } from "@/lib/order-ticket";
+import { lineProviderName } from "@/lib/shop-offers";
 
 export const Route = createFileRoute("/commande/$id")({
   head: ({ loaderData }) => {
@@ -132,7 +133,7 @@ function OrderPage() {
               </p>}
             </div>
           )}
-          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} authorized={order.deliveryAuthorized === true} />}
+          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} provider={order.provider} authorized={order.deliveryAuthorized === true} />}
           {order.state === "expired" && (order.trexPlanId || order.planId || order.lionPlanId) && (
             <Button asChild variant="hero" className="w-full">
               <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? order.lionPlanId ?? "" }} search={order.type === "trex" ? { type: "trex" } : order.type === "lion" ? { type: "lion" } : {}}>
@@ -232,7 +233,7 @@ function StateBadge({ order }: { order: Order }) {
 function TrexTimeline({ order }: { order: Order }) {
   const steps = trexTimeline(order);
   const current = steps.findIndex((step) => !step.done);
-  return <ol aria-label="Progression de l'activation TREX" className="space-y-4 border-t border-border pt-5">
+  return <ol aria-label={`Progression de l'activation ${lineProviderName(order.provider)}`} className="space-y-4 border-t border-border pt-5">
     {steps.map((step, index) => <li key={step.label} className="flex items-center gap-3 text-sm" aria-current={index === current ? "step" : undefined}>
       {step.done ? <CheckCircle2 aria-label="Terminé" className="h-5 w-5 shrink-0 text-success" /> : <Clock aria-label={index === current ? "En cours" : "En attente"} className={`h-5 w-5 shrink-0 ${index === current ? "text-primary" : "text-muted-foreground"}`} />}
       <span className={step.done || index === current ? "text-foreground" : "text-muted-foreground"}>{step.label}</span>

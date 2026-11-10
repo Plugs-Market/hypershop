@@ -23,14 +23,29 @@ export type OffersResponse = {
 export type TrexPlan = {
   id: string;
   type: "trex";
+  provider?: "trex" | "8kpro";
   title: string;
   description?: string | null;
   cover_url?: string | null;
   price_eur?: number | null;
   currency: string;
-  line: { type: "m3u"; months: number; durationDays: number; sub?: number | null; label?: string; labels?: string[] };
+  line: { type: "m3u"; months: number; durationDays: number; isDemo?: boolean; sub?: number | null; label?: string; labels?: string[] };
   includesHypertvSubscription: null | { name: string; durationDays: number; maxDevices: number };
 };
+
+export type LineProvider = "trex" | "8kpro";
+export function lineProvider(provider?: unknown): LineProvider {
+  return provider === "8kpro" ? "8kpro" : "trex";
+}
+export function lineProviderName(provider?: unknown): string {
+  return lineProvider(provider) === "8kpro" ? "8KPRO" : "TREX";
+}
+export function lineProductText(text: string, provider?: unknown): string {
+  return lineProvider(provider) === "8kpro" ? text.replace(/\bTREX\b/gi, "8KPRO") : text;
+}
+export function plansForProvider<T extends { provider?: LineProvider }>(plans: T[], provider: LineProvider): T[] {
+  return plans.filter(plan => lineProvider(plan.provider) === provider);
+}
 
 // Les libellés sont affichés tels qu'écrits par le revendeur : ils ne servent
 // jamais à calculer une durée (months / durationDays restent les vraies valeurs).
@@ -67,8 +82,9 @@ export function catalogPlans(offers: OffersResponse) {
 export function catalogTrexPlans(offers: OffersResponse) {
   return (offers.trexPlans ?? []).filter((plan) => plan.type === "trex").map((plan) => ({
     id: plan.id,
-    name: plan.title,
-    description: plan.description ?? null,
+    provider: lineProvider(plan.provider),
+    name: lineProductText(plan.title, plan.provider),
+    description: plan.description ? lineProductText(plan.description, plan.provider) : null,
     cover_url: plan.cover_url ?? null,
     price_cents: planPriceCents(plan),
     line: plan.line,

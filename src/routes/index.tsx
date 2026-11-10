@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight, CircleCheck, Clock, Crown, ListMusic, MonitorSmartphone, Truck, Tv, Zap } from "lucide-react";
 import { getCatalog } from "@/lib/shop.functions";
-import { trexLineLabels } from "@/lib/shop-offers";
+import { trexLineLabels, plansForProvider, lineProductText } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Category = "hypertv" | "trex" | "lion";
+type Category = "hypertv" | "trex" | "8kpro" | "lion";
 
 type PlanCardData = {
   id: string;
@@ -80,6 +80,8 @@ function Home() {
   const { data: apps } = useSuspenseQuery(appsQuery);
   const shop = data.shop;
   const shopName = shop.name ?? null;
+  const trexPlans = plansForProvider(data.trexPlans, "trex");
+  const proPlans = plansForProvider(data.trexPlans, "8kpro");
   const [category, setCategory] = useState<Category | null>(null);
   useEffect(() => {
     const reset = () => { setCategory(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -106,11 +108,19 @@ function Home() {
     },
     {
       id: "trex",
-      label: "TREX",
+      label: "Abonnements TREX",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
-      image: data.trexPlans[0]?.cover_url ?? null,
+      image: trexPlans[0]?.cover_url ?? null,
       icon: ListMusic,
-      count: data.trexPlans.length,
+      count: trexPlans.length,
+    },
+    {
+      id: "8kpro",
+      label: "Abonnements 8KPRO",
+      description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
+      image: proPlans[0]?.cover_url ?? null,
+      icon: ListMusic,
+      count: proPlans.length,
     },
     {
       id: "lion",
@@ -150,12 +160,13 @@ function Home() {
 
         {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0 || data.lionPlans.length > 0) && category === null && (
           <section aria-label="Choisissez une catégorie" className="grid gap-5 sm:grid-cols-2">
-            {categories.map((c) => (
-              <button
+            {categories.filter(c => !["trex", "8kpro"].includes(c.id) || c.count > 0).map((c) => (
+              <Button
+                variant="ghost"
                 key={c.id}
                 type="button"
                 onClick={() => { setCategory(c.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="group flex items-center gap-5 rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
+                className="group flex h-auto items-center gap-5 whitespace-normal rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
               >
                 <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-primary shadow-glow">
                   {c.image ? (
@@ -172,13 +183,13 @@ function Home() {
                   </span>
                 </span>
                 <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:text-primary" />
-              </button>
+              </Button>
             ))}
           </section>
         )}
 
         {!data.error && category !== null && (
-          <section aria-label={category === "hypertv" ? "HYPER TV" : category === "lion" ? "LION OTT" : "TREX"}>
+          <section aria-label={categories.find(c => c.id === category)?.label}>
             <div className="mb-5 flex items-center justify-between gap-4">
               <Button variant="ghost" size="sm" onClick={() => setCategory(null)}>
                 <ArrowLeft className="h-4 w-4" /> Toutes les catégories
@@ -235,19 +246,21 @@ function Home() {
                           }
                         />
                       ))
-                  : data.trexPlans.map((p) => (
+                  : (category === "8kpro" ? proPlans : trexPlans).map((p) => (
                       <PlanCard
                         key={p.id}
                         plan={p}
                         type="trex"
                         details={
                           <ul className="mt-5 space-y-2 text-xs">
+                            <li className="flex items-start gap-2"><Clock className="h-4 w-4 shrink-0 text-primary" /><span>{p.line.isDemo || p.price_cents === 0 ? "Démo" : `${p.line.months} mois`}</span></li>
                             {trexLineLabels(p.line).map((lbl, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
-                                <span className="min-w-0 break-words">{lbl}</span>
+                                <span className="min-w-0 break-words">{lineProductText(lbl, p.provider)}</span>
                               </li>
                             ))}
+                            {p.includesHypertvSubscription && <li className="flex items-start gap-2"><Zap className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">+ HYPER {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span></li>}
                           </ul>
                         }
                       />
