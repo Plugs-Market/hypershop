@@ -103,7 +103,7 @@ function Checkout() {
     if (!isFree && !method) return setError("Choisissez un mode de paiement.");
     submitting.current = true;
     setLoading(true);
-    const details = isFree ? { mac: normalizeMac(mac) } : { mac: normalizeMac(mac), method: method ?? undefined };
+    const details = isFree ? { mac: normalizeMac(mac), ...(isTrex ? { method: "free" } : {}) } : { mac: normalizeMac(mac), method: method ?? undefined };
     const product = isTrex ? { trexPlanId: plan.id } : isLion ? { lionPlanId: plan.id } : { planId: plan.id };
     attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
