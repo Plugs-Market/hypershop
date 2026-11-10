@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ session: vi.fn(), clear: vi.fn(), header: vi.fn(), invoice: vi.fn(), invoices: vi.fn(), methods: vi.fn(), pay: vi.fn(), stripe: vi.fn(), paypal: vi.fn(), cancel: vi.fn() }));
+const mocks = vi.hoisted(() => ({ offers: vi.fn(), session: vi.fn(), clear: vi.fn(), header: vi.fn(), invoice: vi.fn(), invoices: vi.fn(), methods: vi.fn(), pay: vi.fn(), stripe: vi.fn(), paypal: vi.fn(), cancel: vi.fn() }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => ({ inputValidator: () => ({ handler: (f: unknown) => f }), handler: (f: unknown) => f }) }));
 vi.mock("@tanstack/react-start/server", () => ({ setResponseHeader: mocks.header, getRequestUrl: () => "https://shop.hypertv.win" }));
 vi.mock("@/lib/account.server", () => ({ readSession: mocks.session, clearSession: mocks.clear }));
-vi.mock("@/lib/hypertvClient.server", () => ({ HypertvError: class extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }, hypertv: { getInvoice: mocks.invoice, getInvoices: mocks.invoices, getPaymentMethods: mocks.methods, payInvoice: mocks.pay, stripeCheckout: mocks.stripe, paypalTxid: mocks.paypal, cancelInvoice: mocks.cancel } }));
+vi.mock("@/lib/hypertvClient.server", () => ({ HypertvError: class extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }, hypertv: { getOffers: mocks.offers, getInvoice: mocks.invoice, getInvoices: mocks.invoices, getPaymentMethods: mocks.methods, payInvoice: mocks.pay, stripeCheckout: mocks.stripe, paypalTxid: mocks.paypal, cancelInvoice: mocks.cancel } }));
 import { HypertvError } from "@/lib/hypertvClient.server";
 import { getCustomerInvoice, getCustomerOrderTicket, listCustomerInvoices, payCustomerInvoice, cancelCustomerInvoice, invoicePaypalTxid } from "@/lib/invoices.functions";
 // Mocked RPC builder exposes the handler directly, with its runtime {data} contract.
@@ -14,6 +14,7 @@ const cancel = cancelCustomerInvoice as unknown as (args: { data: { id: string }
 const paypal = invoicePaypalTxid as unknown as (args: { data: { id: string; txid: string; paypalEmail: string } }) => Promise<unknown>;
 beforeEach(() => {
   vi.clearAllMocks(); mocks.session.mockReturnValue("test-customer-session");
+  mocks.offers.mockResolvedValue({ trexPlans: [] });
   mocks.invoice.mockResolvedValue({ id: "invoice", state: "pending", priceEur: 20, payable: true, source: "shop", order: { id: "owned-order" }, payment: { method: "paypal_ff" } });
   mocks.methods.mockResolvedValue({ methods: [{ code: "stripe", minEur: null, maxEur: null }, { code: "paypal_ff", minEur: null, maxEur: null }] });
   mocks.pay.mockResolvedValue({ replacedId: "invoice", order: { id: "new-invoice" } }); mocks.stripe.mockResolvedValue({ url: "https://checkout.stripe.com/test" });

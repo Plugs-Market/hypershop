@@ -111,6 +111,7 @@ function OrderPage() {
           <OrderTicketPanel order={order} opening={opening.has(order.id)} />
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
+            {order.type === "trex" && <><dt className="text-muted-foreground">Abonnement</dt><dd className="text-right">{lineProviderName(order.provider)}</dd></>}
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
             <dt className="text-muted-foreground">Prix</dt><dd className="text-right">{formatEur(order.priceEur)}</dd>
             <dt className="text-muted-foreground">Appareil (MAC)</dt><dd className="text-right font-mono">{order.mac}</dd>
