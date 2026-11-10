@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, CircleCheck, Clock, Crown, ListMusic, MonitorSmartphone, Truck, Tv, Zap } from "lucide-react";
+import { ArrowLeft, ChevronRight, CircleCheck, Clock, Crown, ListMusic, MonitorSmartphone, RotateCw, Truck, Tv, Zap } from "lucide-react";
 import { getCatalog } from "@/lib/shop.functions";
-import { trexLineLabels, plansForProvider, lineProductText } from "@/lib/shop-offers";
+import { trexLineLabels, plansForProvider } from "@/lib/shop-offers";
 import { formatPrice } from "@/lib/hypertv-shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 // Les URL d'images de l'API expirent après 24 h : on relit le catalogue à chaque visite.
 const catalogQuery = queryOptions({
-  queryKey: ["catalog"],
+  queryKey: ["catalog", "providers-v2"],
   queryFn: () => getCatalog(),
   staleTime: 0,
   refetchOnMount: "always",
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
     };
   },
   loader: async ({ context }): Promise<Catalog> => {
-    const [catalog] = await Promise.all([context.queryClient.ensureQueryData(catalogQuery), context.queryClient.ensureQueryData(appsQuery)]);
+    const [catalog] = await Promise.all([context.queryClient.fetchQuery(catalogQuery), context.queryClient.ensureQueryData(appsQuery)]);
     return catalog;
   },
   component: Home,
@@ -76,7 +76,7 @@ function PlanCard({ plan, type, details }: { plan: PlanCardData; type?: "trex" |
 }
 
 function Home() {
-  const { data } = useSuspenseQuery(catalogQuery);
+  const { data, refetch, isFetching } = useSuspenseQuery(catalogQuery);
   const { data: apps } = useSuspenseQuery(appsQuery);
   const shop = data.shop;
   const shopName = shop.name ?? null;
@@ -108,7 +108,7 @@ function Home() {
     },
     {
       id: "trex",
-      label: "Abonnements TREX",
+      label: "Abonnements TREX OTT",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       image: trexPlans[0]?.cover_url ?? null,
       icon: ListMusic,
@@ -116,7 +116,7 @@ function Home() {
     },
     {
       id: "8kpro",
-      label: "Abonnements 8KPRO",
+      label: "Abonnements STRONG 8K",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       image: proPlans[0]?.cover_url ?? null,
       icon: ListMusic,
@@ -153,7 +153,7 @@ function Home() {
           <div className="pt-6" />
         )}
 
-        {data.error && <p className="text-center text-destructive">{data.error}</p>}
+        {data.error && <div role="alert" className="space-y-3 text-center"><p className="text-destructive">{data.error}</p><Button variant="outline" disabled={isFetching} onClick={() => void refetch()}><RotateCw className="h-4 w-4" /> Réessayer</Button></div>}
         {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && data.lionPlans.length === 0 && (
           <p className="text-center text-muted-foreground">Aucune formule disponible pour le moment.</p>
         )}
@@ -257,7 +257,7 @@ function Home() {
                             {trexLineLabels(p.line).map((lbl, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <CircleCheck className="mt-px h-4 w-4 shrink-0 text-primary" />
-                                <span className="min-w-0 break-words">{lineProductText(lbl, p.provider)}</span>
+                                <span className="min-w-0 break-words">{lbl}</span>
                               </li>
                             ))}
                             {p.includesHypertvSubscription && <li className="flex items-start gap-2"><Zap className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">+ HYPER {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span></li>}

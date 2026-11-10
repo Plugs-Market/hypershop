@@ -26,7 +26,7 @@ async function request<T>(path: string, init?: { method?: string; body?: unknown
   try {
     res = await fetch(BASE_URL + path, {
       method: init?.method ?? "GET",
-      ...(init?.session ? { cache: "no-store" as const } : {}),
+      ...(init?.session || path === "/offers" ? { cache: "no-store" as const } : {}),
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init?.session ? { "X-Customer-Session": init.session } : {}), ...(init?.headers ?? {}) },
       ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
       signal: AbortSignal.timeout(15000),
@@ -127,6 +127,11 @@ export const hypertv = {
     }
   },
   getOffers: () => call<OffersResponse>("/offers"),
+  getOffersWithStatus: async () => {
+    const response = await request<OffersResponse>("/offers");
+    if (!response.data) throw new HypertvError(response.status, "invalid_response", "Catalogue invalide");
+    return { data: response.data, status: response.status };
+  },
    getPaymentMethods: (session?: string) => call<{ methods: PaymentMethod[] }>("/payment-methods", session ? { session } : undefined),
   // L'API enveloppe la commande dans { order: … } ; on accepte aussi la réponse directe.
   createOrder: async (body: OrderInput) => {

@@ -16,16 +16,18 @@ function errMessage(e: unknown): string {
 // ---------- Public ----------
 // Tout le catalogue vient de l'API HyperTV (géré depuis le panel revendeur).
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
+  setResponseHeader("Cache-Control", "no-store");
   try {
-    const [offers, shop] = await Promise.all([
-      hypertv.getOffers(),
+    const [response, shop] = await Promise.all([
+      hypertv.getOffersWithStatus(),
       hypertv.getShop().catch(() => null),
     ]);
+    const offers = response.data;
     const plans = catalogPlans(offers);
-    return { plans, trexPlans: catalogTrexPlans(offers), lionPlans: catalogLionPlans(offers), shop: shopInfo(shop), error: null as string | null };
+    return { plans, trexPlans: catalogTrexPlans(offers), lionPlans: catalogLionPlans(offers), shop: shopInfo(shop), error: null as string | null, diagnostics: { httpStatus: response.status as number | null, counts: { resellerOffers: offers.resellerOffers.length, subscriptionPlans: offers.subscriptionPlans.length, trexPlans: offers.trexPlans?.length ?? 0, lionPlans: offers.lionPlans?.length ?? 0 } } };
   } catch (e) {
-    console.error("getCatalog failed", e instanceof HypertvError ? e.code : e);
-    return { plans: [], trexPlans: [], lionPlans: [], shop: shopInfo(null), error: "Catalogue momentanément indisponible." };
+    const status = e instanceof HypertvError ? e.status : null;
+    return { plans: [], trexPlans: [], lionPlans: [], shop: shopInfo(null), error: `Catalogue momentanément indisponible.${status ? ` (HTTP ${status})` : ""}`, diagnostics: { httpStatus: status, counts: null } };
   }
 });
 
