@@ -1,4 +1,5 @@
 # Intégration TREX
+- [ ] Corriger le catalogue TREX OTT / STRONG 8K, invalider les caches, traiter les erreurs API et vérifier les offres réelles sans achat.
 - [x] Intégrer 8KPRO dans le catalogue et le parcours TREX partagé ; tests catalogue, commandes, factures et confidentialité validés, sections vides masquées dans l’aperçu.
 - [ ] Vérifier un achat et une livraison 8KPRO réels — aucune formule 8KPRO actuellement renvoyée par l’API de cette boutique ; aucun achat effectué.
 - [x] Exclure les commandes déjà livrées de toute création automatique de ticket, y compris la reprise de brouillons et l'appel serveur ; 67 tests ciblés validés.

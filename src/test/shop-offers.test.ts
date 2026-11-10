@@ -40,6 +40,13 @@ describe("nouveau schéma des offres HyperTV", () => {
 
 describe("offres TREX", () => {
   const trex: TrexPlan = { id: "trex-12", type: "trex", title: "TREX annuel", price_eur: 59.90, currency: "EUR", line: { type: "m3u", months: 12, durationDays: 365 }, includesHypertvSubscription: { name: "PRO", durationDays: 365, maxDevices: 2 } };
+  it.each(["trex", "8kpro"] as const)("conserve un fournisseur %s seul sans filtrer par titre", provider => {
+    const plan = { ...trex, provider, title: "TREX texte fournisseur", description: "Texte TREX original", cover_url: "https://example.com/cover.jpg", price_eur: 0, line: { ...trex.line, labels: ["TREX original", "Ultra HD"] } };
+    const catalog = catalogTrexPlans({ resellerOffers: [], subscriptionPlans: [], trexPlans: [plan] });
+    expect(plansForProvider(catalog, provider)).toHaveLength(1);
+    expect(plansForProvider(catalog, provider === "trex" ? "8kpro" : "trex")).toEqual([]);
+    expect(catalog[0]).toMatchObject({ id: plan.id, name: plan.title, description: plan.description, cover_url: plan.cover_url, price_cents: 0, line: plan.line });
+  });
   it("sépare 8KPRO et TREX et considère un provider absent comme TREX", () => {
     const plans = catalogTrexPlans({ resellerOffers: [], subscriptionPlans: [], trexPlans: [trex, { ...trex, id: "explicit", provider: "trex" }, { ...trex, id: "8k-12", provider: "8kpro" }] });
     expect(plansForProvider(plans, "trex").map(p => p.id)).toEqual(["trex-12", "explicit"]);
