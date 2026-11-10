@@ -17,7 +17,7 @@ import { resolveOrderAttempt, type OrderAttempt } from "@/lib/shop-order";
 import { lineProvider, lineProviderName, plansForProvider } from "@/lib/shop-offers";
 
 const catalogQuery = queryOptions({
-  queryKey: ["catalog"],
+  queryKey: ["catalog", "providers-v2"],
   queryFn: () => getCatalog(),
   staleTime: 0,
   refetchOnMount: "always",
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/commander/$planId")({
   },
   loader: async ({ context }): Promise<Catalog> => {
     const [catalog] = await Promise.all([
-      context.queryClient.ensureQueryData(catalogQuery),
+      context.queryClient.fetchQuery(catalogQuery),
       context.queryClient.ensureQueryData(methodsQuery),
     ]);
     return catalog;
@@ -62,7 +62,7 @@ function Checkout() {
   const { type } = Route.useSearch();
   const isTrex = type === "trex";
   const isLion = type === "lion";
-  const { data } = useSuspenseQuery(catalogQuery);
+  const { data, refetch, isFetching } = useSuspenseQuery(catalogQuery);
   const { data: methodsData } = useSuspenseQuery(methodsQuery);
   const navigate = useNavigate();
   const create = useServerFn(createOrder);
@@ -131,7 +131,7 @@ function Checkout() {
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="space-y-2">
             <Label>{isTrex ? `Abonnement ${lineProviderName(provider)}` : isLion ? "Abonnement LION OTT" : "Formule"}</Label>
-            {data.error && <p className="text-sm text-destructive">{data.error}</p>}
+            {data.error && <div role="alert" className="space-y-2"><p className="text-sm text-destructive">{data.error}</p><Button type="button" variant="outline" disabled={isFetching} onClick={() => void refetch()}>Réessayer</Button></div>}
             {!data.error && !plan && <p className="text-sm text-destructive">Cette formule n'est plus disponible</p>}
             <div className="grid gap-2">
               {buyable.map((p) => (

@@ -38,10 +38,11 @@ export function lineProvider(provider?: unknown): LineProvider {
   return provider === "8kpro" ? "8kpro" : "trex";
 }
 export function lineProviderName(provider?: unknown): string {
-  return lineProvider(provider) === "8kpro" ? "8KPRO" : "TREX";
+  return lineProvider(provider) === "8kpro" ? "STRONG 8K" : "TREX OTT";
 }
-export function lineProductText(text: string, provider?: unknown): string {
-  return lineProvider(provider) === "8kpro" ? text.replace(/\bTREX\b/gi, "8KPRO") : text;
+export function lineProductText(text: string, _provider?: unknown): string {
+  // Le contenu fournisseur est conservé ; seuls les libellés de navigation sont locaux.
+  return text;
 }
 export function plansForProvider<T extends { provider?: LineProvider }>(plans: T[], provider: LineProvider): T[] {
   return plans.filter(plan => lineProvider(plan.provider) === provider);
@@ -83,8 +84,8 @@ export function catalogTrexPlans(offers: OffersResponse) {
   return (offers.trexPlans ?? []).filter((plan) => plan.type === "trex").map((plan) => ({
     id: plan.id,
     provider: lineProvider(plan.provider),
-    name: lineProductText(plan.title, plan.provider),
-    description: plan.description ? lineProductText(plan.description, plan.provider) : null,
+    name: plan.title,
+    description: plan.description ?? null,
     cover_url: plan.cover_url ?? null,
     price_cents: planPriceCents(plan),
     line: plan.line,
