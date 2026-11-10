@@ -1,7 +1,7 @@
 # Intégration TREX
-- [ ] Corriger le catalogue TREX OTT / STRONG 8K, invalider les caches, traiter les erreurs API et vérifier les offres réelles sans achat.
+- [x] Catalogue TREX OTT / STRONG 8K corrigé, contenu API conservé, caches invalidés et erreurs avec réessai ; HTTP 200 réel, 5 TREX et 2 STRONG 8K, images et accès aux pages de commande vérifiés sans achat.
 - [x] Intégrer 8KPRO dans le catalogue et le parcours TREX partagé ; tests catalogue, commandes, factures et confidentialité validés, sections vides masquées dans l’aperçu.
-- [ ] Vérifier un achat et une livraison 8KPRO réels — aucune formule 8KPRO actuellement renvoyée par l’API de cette boutique ; aucun achat effectué.
+- [ ] Vérifier un achat et une livraison STRONG 8K réels — accord préalable nécessaire pour tout achat ; aucun achat effectué.
 - [x] Exclure les commandes déjà livrées de toute création automatique de ticket, y compris la reprise de brouillons et l'appel serveur ; 67 tests ciblés validés.
 - [x] Unifier les tickets chiffrés de commande, leur reprise sans doublon et les boutons LION/TREX dans le suivi et les factures ; 58 tests ciblés validés.
 - [ ] Vérifier les six parcours tickets sur des commandes réelles, dont une ancienne commande déjà livrée ; bloqué par l’absence de session client HyperTV, redirection vers connexion vérifiée.
