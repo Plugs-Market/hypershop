@@ -141,14 +141,6 @@ function Home() {
       count: proPlans.length,
     },
     {
-      id: "hypervod",
-      label: "HYPER VOD",
-      description: "Films & séries sur votre application HyperTV.",
-      image: data.hypervodPlans[0]?.cover_url ?? null,
-      icon: Tv,
-      count: data.hypervodPlans.length,
-    },
-    {
       id: "lion",
       label: "LION OTT",
       description: "Abonnements livrés manuellement par ticket-support après votre achat.",
