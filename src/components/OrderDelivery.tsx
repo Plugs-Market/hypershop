@@ -6,7 +6,7 @@ import type { Delivery } from "@/lib/playlist-security";
 import { Button } from "@/components/ui/button";
 import { lineProviderName, type LineProvider } from "@/lib/shop-offers";
 
-export function PrivateField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
+export function PrivateField({ label, value, secret = false, revealLabel }: { label: string; value: string; secret?: boolean; revealLabel?: string }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -18,7 +18,7 @@ export function PrivateField({ label, value, secret = false }: { label: string; 
     <p className="text-xs text-muted-foreground">{label}</p>
     <div className="flex items-start gap-2">
       <code className="min-w-0 flex-1 break-all rounded-md bg-muted px-3 py-2 text-sm">{secret && !visible ? "••••••••••••" : value}</code>
-      {secret && <Button type="button" variant="ghost" size="icon" title={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"} aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"} onClick={() => setVisible(!visible)}>{visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>}
+      {secret && <Button type="button" variant="ghost" size="icon" title={visible ? "Masquer le mot de passe" : (revealLabel ?? "Afficher le mot de passe")} aria-label={visible ? "Masquer le mot de passe" : (revealLabel ?? "Afficher le mot de passe")} onClick={() => setVisible(!visible)}>{visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>}
       <Button type="button" variant="outline" size="icon" title={`Copier ${label.toLowerCase()}`} aria-label={`Copier ${label.toLowerCase()}`} onClick={copy}><Copy className="h-4 w-4" /></Button>
     </div>
     <p role="status" className="text-xs text-muted-foreground">{copied ? "Copié" : failed ? "Copie indisponible sur ce navigateur." : ""}</p>
@@ -75,7 +75,7 @@ export function OrderDelivery({ id, authorized, provider, type }: { id: string; 
         <h3 className="text-sm font-semibold">Xtream Codes</h3>
         <PrivateField label="Serveur" value={delivery.xtream.serverUrl} />
         <PrivateField label="Identifiant" value={delivery.xtream.username} />
-        <PrivateField label="Mot de passe" value={delivery.xtream.password} secret />
+        <PrivateField label="Mot de passe" value={delivery.xtream.password} secret revealLabel={type === "hypervod" ? "Révéler" : undefined} />
       </>}
       {busy && !delivery && <p className="text-sm text-muted-foreground">Récupération des accès…</p>}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

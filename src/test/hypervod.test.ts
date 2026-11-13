@@ -34,6 +34,7 @@ describe("HYPER VOD", () => {
       expect(canReadDelivery({ type: "hypervod", state }, false)).toBe(false);
     }
     expect(canReadDelivery({ type: "hypervod", state: "paid_activation_failed" }, true)).toBe(false);
+    expect(canReadDelivery({ type: "hypervod", state: "completed", activationError: "credits" }, true)).toBe(false);
   });
   it("ne renvoie aucun accès sans preuve propriétaire côté serveur", async () => {
     mocks.owns.mockResolvedValue(false);

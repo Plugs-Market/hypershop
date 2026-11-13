@@ -1,6 +1,6 @@
 export type Delivery = { m3uUrl: string; xtream: { serverUrl: string; username: string; password: string }; expiresAt: string | null };
-export function canReadDelivery(order: { type?: string; state: string }, authorized: boolean) {
-  return authorized && (order.type === "trex" && order.state === "activated" || order.type === "hypervod" && ["activated", "completed", "finished", "delivered"].includes(order.state));
+export function canReadDelivery(order: { type?: string; state: string; activationError?: string | null }, authorized: boolean) {
+  return authorized && (order.type === "trex" && order.state === "activated" || order.type === "hypervod" && !order.activationError && ["activated", "completed", "finished", "delivered"].includes(order.state));
 }
 export function lineExpiry(order: { type?: string; subscriptionExpiresAt?: string | null; delivery?: Delivery | null }) {
   return (order.type === "trex" || order.type === "hypervod") ? order.delivery?.expiresAt ?? null : order.subscriptionExpiresAt ?? null;
