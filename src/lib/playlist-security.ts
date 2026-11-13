@@ -24,8 +24,8 @@ export const MAX_PLAYLIST_BYTES = 20 * 1024 * 1024;
 export function privateDelivery(value: unknown): Delivery | null {
   if (!value || typeof value !== "object") return null;
   const d = value as Record<string, unknown>;
-  if (!d.xtream || typeof d.xtream !== "object") return null;
-  const x = d.xtream as Record<string, unknown>;
-  if (typeof d.m3uUrl !== "string" || typeof x.serverUrl !== "string" || typeof x.username !== "string" || typeof x.password !== "string") return null;
-  return { m3uUrl: d.m3uUrl, xtream: { serverUrl: x.serverUrl, username: x.username, password: x.password }, expiresAt: typeof d.expiresAt === "string" ? d.expiresAt : null };
+  if (!d["xtream"] || typeof d["xtream"] !== "object") return null;
+  const x = d["xtream"] as Record<string, unknown>;
+  if (typeof d["m3uUrl"] !== "string" || typeof x["serverUrl"] !== "string" || typeof x["username"] !== "string" || typeof x["password"] !== "string") return null;
+  return { m3uUrl: d["m3uUrl"], xtream: { serverUrl: x["serverUrl"], username: x["username"], password: x["password"] }, expiresAt: typeof d["expiresAt"] === "string" ? d["expiresAt"] : null };
 }
