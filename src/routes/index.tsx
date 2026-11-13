@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight, CircleCheck, Clock, Crown, ListMusic, MonitorSmartphone, RotateCw, Truck, Tv, Zap } from "lucide-react";
@@ -83,6 +83,16 @@ function Home() {
   const trexPlans = plansForProvider(data.trexPlans, "trex");
   const proPlans = plansForProvider(data.trexPlans, "8kpro");
   const [category, setCategory] = useState<Category | null>(null);
+  useLayoutEffect(() => {
+    if (category === null) return;
+    // Reset after React replaces the category tiles with the product listing.
+    // A smooth scroll started before that replacement can be cancelled by iOS
+    // scroll anchoring, retaining the previous page's offset instead.
+    const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    resetScroll();
+    const frame = window.requestAnimationFrame(resetScroll);
+    return () => window.cancelAnimationFrame(frame);
+  }, [category]);
   useEffect(() => {
     const reset = () => { setCategory(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
     const goDownload = () => {
@@ -173,7 +183,7 @@ function Home() {
                 variant="ghost"
                 key={c.id}
                 type="button"
-                onClick={() => { setCategory(c.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                onClick={() => setCategory(c.id)}
                 className="group flex h-auto items-center gap-5 whitespace-normal rounded-2xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow"
               >
                 <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-primary shadow-glow">
