@@ -6,7 +6,7 @@ import type { Delivery } from "@/lib/playlist-security";
 import { Button } from "@/components/ui/button";
 import { lineProviderName, type LineProvider } from "@/lib/shop-offers";
 
-export function PrivateField({ label, value, secret = false, revealLabel }: { label: string; value: string; secret?: boolean; revealLabel?: string }) {
+export function PrivateField({ label, value, secret = false, revealLabel }: { label: string; value: string; secret?: boolean; revealLabel?: string | undefined }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
