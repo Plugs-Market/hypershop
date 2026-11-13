@@ -111,7 +111,7 @@ function Home() {
     {
       id: "hypertv",
       label: "HYPER TV",
-      description: "Abonnements pour activer votre application HYPERTV.",
+      description: "Abonnements pour activer votre application HYPER TV.",
       image: data.plans[0]?.cover_url ?? null,
       icon: Tv,
       count: data.plans.length,
@@ -119,7 +119,7 @@ function Home() {
     {
       id: "hypervod",
       label: "HYPER VOD",
-      description: "Films & séries sur votre application HyperTV.",
+      description: "Films & séries sur votre application HYPER TV.",
       image: data.hypervodPlans[0]?.cover_url ?? null,
       icon: Tv,
       count: data.hypervodPlans.length,
