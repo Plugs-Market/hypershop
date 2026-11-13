@@ -2,11 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hypertv, HypertvError } from "./hypertvClient.server";
 import { translateHypertvError } from "./hypertv-shared";
-import { catalogPlans, catalogTrexPlans, catalogLionPlans, lineProvider, lineProductText } from "./shop-offers";
+import { catalogPlans, catalogTrexPlans, catalogLionPlans, catalogHypervodPlans, lineProvider, lineProductText } from "./shop-offers";
 import { orderInputSchema, type LionDelivery } from "./shop-order";
 import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/server";
 import { ownerHash, ownsOrder, hashValue } from "./order-access.server";
-import { canReadDelivery } from "./playlist-security";
+import { canReadDelivery, privateDelivery } from "./playlist-security";
 
 function errMessage(e: unknown): string {
   if (e instanceof HypertvError) return translateHypertvError(e.status, e.code, e.message);
@@ -24,10 +24,10 @@ export const getCatalog = createServerFn({ method: "GET" }).handler(async () => 
     ]);
     const offers = response.data;
     const plans = catalogPlans(offers);
-    return { plans, trexPlans: catalogTrexPlans(offers), lionPlans: catalogLionPlans(offers), shop: shopInfo(shop), error: null as string | null, diagnostics: { httpStatus: response.status as number | null, counts: { resellerOffers: offers.resellerOffers.length, subscriptionPlans: offers.subscriptionPlans.length, trexPlans: offers.trexPlans?.length ?? 0, lionPlans: offers.lionPlans?.length ?? 0 } } };
+    return { plans, trexPlans: catalogTrexPlans(offers), lionPlans: catalogLionPlans(offers), hypervodPlans: catalogHypervodPlans(offers), shop: shopInfo(shop), error: null as string | null, diagnostics: { httpStatus: response.status as number | null, counts: { resellerOffers: offers.resellerOffers.length, subscriptionPlans: offers.subscriptionPlans.length, trexPlans: offers.trexPlans?.length ?? 0, lionPlans: offers.lionPlans?.length ?? 0, hypervodPlans: offers.hypervodPlans?.length ?? 0 } } };
   } catch (e) {
     const status = e instanceof HypertvError ? e.status : null;
-    return { plans: [], trexPlans: [], lionPlans: [], shop: shopInfo(null), error: `Catalogue momentanément indisponible.${status ? ` (HTTP ${status})` : ""}`, diagnostics: { httpStatus: status, counts: null } };
+    return { plans: [], trexPlans: [], lionPlans: [], hypervodPlans: [], shop: shopInfo(null), error: `Catalogue momentanément indisponible.${status ? ` (HTTP ${status})` : ""}`, diagnostics: { httpStatus: status, counts: null } };
   }
 });
 
@@ -120,7 +120,7 @@ export const getOrder = createServerFn({ method: "GET" })
         order.plan = lineProductText(order.plan, order.provider);
       }
       // Never serialize delivery into loader/SSR hydration or router caches.
-      return { ...order, suggestedTicket: authorized ? order.suggestedTicket ?? null : null, supportTicketId: authorized ? order.supportTicketId ?? null : null, supportTicketRequired: authorized && order.supportTicketRequired === true, deliveryStatus: order.delivery && "status" in order.delivery && typeof order.delivery.status === "string" ? order.delivery.status : null, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
+      return { id: order.id, state: order.state, type: order.type, provider: order.provider, plan: order.plan, planId: order.planId, trexPlanId: order.trexPlanId, lionPlanId: order.lionPlanId, vodPlanId: order.vodPlanId, priceEur: order.priceEur, mac: order.mac, email: order.email, expiresAt: order.expiresAt, subscriptionExpiresAt: order.subscriptionExpiresAt, payment: order.payment, steps: order.steps, includesHypertvSubscription: order.includesHypertvSubscription, activationError: order.type === "hypervod" && order.activationError ? "delivery_pending" : order.activationError, suggestedTicket: authorized ? order.suggestedTicket ?? null : null, supportTicketId: authorized ? order.supportTicketId ?? null : null, supportTicketRequired: authorized && order.supportTicketRequired === true, deliveryStatus: order.delivery && "status" in order.delivery && typeof order.delivery.status === "string" ? order.delivery.status : null, manualDeliveryStatus: order.delivery?.mode === "manual" ? order.delivery.status : null, delivery: null, deliveryError: authorized && order.type !== "lion" && order.delivery?.mode !== "manual" ? order.deliveryError : null, deliveryAuthorized: authorized };
     } catch (e) {
       if (e instanceof HypertvError && e.status === 404) return null;
       throw new Error(errMessage(e));
@@ -171,7 +171,7 @@ export const getDelivery = createServerFn({ method: "POST" })
     try {
       const order = await hypertv.getOrder(data.id);
       if (!canReadDelivery(order, true)) return { delivery: null, error: "Les accès seront disponibles après activation." };
-      const delivery = order.delivery && "m3uUrl" in order.delivery ? order.delivery : null;
+      const delivery = privateDelivery(order.delivery);
       return { delivery, error: delivery ? null : "Vos accès IPTV sont momentanément indisponibles. Réessayez dans quelques instants." };
     } catch { return { delivery: null, error: "Impossible de récupérer vos accès. Réessayez." }; }
   });

@@ -111,6 +111,7 @@ function OrderPage() {
           <OrderTicketPanel order={order} opening={opening.has(order.id)} />
 
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
+            {order.type === "hypervod" && <><dt className="text-muted-foreground">Abonnement</dt><dd className="text-right">HYPER VOD</dd></>}
             {order.type === "trex" && <><dt className="text-muted-foreground">Abonnement</dt><dd className="text-right">{lineProviderName(order.provider)}</dd></>}
             <dt className="text-muted-foreground">Formule</dt><dd className="text-right">{order.plan}</dd>
             <dt className="text-muted-foreground">Prix</dt><dd className="text-right">{formatEur(order.priceEur)}</dd>
@@ -123,21 +124,21 @@ function OrderPage() {
             )}
           </dl>
 
-          {order.state === "activated" && order.type !== "lion" && (
+          {["activated", ...(order.type === "hypervod" ? ["completed", "finished", "delivered"] : [])].includes(order.state) && order.type !== "lion" && !order.activationError && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <p className="flex items-center justify-center gap-2 text-center font-semibold">
                 <Rocket className="h-5 w-5 shrink-0 text-primary" />
-                {order.type === "trex" ? "Votre playlist a été ajoutée automatiquement à votre application HyperTV. Ouvrez l'app pour en profiter." : "Lancez votre application pour profiter de votre abonnement"}
+                {(order.type === "trex" || order.type === "hypervod") ? "Votre playlist a été ajoutée automatiquement à votre application HyperTV. Ouvrez l'app pour en profiter." : "Lancez votre application pour profiter de votre abonnement"}
               </p>
-              {order.type !== "trex" && <p className="mt-2 text-center text-sm text-muted-foreground">
+              {order.type !== "trex" && order.type !== "hypervod" && <p className="mt-2 text-center text-sm text-muted-foreground">
                 Redémarrez l'application HyperTV sur votre appareil : votre formule est déjà active.
               </p>}
             </div>
           )}
-          {order.type === "trex" && order.state === "activated" && <OrderDelivery key={order.id} id={order.id} provider={order.provider ?? "trex"} authorized={order.deliveryAuthorized === true} />}
-          {order.state === "expired" && (order.trexPlanId || order.planId || order.lionPlanId) && (
+          {(order.type === "trex" || order.type === "hypervod") && ["activated", ...(order.type === "hypervod" ? ["completed", "finished", "delivered"] : [])].includes(order.state) && !order.activationError && <OrderDelivery type={order.type} key={order.id} id={order.id} provider={order.provider ?? "trex"} authorized={order.deliveryAuthorized === true} />}
+          {order.state === "expired" && (order.trexPlanId || order.planId || order.lionPlanId || order.vodPlanId) && (
             <Button asChild variant="hero" className="w-full">
-              <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? order.lionPlanId ?? "" }} search={order.type === "trex" ? { type: "trex" } : order.type === "lion" ? { type: "lion" } : {}}>
+              <Link to="/commander/$planId" params={{ planId: order.trexPlanId ?? order.planId ?? order.lionPlanId ?? order.vodPlanId ?? "" }} search={order.type === "hypervod" ? { type: "hypervod" } : order.type === "trex" ? { type: "trex" } : order.type === "lion" ? { type: "lion" } : {}}>
                 <RotateCcw className="h-4 w-4" /> Recommencer
               </Link>
             </Button>
@@ -193,6 +194,9 @@ function StateBadge({ order }: { order: Order }) {
           <p className="font-semibold">Payé, activation en cours…</p>
         </div>
       );
+    case "completed":
+    case "finished":
+    case "delivered":
     case "activated":
       return (
         <div className={base}>

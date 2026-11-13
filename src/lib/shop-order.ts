@@ -13,6 +13,7 @@ const commonFields = {
 export const orderInputSchema = z.union([
   z.object({ ...commonFields, planId: z.string().min(1).max(100) }).strict(),
   z.object({ ...commonFields, trexPlanId: z.string().min(1).max(100) }).strict(),
+  z.object({ ...commonFields, vodPlanId: z.string().min(1).max(100), email: z.string().trim().email().max(255).optional() }).strict(),
   z.object({ ...commonFields, lionPlanId: z.string().min(1).max(100) }).strict(),
 ]);
 export type OrderInput = z.infer<typeof orderInputSchema>;
@@ -48,6 +49,7 @@ export type LionDelivery = {
 };
 
 export function activationNotice(order: OrderProgress): string | null {
+  if (order.type === "hypervod" && order.activationError) return "Livraison en attente, le vendeur a été prévenu";
   if (order.state === "activated") return null;
   if (order.type === "trex" && order.state === "paid_activation_failed") return "Votre ligne n'a pas pu être livrée automatiquement. Le vendeur va vous la fournir dans le ticket support.";
   if (order.activationError === "trex_line_state_unknown_contact_support" || order.state === "trex_line_state_unknown_contact_support") {
@@ -63,6 +65,7 @@ export function shouldPollOrder(order: OrderProgress): boolean {
   if ((order.type === "lion" || order.manualDeliveryStatus) && !["expired", "cancelled"].includes(order.state)) {
     return order.manualDeliveryStatus !== "delivered";
   }
+  if (order.type === "hypervod" && ["completed", "finished", "delivered"].includes(order.state) && !order.activationError) return false;
   if (["activated", "expired", "cancelled"].includes(order.state)) return false;
   return ["pending", "detected", "review", "paid", "paid_activation_failed"].includes(order.state) || activationNotice(order) !== null;
 }

@@ -5,6 +5,7 @@ import { hypertv, HypertvError } from "./hypertvClient.server";
 import { readSession, clearSession } from "./account.server";
 import { SESSION_ERRORS } from "./account";
 import { invoiceSearchSchema, invoiceCanPay, invoiceCanCancel, normalizeInvoice, normalizeInvoiceDelivery, record, replacementInvoiceId } from "./invoices";
+import { canReadDelivery } from "./playlist-security";
 import { translateHypertvError } from "./hypertv-shared";
 
 const idSchema = z.object({ id: z.string().min(1).max(150) });
@@ -49,7 +50,15 @@ export const getCustomerOrderTicket = createServerFn({ method: "POST" }).inputVa
   }));
 // IPTV credentials never enter loader data, SSR hydration or Query caches.
 export const getCustomerInvoiceDelivery = createServerFn({ method: "POST" }).inputValidator((d: unknown) => idSchema.parse(d))
-  .handler(({ data }) => privateCall(async session => normalizeInvoiceDelivery(await hypertv.getInvoice(session, data.id))));
+  .handler(({ data }) => privateCall(async session => {
+    const raw = await hypertv.getInvoice(session, data.id);
+    const invoice = normalizeInvoice(raw);
+    if (invoice.type === "hypervod") {
+      const outer = record(raw), i = record(outer.invoice ?? raw), order = record(i.order);
+      if (!canReadDelivery({ type: invoice.type, state: typeof order.state === "string" ? order.state : invoice.state }, true) || i["activationError"] || order["activationError"]) return null;
+    }
+    return normalizeInvoiceDelivery(raw);
+  }));
 export const payCustomerInvoice = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => idSchema.extend({ method: z.string().min(1).max(40) }).parse(d))
   .handler(({ data }) => privateCall(async session => {

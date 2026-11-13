@@ -1,3 +1,9 @@
+# Intégration HYPER VOD
+- [x] Catalogue et commande HYPER VOD, prix API et démos sans paiement.
+- [x] Livraison privée, historique et secours support.
+- [x] 96 tests ciblés validés ; catalogue réel HTTP 200 et aucune offre HYPER VOD, aucun achat effectué.
+- [ ] Vérification réelle du parcours HYPER VOD — aucune offre HYPER VOD renvoyée par HyperTV et aucune commande propriétaire disponible.
+
 # Intégration TREX
 - [x] Catalogue TREX OTT / STRONG 8K corrigé, contenu API conservé, caches invalidés et erreurs avec réessai ; HTTP 200 réel, 5 TREX et 2 STRONG 8K, images et accès aux pages de commande vérifiés sans achat.
 - [x] Intégrer 8KPRO dans le catalogue et le parcours TREX partagé ; tests catalogue, commandes, factures et confidentialité validés, sections vides masquées dans l’aperçu.
