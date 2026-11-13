@@ -117,6 +117,14 @@ function Home() {
       count: data.plans.length,
     },
     {
+      id: "hypervod",
+      label: "HYPER VOD",
+      description: "Films & séries sur votre application HyperTV.",
+      image: data.hypervodPlans[0]?.cover_url ?? null,
+      icon: Tv,
+      count: data.hypervodPlans.length,
+    },
+    {
       id: "trex",
       label: "Abonnements TREX OTT",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
@@ -131,14 +139,6 @@ function Home() {
       image: proPlans[0]?.cover_url ?? null,
       icon: ListMusic,
       count: proPlans.length,
-    },
-    {
-      id: "hypervod",
-      label: "HYPER VOD",
-      description: "Films & séries sur votre application HyperTV.",
-      image: data.hypervodPlans[0]?.cover_url ?? null,
-      icon: Tv,
-      count: data.hypervodPlans.length,
     },
     {
       id: "lion",
