@@ -119,7 +119,7 @@ function Home() {
     {
       id: "hypervod",
       label: "HYPER VOD",
-      description: "Films & séries sur votre application HYPER TV.",
+      description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       image: data.hypervodPlans[0]?.cover_url ?? null,
       icon: Tv,
       count: data.hypervodPlans.length,
@@ -143,7 +143,7 @@ function Home() {
     {
       id: "lion",
       label: "LION OTT",
-      description: "Abonnements livrés manuellement par ticket-support après votre achat.",
+      description: "Lignes M3U livrées manuellement sur votre application ou à télécharger.",
       image: data.lionPlans[0]?.cover_url ?? null,
       icon: Crown,
       count: data.lionPlans.length,
