@@ -21,6 +21,6 @@ describe("catalogue : erreurs et diagnostic public sans données privées", () =
     mocks.offers.mockResolvedValue({ status: 200, data: { resellerOffers: [{ id: "pack" }], subscriptionPlans: [], lionPlans: [], trexPlans: [] } });
     const result = await read();
     expect(result.error).toBeNull();
-    expect(result.diagnostics).toEqual({ httpStatus: 200, counts: { resellerOffers: 1, subscriptionPlans: 0, lionPlans: 0, trexPlans: 0 } });
+    expect(result.diagnostics).toEqual({ httpStatus: 200, counts: { resellerOffers: 1, subscriptionPlans: 0, lionPlans: 0, trexPlans: 0, hypervodPlans: 0 } });
   });
 });

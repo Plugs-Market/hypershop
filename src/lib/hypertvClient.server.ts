@@ -103,6 +103,7 @@ export type ShopOrder = OrderProgress & {
   planId?: string;
   trexPlanId?: string;
   lionPlanId?: string;
+  vodPlanId?: string;
   priceEur: number;
   mac: string;
   email?: string | null;

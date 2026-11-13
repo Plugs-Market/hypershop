@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Category = "hypertv" | "trex" | "8kpro" | "lion";
+type Category = "hypertv" | "trex" | "8kpro" | "lion" | "hypervod";
 
 type PlanCardData = {
   id: string;
@@ -54,14 +54,14 @@ type PlanCardData = {
   price_cents: number | null;
 };
 
-function PlanCard({ plan, type, details }: { plan: PlanCardData; type?: "trex" | "lion"; details: ReactNode }) {
+function PlanCard({ plan, type, details }: { plan: PlanCardData; type?: "trex" | "lion" | "hypervod"; details: ReactNode }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/60 hover:shadow-glow">
       {plan.cover_url && <img src={plan.cover_url} alt={plan.name} loading="lazy" suppressHydrationWarning className="aspect-video w-full object-cover" />}
       <div className="flex flex-1 flex-col p-6">
         <h2 className="text-xl font-bold">{plan.name}</h2>
         {plan.description && <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>}
-        <p className="mt-4 text-3xl font-extrabold">{plan.price_cents !== null ? formatPrice(plan.price_cents) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
+        <p className="mt-4 text-3xl font-extrabold">{plan.price_cents !== null ? (plan.price_cents === 0 && type === "hypervod" ? "Gratuit" : formatPrice(plan.price_cents)) : <span className="text-base font-medium text-muted-foreground">Prix bientôt disponible</span>}</p>
         {details}
         <div className="mt-auto pt-6">
           {plan.price_cents !== null ? (
@@ -123,6 +123,14 @@ function Home() {
       count: proPlans.length,
     },
     {
+      id: "hypervod",
+      label: "HYPER VOD",
+      description: "Films & séries sur votre application HyperTV.",
+      image: data.hypervodPlans[0]?.cover_url ?? null,
+      icon: Tv,
+      count: data.hypervodPlans.length,
+    },
+    {
       id: "lion",
       label: "LION OTT",
       description: "Abonnements livrés manuellement par ticket-support après votre achat.",
@@ -154,13 +162,13 @@ function Home() {
         )}
 
         {data.error && <div role="alert" className="space-y-3 text-center"><p className="text-destructive">{data.error}</p><Button variant="outline" disabled={isFetching} onClick={() => void refetch()}><RotateCw className="h-4 w-4" /> Réessayer</Button></div>}
-        {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && data.lionPlans.length === 0 && (
+        {!data.error && data.plans.length === 0 && data.trexPlans.length === 0 && data.lionPlans.length === 0 && data.hypervodPlans.length === 0 && (
           <p className="text-center text-muted-foreground">Aucune formule disponible pour le moment.</p>
         )}
 
-        {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0 || data.lionPlans.length > 0) && category === null && (
+        {!data.error && (data.plans.length > 0 || data.trexPlans.length > 0 || data.lionPlans.length > 0 || data.hypervodPlans.length > 0) && category === null && (
           <section aria-label="Choisissez une catégorie" className="grid gap-5 sm:grid-cols-2">
-            {categories.filter(c => !["trex", "8kpro"].includes(c.id) || c.count > 0).map((c) => (
+            {categories.filter(c => !["trex", "8kpro", "hypervod"].includes(c.id) || c.count > 0).map((c) => (
               <Button
                 variant="ghost"
                 key={c.id}
@@ -213,6 +221,15 @@ function Home() {
                         }
                       />
                     ))
+                  : category === "hypervod"
+                    ? data.hypervodPlans.map(p => <PlanCard key={p.id} plan={p} type="hypervod" details={
+                      <ul className="mt-5 space-y-2 text-xs">
+                        <li className="flex items-start gap-2"><Clock className="h-4 w-4 shrink-0 text-primary" /><span>{p.line.isDemo ? "Démo 24 h" : `${p.line.months} mois`}</span></li>
+                        {trexLineLabels(p.line).map((label, i) => <li key={i} className="flex items-start gap-2"><CircleCheck className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">{label}</span></li>)}
+                        <li className="flex items-start gap-2"><MonitorSmartphone className="h-4 w-4 shrink-0 text-primary" /><span>{p.line.screens} écran{p.line.screens > 1 ? "s" : ""}</span></li>
+                        {p.includesHypertvSubscription && <li className="flex items-start gap-2"><Zap className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">+ HYPER {p.includesHypertvSubscription.name} ({p.includesHypertvSubscription.durationDays} j, {p.includesHypertvSubscription.maxDevices} écran{p.includesHypertvSubscription.maxDevices > 1 ? "s" : ""})</span></li>}
+                      </ul>
+                    } />)
                   : category === "lion"
                     ? data.lionPlans.map((p) => (
                         <PlanCard

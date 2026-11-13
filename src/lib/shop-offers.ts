@@ -18,6 +18,7 @@ export type OffersResponse = {
   subscriptionPlans: SubscriptionPlan[];
   trexPlans?: TrexPlan[];
   lionPlans?: LionPlan[];
+  hypervodPlans?: HypervodPlan[];
 };
 
 export type TrexPlan = {
@@ -120,5 +121,18 @@ export function catalogLionPlans(offers: OffersResponse) {
     durationDays: plan.durationDays ?? null,
     line: plan.line,
     includesHypertvSubscription: plan.includesHypertvSubscription ?? null,
+  }));
+}
+// HYPER VOD : catalogue Xtream automatique, commun à l'affichage et au checkout.
+export type HypervodPlan = {
+  id: string; type: "hypervod"; delivery: "automatic"; title: string;
+  description?: string | null; cover_url?: string | null; price_eur?: number | null; currency: string;
+  line: { type: "xtream"; label?: string; labels: string[]; isDemo: boolean; months: number | null; durationDays: number; screens: number };
+  includesHypertvSubscription: null | { name: string; durationDays: number; maxDevices: number };
+};
+export function catalogHypervodPlans(offers: OffersResponse) {
+  return (offers.hypervodPlans ?? []).filter(plan => plan.type === "hypervod" && plan.delivery === "automatic").map(plan => ({
+    id: plan.id, name: plan.title, description: plan.description ?? null, cover_url: plan.cover_url ?? null,
+    price_cents: planPriceCents(plan), line: plan.line, includesHypertvSubscription: plan.includesHypertvSubscription ?? null,
   }));
 }

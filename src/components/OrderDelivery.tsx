@@ -25,7 +25,7 @@ export function PrivateField({ label, value, secret = false }: { label: string; 
   </div>;
 }
 
-export function OrderDelivery({ id, authorized, provider }: { id: string; authorized: boolean; provider?: LineProvider }) {
+export function OrderDelivery({ id, authorized, provider, type }: { id: string; authorized: boolean; provider?: LineProvider; type?: string }) {
   const read = useServerFn(getDelivery);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,17 +61,17 @@ export function OrderDelivery({ id, authorized, provider }: { id: string; author
     } else save();
   }
   return <section aria-labelledby="iptv-title" className="min-w-0 space-y-4 border-t border-border pt-5">
-    <h2 id="iptv-title" className="text-xl font-semibold">Ma ligne IPTV</h2>
+    <h2 id="iptv-title" className="text-xl font-semibold">{type === "hypervod" ? "Mes accès HYPER VOD" : "Ma ligne IPTV"}</h2>
     {!authorized ? <p className="text-sm text-muted-foreground">Accès privé : ouvrez ce suivi depuis le navigateur utilisé pour votre achat. Pour une ancienne commande, contactez votre revendeur afin de récupérer vos accès de manière sécurisée.</p> : <>
       {delivery && <>
-        {delivery.expiresAt && <p className="text-sm text-muted-foreground">Ligne {lineProviderName(provider)} valable jusqu’au {new Date(delivery.expiresAt).toLocaleDateString("fr-FR")}</p>}
+        {delivery.expiresAt && (type === "hypervod" ? <PrivateField label="Date d’expiration" value={new Date(delivery.expiresAt).toLocaleString("fr-FR")} /> : <p className="text-sm text-muted-foreground">Ligne {(type === "hypervod" ? "HYPER VOD" : lineProviderName(provider))} valable jusqu’au {new Date(delivery.expiresAt).toLocaleDateString("fr-FR")}</p>)}
         <PrivateField label="Lien M3U" value={delivery.m3uUrl} />
-        <div className="flex flex-wrap gap-2">
+        {type !== "hypervod" && <div className="flex flex-wrap gap-2">
           {!file ? <Button variant="outline" disabled={busy} onClick={prepare}><Download className="h-4 w-4" />{busy ? "Préparation…" : "Préparer la playlist M3U"}</Button> : <>
             <Button variant="hero" onClick={save}><Download className="h-4 w-4" />Télécharger la playlist M3U</Button>
             <Button variant="outline" onClick={share}><Share2 className="h-4 w-4" />Enregistrer dans Fichiers</Button>
           </>}
-        </div>
+        </div>}
         <h3 className="text-sm font-semibold">Xtream Codes</h3>
         <PrivateField label="Serveur" value={delivery.xtream.serverUrl} />
         <PrivateField label="Identifiant" value={delivery.xtream.username} />

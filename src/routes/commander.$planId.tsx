@@ -31,8 +31,8 @@ const methodsQuery = queryOptions({
 type Catalog = Awaited<ReturnType<typeof getCatalog>>;
 
 export const Route = createFileRoute("/commander/$planId")({
-  validateSearch: (search: Record<string, unknown>): { type?: "trex" | "lion" } =>
-    search["type"] === "trex" ? { type: "trex" } : search["type"] === "lion" ? { type: "lion" } : {},
+  validateSearch: (search: Record<string, unknown>): { type?: "trex" | "lion" | "hypervod" } =>
+    search["type"] === "trex" ? { type: "trex" } : search["type"] === "hypervod" ? { type: "hypervod" } : search["type"] === "lion" ? { type: "lion" } : {},
   head: ({ loaderData }) => {
     const data = loaderData as Catalog | undefined;
     const shopName = data?.shop?.name ?? "Boutique";
@@ -61,6 +61,7 @@ function Checkout() {
   const { planId } = Route.useParams();
   const { type } = Route.useSearch();
   const isTrex = type === "trex";
+  const isVod = type === "hypervod";
   const isLion = type === "lion";
   const { data, refetch, isFetching } = useSuspenseQuery(catalogQuery);
   const { data: methodsData } = useSuspenseQuery(methodsQuery);
@@ -80,6 +81,7 @@ function Checkout() {
       setMac((m) => m || accountMac);
     }
   }, [status?.mac]);
+  const [email, setEmail] = useState("");
   const [method, setMethod] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,7 +89,7 @@ function Checkout() {
   const attempt = useRef<OrderAttempt | null>(null);
   const submitting = useRef(false);
   const provider = lineProvider(data.trexPlans.find(p => p.id === planId)?.provider);
-  const available = isTrex ? plansForProvider(data.trexPlans, provider) : isLion ? data.lionPlans : data.plans;
+  const available = isTrex ? plansForProvider(data.trexPlans, provider) : isLion ? data.lionPlans : isVod ? data.hypervodPlans : data.plans;
   const buyable = available.filter((p): p is typeof p & { price_cents: number } => p.price_cents !== null);
   const plan = buyable.find((p) => p.id === selected);
   const isFree = plan?.price_cents === 0;
@@ -104,7 +106,7 @@ function Checkout() {
     submitting.current = true;
     setLoading(true);
     const details = isFree ? { mac: normalizeMac(mac), ...(isTrex ? { method: "free" } : {}) } : { mac: normalizeMac(mac), method: method ?? undefined };
-    const product = isTrex ? { trexPlanId: plan.id } : isLion ? { lionPlanId: plan.id } : { planId: plan.id };
+    const product = isVod ? { vodPlanId: plan.id, ...(email.trim() ? { email: email.trim() } : {}) } : isTrex ? { trexPlanId: plan.id } : isLion ? { lionPlanId: plan.id } : { planId: plan.id };
     attempt.current = resolveOrderAttempt(attempt.current, JSON.stringify({ ...product, ...details }), () => crypto.randomUUID());
     try {
       const r = await create({ data: { ...product, ...details, idempotencyKey: attempt.current.key } });
@@ -130,14 +132,14 @@ function Checkout() {
         <h1 className="text-3xl font-bold">Votre commande</h1>
         <form onSubmit={submit} className="mt-8 space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="space-y-2">
-            <Label>{isTrex ? `Abonnement ${lineProviderName(provider)}` : isLion ? "Abonnement LION OTT" : "Formule"}</Label>
+            <Label>{isTrex ? `Abonnement ${lineProviderName(provider)}` : isLion ? "Abonnement LION OTT" : isVod ? "Abonnement HYPER VOD" : "Formule"}</Label>
             {data.error && <div role="alert" className="space-y-2"><p className="text-sm text-destructive">{data.error}</p><Button type="button" variant="outline" disabled={isFetching} onClick={() => void refetch()}>Réessayer</Button></div>}
             {!data.error && !plan && <p className="text-sm text-destructive">Cette formule n'est plus disponible</p>}
             <div className="grid gap-2">
               {buyable.map((p) => (
                 <Button variant="outline" type="button" key={p.id} disabled={loading} onClick={() => setSelected(p.id)}
                   className={`h-auto min-h-12 justify-between gap-3 whitespace-normal rounded-lg px-4 py-3 text-left text-sm ${p.id === selected ? "border-primary bg-accent" : "border-border hover:border-primary/50"}`}>
-                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"duration_days" in p ? <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</> : p.line.isDemo || p.price_cents === 0 ? "Démo" : `${p.line.months} mois`}</span></span>
+                  <span className="min-w-0"><span className="font-semibold">{p.name}</span> <span className="block text-muted-foreground">{"duration_days" in p ? <>{p.duration_days} j · {p.max_devices} écran{p.max_devices > 1 ? "s" : ""}</> : p.line.isDemo || (!isVod && p.price_cents === 0) ? (isVod ? "Démo 24 h" : "Démo") : `${p.line.months} mois`}</span></span>
                   <span className="shrink-0 font-bold">{formatPrice(p.price_cents)}</span>
                 </Button>
               ))}
@@ -148,6 +150,7 @@ function Checkout() {
             <Input id="mac" value={mac} onChange={(e) => setMac(e.target.value.toUpperCase())} placeholder="00:1A:79:AB:CD:EF" maxLength={17} className="font-mono" />
             <p className="text-xs text-muted-foreground">Visible dans HyperTV › Profil › Appareils MAG.</p>
           </div>
+          {isVod && <div className="space-y-2"><Label htmlFor="vod-email">Email (facultatif)</Label><Input id="vod-email" type="email" value={email} maxLength={255} onChange={e => setEmail(e.target.value)} autoComplete="email" /></div>}
           {!isFree && (
           <div className="space-y-2">
             <Label>Mode de paiement</Label>

@@ -25,3 +25,5 @@
 - Support chiffré : tout le chiffrement (ECDH/AES-GCM, clés IndexedDB) reste dans le navigateur (src/lib/support-crypto.ts) ; le serveur de la boutique ne relaie que des données chiffrées et le flux SSE via /api/support-stream, pour que ni la boutique ni HyperTV ne lisent les messages.
 - Support conversations render the per-ticket IndexedDB cache of decrypted messages first, then read incrementally (after cursor + If-None-Match/ETag relayed by the proxy, include=devices only on first load) so only new messages are fetched and decrypted.
 - Order-linked support tickets use one browser coordinator across checkout, tracking and account reads; authoritative root ticket metadata and credential-free delivery status are rechecked under locks and on the server, while account ownership checks and encrypted IndexedDB drafts protect recovery and privacy.
+
+- HYPER VOD uses the shared product card and owner-checked ephemeral delivery, with vodPlanId as its exclusive checkout identifier; supplier payloads are projected to prevent credentials entering tracking hydration or history.

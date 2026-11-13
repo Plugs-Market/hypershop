@@ -11,6 +11,7 @@ export function isValidMac(input: string): boolean {
 
 // Traduction des codes d'erreur de l'API revendeur HyperTV.
 export function translateHypertvError(status: number, code?: string, message?: string): string {
+  if (code === "customer_locked_to_other_reseller") return "Ce compte est géré par un autre revendeur";
   if (status === 401 || status === 403) return "Boutique temporairement indisponible.";
   switch (code) {
     case "invalid_request":
@@ -23,6 +24,8 @@ export function translateHypertvError(status: number, code?: string, message?: s
       return "Cette formule n'est plus disponible";
     case "trex_unavailable":
       return "Formule temporairement indisponible";
+    case "vod_demo_already_used":
+      return "Une seule démo HYPER VOD est autorisée par adresse MAC sur cette boutique. Choisissez un abonnement.";
     case "trex_demo_already_used":
       return "Vous avez déjà demandé une démo pour cet appareil sur cette boutique. Choisissez un abonnement.";
     case "trex_delivery_unavailable":
