@@ -126,7 +126,7 @@ function Home() {
     },
     {
       id: "trex",
-      label: "Abonnements TREX OTT",
+      label: "TREX OTT",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       image: trexPlans[0]?.cover_url ?? null,
       icon: ListMusic,
@@ -134,7 +134,7 @@ function Home() {
     },
     {
       id: "8kpro",
-      label: "Abonnements STRONG 8K",
+      label: "STRONG 8K",
       description: "Lignes M3U prêtes automatiquement sur votre application ou à télécharger.",
       image: proPlans[0]?.cover_url ?? null,
       icon: ListMusic,
